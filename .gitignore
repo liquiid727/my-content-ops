@@ -1,3 +1,6 @@
+# Personal local history (not tracked in git)
+local-history/
+
 # Nested repositories / local source checkouts
 gpt_image_playground/
 

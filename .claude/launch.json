@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "chapter-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/Users/liquiid/code/content-ops/半年谈", "-l", "3456", "--no-clipboard"],
+      "port": 3456
+    },
+    {
+      "name": "chapter-preview-v2",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/Users/liquiid/code/content-ops/半年谈-v2", "-l", "3457", "--no-clipboard"],
+      "port": 3457
+    }
+  ]
+}

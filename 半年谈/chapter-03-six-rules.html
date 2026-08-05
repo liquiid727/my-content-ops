@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>Chapter 03 · 指挥 Agent 的六条军规</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0E1438;color:#E8F5FF;font-family:'Noto Sans SC',sans-serif;overflow:hidden;cursor:pointer;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 55% at 55% 60%,rgba(240,124,184,.14) 0%,transparent 65%),radial-gradient(ellipse 45% 40% at 15% 75%,rgba(56,88,200,.25) 0%,transparent 55%),radial-gradient(ellipse 30% 25% at 85% 20%,rgba(255,184,216,.1) 0%,transparent 50%),radial-gradient(ellipse 35% 30% at 70% 80%,rgba(153,136,232,.12) 0%,transparent 50%);pointer-events:none;z-index:0}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden}
+[data-step]{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;padding:80px 160px;z-index:1}
+[data-step].active{display:flex}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes si{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+@keyframes fl{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fr{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pi{from{opacity:0;transform:scale(.3) rotate(-30deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes drift{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(8deg)}100%{transform:translateY(0) rotate(0deg)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,124,184,.3)}50%{box-shadow:0 0 20px 4px rgba(240,124,184,.15)}}
+@keyframes flowIn{from{opacity:0;transform:translateY(-10px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+.an{opacity:0;animation-fill-mode:forwards}
+.progress-bar{position:absolute;bottom:0;left:0;height:4px;background:linear-gradient(90deg,#F07CB8,#FFB8D8,#5BCAE8);transition:width .8s ease;z-index:2}
+.indicator{position:absolute;bottom:20px;right:40px;font-size:14px;color:rgba(240,124,184,.5);letter-spacing:2px;z-index:2;font-weight:300}
+.hint{position:absolute;bottom:20px;left:40px;font-size:14px;color:rgba(255,184,216,.25);letter-spacing:1px;z-index:2}
+.ice{position:absolute;width:10px;height:10px;border:1.5px solid rgba(91,202,232,.4);transform:rotate(45deg);z-index:0;animation:drift 11.5s ease infinite}
+.sparkle{position:absolute;z-index:0}
+.sparkle::before,.sparkle::after{content:'';position:absolute;background:#E8F5FF;border-radius:1px}
+.sparkle::before{width:2px;height:12px;left:5px;top:0}
+.sparkle::after{width:12px;height:2px;left:0;top:5px}
+.petal{position:absolute;width:18px;height:22px;border-radius:50% 50% 50% 0;z-index:0;animation:drift 14.4s ease infinite}
+.ribbon{position:absolute;z-index:0;opacity:.12}
+.rule-badge{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;font-family:'Noto Serif SC',serif;font-weight:900;font-size:28px;color:#0E1438;background:linear-gradient(135deg,#FFB8D8,#F07CB8);box-shadow:0 4px 24px rgba(240,124,184,.3);margin-bottom:20px;flex-shrink:0}
+.rule-badge.blue{background:linear-gradient(135deg,#5BCAE8,#9988E8);box-shadow:0 4px 24px rgba(91,202,232,.3)}
+.rule-badge.lavender{background:linear-gradient(135deg,#9988E8,#F07CB8);box-shadow:0 4px 24px rgba(153,136,232,.3)}
+.cmp-card{padding:36px 32px;border-radius:14px;flex:1;max-width:480px}
+.cmp-bad{background:rgba(56,88,200,.1);border:1px solid rgba(91,202,232,.1)}
+.cmp-good{background:linear-gradient(150deg,rgba(240,124,184,.1),rgba(255,184,216,.06));border:1px solid rgba(240,124,184,.18)}
+.tactic-card{padding:32px 28px;border-radius:14px;background:rgba(56,88,200,.08);border:1px solid rgba(91,202,232,.08);flex:1;max-width:340px;text-align:center;transition:border-color .3s}
+.tactic-card:hover{border-color:rgba(240,124,184,.25)}
+.flow-node{padding:20px 36px;border-radius:12px;font-size:22px;font-weight:700;text-align:center}
+.flow-arrow{font-size:32px;color:rgba(240,124,184,.4)}
+.ctx-bubble{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:100px;font-size:16px;border:1px solid;animation:flowIn 0.9s ease forwards;opacity:0}
+</style>
+</head>
+<body>
+<div class="slide" id="pres">
+  <div class="ice" style="top:10%;left:8%;animation-delay:0s"></div>
+  <div class="ice" style="top:22%;left:88%;width:7px;height:7px;border-color:rgba(91,202,232,.25);animation-delay:1.2s"></div>
+  <div class="ice" style="top:75%;left:6%;width:6px;height:6px;border-color:rgba(91,202,232,.3);animation-delay:2.1s"></div>
+  <div class="ice" style="top:65%;left:93%;animation-delay:.7s"></div>
+  <div class="ice" style="top:45%;left:3%;width:8px;height:8px;border-color:rgba(91,202,232,.2);animation-delay:1.6s"></div>
+  <div class="sparkle" style="top:15%;left:25%;opacity:.4;transform:scale(.7);animation:twinkle 7.2s ease infinite"></div>
+  <div class="sparkle" style="top:8%;left:72%;opacity:.3;transform:scale(.6);animation:twinkle 8.6s ease infinite;animation-delay:.8s"></div>
+  <div class="sparkle" style="top:78%;left:82%;opacity:.35;transform:scale(.6);animation:twinkle 8.1s ease infinite;animation-delay:1.5s"></div>
+  <div class="sparkle" style="top:60%;left:3%;opacity:.25;transform:scale(.5);animation:twinkle 9.2s ease infinite;animation-delay:2s"></div>
+  <div class="sparkle" style="top:35%;left:95%;opacity:.3;transform:scale(.55);animation:twinkle 7.6s ease infinite;animation-delay:.4s"></div>
+  <div class="sparkle" style="top:88%;left:15%;opacity:.2;transform:scale(.5);animation:twinkle 10.1s ease infinite;animation-delay:2.8s"></div>
+  <div class="petal" style="top:18%;left:92%;background:rgba(240,124,184,.08);transform:rotate(-20deg);animation-delay:.5s"></div>
+  <div class="petal" style="top:70%;left:4%;background:rgba(255,184,216,.06);transform:rotate(30deg);width:14px;height:18px;animation-delay:1.8s"></div>
+  <div class="petal" style="top:5%;left:40%;background:rgba(240,124,184,.05);transform:rotate(60deg);width:12px;height:16px;animation-delay:2.5s"></div>
+  <div class="petal" style="top:82%;left:55%;background:rgba(153,136,232,.06);transform:rotate(-40deg);width:16px;height:20px;animation-delay:3s"></div>
+  <svg class="ribbon" style="top:3%;right:5%;width:70px;height:46px" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#F07CB8"/></svg>
+  <svg class="ribbon" style="bottom:8%;left:3%;width:46px;height:30px;opacity:.08" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#FFB8D8"/></svg>
+  <svg class="ribbon" style="top:40%;right:2%;width:36px;height:24px;opacity:.06" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#9988E8"/></svg>
+
+  <div data-step="0">
+    <div class="an" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;animation:fu 0.9s ease 0.2s forwards">
+      <div class="rule-badge">1</div>
+      <div style="font-size:14px;letter-spacing:4px;color:#F07CB8">军规一</div>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:52px;margin-bottom:16px;animation:fu 1.1s ease 0.5s forwards">写清楚 Spec，<span style="color:#FFB8D8">别整玄学</span></div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.45);margin-bottom:48px;animation:fu 0.9s ease 0.8s forwards">怎么指挥好 Agent？从点单开始。</div>
+    <div style="display:flex;align-items:stretch;gap:48px;width:100%">
+      <!-- Bad order -->
+      <div class="an cmp-card cmp-bad" style="animation:fl 1.1s ease 1.0s forwards;position:relative">
+        <div style="position:absolute;top:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,rgba(91,202,232,.2),transparent);border-radius:1px"></div>
+        <div style="font-size:13px;letter-spacing:3px;color:rgba(91,202,232,.45);margin-bottom:16px">BAD ORDER</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.3);margin-bottom:20px;padding:14px 18px;border-radius:10px;background:rgba(14,20,56,.5);border:1px solid rgba(91,202,232,.06);font-family:'Noto Sans SC',sans-serif;line-height:1.7">"你帮我做个登录"</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.2);line-height:1.7">= 跟外卖小哥说<br>"给我来点好吃的"</div>
+        <div style="margin-top:16px;font-size:14px;color:rgba(240,124,184,.3)">（外卖小哥震怒）</div>
+      </div>
+      <!-- Arrow -->
+      <div class="an" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;animation:pi 0.9s ease 1.3s forwards">
+        <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 20 H28 M22 14 L28 20 L22 26" stroke="#FFB8D8" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <div style="font-size:13px;color:rgba(255,184,216,.4);letter-spacing:1px">vs</div>
+      </div>
+      <!-- Good order -->
+      <div class="an cmp-card cmp-good" style="animation:fr 1.1s ease 1.1s forwards;position:relative">
+        <div style="position:absolute;top:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,rgba(240,124,184,.35),transparent);border-radius:1px"></div>
+        <div style="font-size:13px;letter-spacing:3px;color:#F07CB8;margin-bottom:16px">GOOD ORDER</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.7);margin-bottom:20px;padding:14px 18px;border-radius:10px;background:rgba(14,20,56,.5);border:1px solid rgba(240,124,184,.1);font-family:'Noto Sans SC',sans-serif;line-height:1.7">"增设 <span style="color:#5BCAE8">auth/</span> 下的 QQ、微信登录模块<br>采用 OAuth2.0 方案<br>用 <span style="color:#FFB8D8">unionid</span> 存储用户标识"</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.4);line-height:1.7">路径、方案、字段，一次讲清</div>
+        <div style="margin-top:16px;font-size:14px;color:rgba(91,202,232,.45)">这才是合格的点单 ✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-step="1">
+    <div class="an" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;animation:fu 0.9s ease 0.2s forwards">
+      <div class="rule-badge blue">2</div>
+      <div style="font-size:14px;letter-spacing:4px;color:#5BCAE8">军规二</div>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:52px;margin-bottom:16px;animation:fu 1.1s ease 0.5s forwards">喂合适的<span style="color:#5BCAE8">上下文</span></div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.45);margin-bottom:52px;animation:fu 0.9s ease 0.8s forwards">Agent 不是读心术大师，它只是个勤快但需要<span style="color:#FFB8D8">明确指令</span>的打工人。</div>
+    <!-- Context flow visualization -->
+    <div class="an" style="display:flex;align-items:center;justify-content:center;gap:24px;width:100%;animation:fu 1.3s ease 1.0s forwards">
+      <!-- Source bubbles -->
+      <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-end">
+        <div class="ctx-bubble" style="border-color:rgba(240,124,184,.25);color:#FFB8D8;animation-delay:.7s">
+          <svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#FFB8D8" stroke-width="1.5"/><line x1="5" y1="6" x2="11" y2="6" stroke="#FFB8D8" stroke-width="1"/><line x1="5" y1="9" x2="9" y2="9" stroke="#FFB8D8" stroke-width="1"/></svg>
+          spec 文件
+        </div>
+        <div class="ctx-bubble" style="border-color:rgba(91,202,232,.25);color:#5BCAE8;animation-delay:.9s">
+          <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 2 h10 l-3 4 v5 l-4 2 v-7 z" fill="none" stroke="#5BCAE8" stroke-width="1.5"/></svg>
+          agents.md
+        </div>
+        <div class="ctx-bubble" style="border-color:rgba(153,136,232,.25);color:#9988E8;animation-delay:1.1s">
+          <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 4 h4 l2 -2 h6 v12 h-12 z" fill="none" stroke="#9988E8" stroke-width="1.5"/></svg>
+          文件路径
+        </div>
+        <div class="ctx-bubble" style="border-color:rgba(255,184,216,.2);color:rgba(255,184,216,.6);animation-delay:1.3s">
+          <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="rgba(255,184,216,.6)" stroke-width="1.5"/><path d="M8 5 v4 l3 2" fill="none" stroke="rgba(255,184,216,.6)" stroke-width="1.2"/></svg>
+          业务逻辑
+        </div>
+      </div>
+      <!-- Flow arrows -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <svg width="80" height="20" viewBox="0 0 80 20"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#F07CB8" stop-opacity=".3"/><stop offset="100%" stop-color="#5BCAE8" stop-opacity=".6"/></linearGradient></defs><path d="M0 10 H65 M58 4 L66 10 L58 16" stroke="url(#ag)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <div style="font-size:12px;color:rgba(232,245,255,.25);letter-spacing:2px">FEED</div>
+        <svg width="80" height="20" viewBox="0 0 80 20"><path d="M0 10 H65 M58 4 L66 10 L58 16" stroke="url(#ag)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <!-- Agent box -->
+      <div style="padding:40px 48px;border-radius:16px;background:linear-gradient(150deg,rgba(240,124,184,.08),rgba(91,202,232,.06));border:1px solid rgba(240,124,184,.15);text-align:center;animation:pulse 8.6s ease infinite;position:relative">
+        <div style="position:absolute;top:-1px;left:15%;right:15%;height:2px;background:linear-gradient(90deg,transparent,rgba(91,202,232,.3),transparent);border-radius:1px"></div>
+        <div style="font-size:40px;margin-bottom:8px">🤖</div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:28px;font-weight:700;color:#E8F5FF">Agent</div>
+        <div style="font-size:14px;color:rgba(232,245,255,.35);margin-top:8px">勤快的打工人</div>
+      </div>
+    </div>
+    <div class="an" style="margin-top:36px;font-size:15px;color:rgba(240,124,184,.35);animation:fu 0.9s ease 2.2s forwards">（打工人需要背景材料，不接受心灵感应 ><）</div>
+  </div>
+
+  <div data-step="2">
+    <div class="an" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;animation:fu 0.9s ease 0.2s forwards">
+      <div class="rule-badge lavender">3</div>
+      <div style="font-size:14px;letter-spacing:4px;color:#9988E8">军规三</div>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:52px;margin-bottom:10px;animation:fu 1.1s ease 0.5s forwards"><span style="color:#FFB8D8">人工审查</span>——锅是你背的</div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.45);margin-bottom:48px;animation:fu 0.9s ease 0.8s forwards">没办法。但有几个保命窍门——</div>
+    <!-- Three tactic cards -->
+    <div style="display:flex;gap:32px;width:100%">
+      <div class="an tactic-card" style="animation:fl 1.1s ease 1.0s forwards">
+        <div style="font-size:48px;margin-bottom:16px">
+          <svg width="52" height="52" viewBox="0 0 52 52"><rect x="6" y="6" width="40" height="40" rx="6" fill="none" stroke="rgba(91,202,232,.4)" stroke-width="2"/><line x1="14" y1="18" x2="26" y2="18" stroke="rgba(232,245,255,.3)" stroke-width="2"/><line x1="14" y1="26" x2="38" y2="26" stroke="#5BCAE8" stroke-width="2"/><line x1="14" y1="26" x2="20" y2="26" stroke="#F07CB8" stroke-width="2.5"/><line x1="14" y1="34" x2="32" y2="34" stroke="rgba(232,245,255,.3)" stroke-width="2"/></svg>
+        </div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;color:#5BCAE8;margin-bottom:12px">看 Diff</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.4);line-height:1.7">可以不看全部代码<br>但<span style="color:#E8F5FF;font-weight:400">一定要看 diff</span><br>变更一目了然</div>
+      </div>
+      <div class="an tactic-card" style="animation:fu 1.1s ease 1.2s forwards">
+        <div style="font-size:48px;margin-bottom:16px">
+          <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="22" r="12" fill="none" stroke="rgba(240,124,184,.4)" stroke-width="2"/><path d="M20 22 l4 4 l8 -8" stroke="#FFB8D8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 38 l-2 6 h20 l-2 -6" fill="none" stroke="rgba(240,124,184,.3)" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;color:#FFB8D8;margin-bottom:12px">亲手跑一下</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.4);line-height:1.7">测试不是形式主义<br>是你的<span style="color:#E8F5FF;font-weight:400">救命稻草</span><br>跑完心才踏实</div>
+      </div>
+      <div class="an tactic-card" style="animation:fr 1.1s ease 1.4s forwards">
+        <div style="font-size:48px;margin-bottom:16px">
+          <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="18" cy="20" r="8" fill="none" stroke="rgba(153,136,232,.4)" stroke-width="2"/><circle cx="34" cy="20" r="8" fill="none" stroke="rgba(91,202,232,.4)" stroke-width="2"/><path d="M15 32 Q14 42 26 42 Q38 42 37 32" fill="none" stroke="rgba(232,245,255,.2)" stroke-width="1.5"/><path d="M22 36 h8" stroke="#9988E8" stroke-width="2" stroke-linecap="round"/><path d="M24 34 v4" stroke="#9988E8" stroke-width="1.5" stroke-linecap="round"/><path d="M28 34 v4" stroke="#9988E8" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;color:#9988E8;margin-bottom:12px">追问设计</div>
+        <div style="font-size:15px;color:rgba(232,245,255,.4);line-height:1.7">你打算怎么做？为什么？<br>还有别的方案吗？<br>甚至搞个 <span style="color:#E8F5FF;font-weight:400">Agent 辩论赛</span></div>
+      </div>
+    </div>
+    <div class="an" style="margin-top:32px;font-size:15px;color:rgba(240,124,184,.3);animation:fu 0.9s ease 1.8s forwards">（背锅侠的自我修养）</div>
+  </div>
+
+  <div data-step="3">
+    <div class="an" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;animation:fu 0.9s ease 0.2s forwards">
+      <div class="rule-badge">4</div>
+      <div style="font-size:14px;letter-spacing:4px;color:#F07CB8">军规四</div>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:52px;margin-bottom:16px;animation:fu 1.1s ease 0.5s forwards">善用 <span style="color:#5BCAE8">Plan</span> 模式</div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.45);margin-bottom:56px;max-width:900px;text-align:center;line-height:1.7;animation:fu 0.9s ease 0.8s forwards">尤其像我这种菜鸟，特别怕领导突然出现问<br>"这块你怎么做的"——让 Agent 先出计划，审完再动手</div>
+    <!-- Plan flow -->
+    <div class="an" style="display:flex;align-items:center;justify-content:center;gap:24px;animation:fu 1.3s ease 1.1s forwards">
+      <div class="flow-node" style="background:linear-gradient(135deg,rgba(91,202,232,.12),rgba(91,202,232,.06));border:1px solid rgba(91,202,232,.2)">
+        <div style="font-size:36px;margin-bottom:8px">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="6" y="4" width="28" height="32" rx="4" fill="none" stroke="#5BCAE8" stroke-width="2"/><line x1="12" y1="12" x2="28" y2="12" stroke="rgba(91,202,232,.5)" stroke-width="1.5"/><line x1="12" y1="18" x2="24" y2="18" stroke="rgba(91,202,232,.4)" stroke-width="1.5"/><line x1="12" y1="24" x2="26" y2="24" stroke="rgba(91,202,232,.3)" stroke-width="1.5"/></svg>
+        </div>
+        <div style="color:#5BCAE8">Agent 出计划</div>
+      </div>
+      <div class="flow-arrow">
+        <svg width="64" height="24" viewBox="0 0 64 24"><path d="M0 12 H50 M44 6 L52 12 L44 18" stroke="#FFB8D8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".5"/></svg>
+      </div>
+      <div class="flow-node" style="background:linear-gradient(135deg,rgba(240,124,184,.12),rgba(255,184,216,.06));border:1px solid rgba(240,124,184,.2)">
+        <div style="font-size:36px;margin-bottom:8px">
+          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="16" r="8" fill="none" stroke="#FFB8D8" stroke-width="2"/><path d="M12 30 Q12 24 20 24 Q28 24 28 30" fill="none" stroke="#FFB8D8" stroke-width="2"/><path d="M16 16 l3 3 l6 -6" stroke="#FFB8D8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="color:#FFB8D8">你来审核</div>
+      </div>
+      <div class="flow-arrow">
+        <svg width="64" height="24" viewBox="0 0 64 24"><path d="M0 12 H50 M44 6 L52 12 L44 18" stroke="#5BCAE8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".5"/></svg>
+      </div>
+      <div class="flow-node" style="background:linear-gradient(135deg,rgba(153,136,232,.12),rgba(153,136,232,.06));border:1px solid rgba(153,136,232,.2)">
+        <div style="font-size:36px;margin-bottom:8px">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 32 L20 8 L32 32 Z" fill="none" stroke="#9988E8" stroke-width="2"/><circle cx="20" cy="24" r="3" fill="#9988E8" opacity=".5"/></svg>
+        </div>
+        <div style="color:#9988E8">放心执行</div>
+      </div>
+    </div>
+    <div class="an" style="margin-top:48px;display:flex;align-items:center;gap:12px;padding:16px 28px;border-radius:100px;background:rgba(240,124,184,.06);border:1px solid rgba(240,124,184,.12);font-size:16px;color:rgba(255,184,216,.5);animation:fu 0.9s ease 1.6s forwards">
+      <svg width="16" height="16" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".5"/></svg>
+      心里踏实 = 效率翻倍（菜鸟的自我修养）
+    </div>
+  </div>
+
+  <div data-step="4">
+    <div class="an" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;animation:fu 0.9s ease 0.2s forwards">
+      <div class="rule-badge blue">5</div>
+      <div style="font-size:14px;letter-spacing:4px;color:#5BCAE8">军规五</div>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:52px;margin-bottom:16px;animation:fu 1.1s ease 0.5s forwards">翻车了？<span style="color:#FFB8D8">别慌</span></div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.45);margin-bottom:56px;animation:fu 0.9s ease 0.8s forwards">Claude Code 有个 <span style="color:#5BCAE8;font-weight:400">rewind</span> 命令，能帮你回滚到之前的状态</div>
+    <!-- Rewind visual -->
+    <div class="an" style="display:flex;align-items:center;justify-content:center;gap:40px;animation:fu 1.3s ease 1.1s forwards">
+      <!-- Crash state -->
+      <div style="padding:36px 40px;border-radius:14px;background:rgba(200,60,60,.08);border:1px solid rgba(200,60,60,.15);text-align:center;max-width:280px">
+        <div style="font-size:42px;margin-bottom:12px">💥</div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;color:rgba(232,245,255,.5);margin-bottom:8px">翻车现场</div>
+        <div style="font-size:14px;color:rgba(232,245,255,.25);line-height:1.6">代码一团糟<br>功能全崩了</div>
+      </div>
+      <!-- Rewind arrow -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+        <svg width="100" height="40" viewBox="0 0 100 40">
+          <defs>
+            <linearGradient id="rw" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#F07CB8" stop-opacity=".2"/><stop offset="100%" stop-color="#5BCAE8" stop-opacity=".6"/></linearGradient>
+          </defs>
+          <path d="M90 20 H20 M28 12 L18 20 L28 28" stroke="url(#rw)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M14 10 A10 10 0 1 0 14 30" stroke="#5BCAE8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".4"/>
+        </svg>
+        <div style="padding:8px 20px;border-radius:8px;background:rgba(91,202,232,.1);border:1px solid rgba(91,202,232,.2);font-family:'Noto Sans SC',sans-serif;font-size:16px;color:#5BCAE8;letter-spacing:1px;font-weight:700">/rewind</div>
+      </div>
+      <!-- Restored state -->
+      <div style="padding:36px 40px;border-radius:14px;background:linear-gradient(150deg,rgba(91,202,232,.08),rgba(153,136,232,.06));border:1px solid rgba(91,202,232,.18);text-align:center;max-width:280px">
+        <div style="font-size:42px;margin-bottom:12px">✨</div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;color:#E8F5FF;margin-bottom:8px">回到正轨</div>
+        <div style="font-size:14px;color:rgba(232,245,255,.4);line-height:1.6">回滚到安全状态<br>重新出发</div>
+      </div>
+    </div>
+    <div class="an" style="margin-top:44px;display:flex;align-items:center;gap:12px;animation:fu 0.9s ease 1.6s forwards">
+      <div style="padding:14px 28px;border-radius:100px;background:rgba(255,184,216,.06);border:1px solid rgba(255,184,216,.12);font-size:17px;color:rgba(255,184,216,.5)">翻车不怕，怕的是没有后悔药</div>
+      <div style="font-size:14px;color:rgba(240,124,184,.3)">（后悔药 get!）</div>
+    </div>
+  </div>
+
+  <div data-step="5">
+    <div class="an" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;animation:fu 0.9s ease 0.2s forwards">
+      <div class="rule-badge lavender">6</div>
+      <div style="font-size:14px;letter-spacing:4px;color:#9988E8">军规六</div>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:48px;margin-bottom:16px;animation:fu 1.1s ease 0.5s forwards">适时<span style="color:#9988E8">拆任务</span>、压上下文、<span style="color:#5BCAE8">换 Agent</span></div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.45);margin-bottom:52px;max-width:900px;text-align:center;line-height:1.7;animation:fu 0.9s ease 0.8s forwards">以后上下文管理大概率会被模型本身解决<br>但现在嘛，还是得靠我们<span style="color:#FFB8D8">手动看着点</span></div>
+    <!-- Task splitting visual -->
+    <div class="an" style="display:flex;align-items:center;justify-content:center;gap:40px;width:100%;animation:fu 1.3s ease 1.1s forwards">
+      <!-- Big task -->
+      <div style="padding:32px 36px;border-radius:14px;background:rgba(240,124,184,.08);border:1px solid rgba(240,124,184,.15);text-align:center;min-width:200px;position:relative">
+        <div style="font-size:36px;margin-bottom:10px">
+          <svg width="44" height="44" viewBox="0 0 44 44"><rect x="4" y="4" width="36" height="36" rx="6" fill="none" stroke="#FFB8D8" stroke-width="2"/><line x1="12" y1="14" x2="32" y2="14" stroke="rgba(255,184,216,.4)" stroke-width="1.5"/><line x1="12" y1="22" x2="32" y2="22" stroke="rgba(255,184,216,.3)" stroke-width="1.5"/><line x1="12" y1="30" x2="28" y2="30" stroke="rgba(255,184,216,.2)" stroke-width="1.5"/></svg>
+        </div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;color:#FFB8D8">大任务</div>
+        <div style="font-size:13px;color:rgba(232,245,255,.25);margin-top:6px">上下文爆炸</div>
+      </div>
+      <!-- Split arrow -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <path d="M10 40 H40" stroke="rgba(240,124,184,.3)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M40 40 L65 16 M58 14 L66 16 L62 24" stroke="#5BCAE8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M40 40 L65 40 M58 36 L66 40 L58 44" stroke="#FFB8D8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M40 40 L65 64 M58 60 L66 64 L62 56" stroke="#9988E8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font-size:12px;color:rgba(232,245,255,.3);letter-spacing:2px">SPLIT</div>
+      </div>
+      <!-- Small tasks -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-radius:10px;background:rgba(91,202,232,.08);border:1px solid rgba(91,202,232,.12)">
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(91,202,232,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:#5BCAE8;font-weight:700">A</div>
+          <div>
+            <div style="font-size:16px;color:#5BCAE8;font-weight:400">子任务 A</div>
+            <div style="font-size:12px;color:rgba(232,245,255,.25)">Agent 1 处理</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-radius:10px;background:rgba(240,124,184,.08);border:1px solid rgba(240,124,184,.12)">
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(240,124,184,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:#FFB8D8;font-weight:700">B</div>
+          <div>
+            <div style="font-size:16px;color:#FFB8D8;font-weight:400">子任务 B</div>
+            <div style="font-size:12px;color:rgba(232,245,255,.25)">Agent 2 处理</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-radius:10px;background:rgba(153,136,232,.08);border:1px solid rgba(153,136,232,.12)">
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(153,136,232,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:#9988E8;font-weight:700">C</div>
+          <div>
+            <div style="font-size:16px;color:#9988E8;font-weight:400">子任务 C</div>
+            <div style="font-size:12px;color:rgba(232,245,255,.25)">Agent 3 处理</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="an" style="margin-top:36px;font-size:15px;color:rgba(153,136,232,.4);animation:fu 0.9s ease 1.6s forwards">（以后模型会自己管上下文的……大概吧）</div>
+  </div>
+
+  <div class="progress-bar" id="prog"></div>
+  <div class="indicator" id="ind">1 / 6</div>
+  <div class="hint">点击继续 →</div>
+</div>
+<script>
+(function(){
+  var pres=document.getElementById('pres');
+  var total=6;var cur=0;
+  var prog=document.getElementById('prog');
+  var ind=document.getElementById('ind');
+  var templates=[];
+  for(var i=0;i<total;i++){var el=pres.querySelector('[data-step="'+i+'"]');if(el)templates.push(el.outerHTML)}
+  function render(){
+    var all=pres.querySelectorAll('[data-step]');for(var i=0;i<all.length;i++)all[i].remove();
+    var w=document.createElement('div');w.innerHTML=templates[cur];
+    var fresh=w.firstElementChild;fresh.classList.add('active');
+    pres.insertBefore(fresh,prog);
+    prog.style.width=((cur+1)/total*100)+'%';
+    ind.textContent=(cur+1)+' / '+total;
+  }
+  function advance(){if(cur<total-1){cur++;render()}}
+  function retreat(){if(cur>0){cur--;render()}}
+  pres.addEventListener('click',advance);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' ')advance();
+    if(e.key==='ArrowLeft')retreat();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

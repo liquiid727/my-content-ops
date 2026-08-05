@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "web-video-presentation": {
+      "source": "ConardLi/garden-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-video-presentation/SKILL.md",
+      "computedHash": "c8c5077774ff6795fa8400cd2b271cc1cd1eebb2d636b19d2e45f22b9cabfd2f"
+    }
+  }
+}
