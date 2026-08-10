@@ -44,6 +44,18 @@ describe('local identity and bootstrap security boundary', () => {
     })
   })
 
+  it('seeds the ALAOS creator profile for a new workspace', async () => {
+    await withTestDatabase(async ({ db }) => {
+      const identity = await ensureLocalIdentity(new WorkspaceRepository(db))
+      expect(identity.creatorProfile.displayName).toBe('阿篓的AI篓子')
+      const profile = JSON.parse(identity.creatorProfile.profileJson) as { identity: { creatorName: string }; positioning: { nicheTags: string[] } }
+      expect(profile.identity.creatorName).toBe('阿篓')
+      expect(profile.positioning.nicheTags).toContain('AI Coding')
+      const injection = JSON.parse(identity.creatorProfile.injectionJson) as { sections: { memory: boolean } }
+      expect(injection.sections.memory).toBe(false)
+    })
+  })
+
   it('issues a strict HttpOnly session and returns a redacted bootstrap envelope', async () => {
     await withTestDatabase(async ({ db }) => {
       const identity = await ensureLocalIdentity(new WorkspaceRepository(db))

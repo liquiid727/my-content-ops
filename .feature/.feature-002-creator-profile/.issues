@@ -80,7 +80,7 @@
 - [.prd US-001/002/003](./.prd) ｜ [.spec §2.4](./.spec)
 
 ## Issue #5: Obsidian vault 导入
-**Status:** pending
+**Status:** shipped
 **Type:** fullstack
 **Priority:** medium
 **Dependencies:** #2
@@ -89,10 +89,10 @@
 实现 `POST /creator-profile/import`：Server 侧读 vault `.md`（校验路径在 vault 根内，防穿越），按 `targetSection` 结构化抽取或整体放入草稿。前端提供导入入口与结果反馈。
 
 ### Acceptance Criteria
-- [ ] 合法 vault 相对路径（如 `50_Channels/阿篓的AI篓子/00-账号定位.md`）导入成功，填入对应区块或返回草稿
-- [ ] 越界路径 / 文件不存在返回 422 `IMPORT_FAILED`，可读错误，不抛堆栈
-- [ ] 重复导入幂等（覆盖同名区块），返回 `imported` 摘要
-- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+- [x] 合法 vault 相对路径（如 `50_Channels/阿篓的AI篓子/00-账号定位.md`）导入成功，填入对应区块或返回草稿
+- [x] 越界路径 / 文件不存在返回 422 `IMPORT_FAILED`，可读错误，不抛堆栈
+- [x] 重复导入幂等（覆盖同名区块），返回 `imported` 摘要
+- [x] 浏览器验证（`run` skill）；Typecheck/lint 通过
 
 ### SPEC Reference
 - [.prd US-004](./.prd) ｜ [.spec §4.3 §5.1](./.spec)
