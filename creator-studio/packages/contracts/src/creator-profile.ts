@@ -72,6 +72,7 @@ export const voiceSchema = z
       .default({ common: [], banned: [] }),
   })
   .passthrough()
+  .default({ tone: { like: [], avoid: [] }, writingStyle: { preferredAspects: [], sentencePatterns: [] }, vocabulary: { common: [], banned: [] } })
 
 export const knowledgeSchema = z
   .object({
@@ -106,13 +107,13 @@ export const contentRulesSchema = z
 /** 七块画像内容 + `extra` 自由扩展。未知顶层键不报错（passthrough 保留，UI 不回写）。 */
 export const personalStyleSchema = z
   .object({
-    identity: creatorIdentitySchema.default({}),
-    positioning: positioningSchema.default({}),
-    audience: audienceSchema.default({}),
-    voice: voiceSchema.default({}),
-    knowledge: knowledgeSchema.default({}),
-    memory: memorySchema.default({}),
-    rules: contentRulesSchema.default({}),
+    identity: creatorIdentitySchema.default({ creatorName: '', nicknames: {} }),
+    positioning: positioningSchema.default({ summary: '', nicheTags: [], channels: [] }),
+    audience: audienceSchema.default({ primaryAudience: '', painPoints: [], goals: [] }),
+    voice: voiceSchema.default({ tone: { like: [], avoid: [] }, writingStyle: { preferredAspects: [], sentencePatterns: [] }, vocabulary: { common: [], banned: [] } }),
+    knowledge: knowledgeSchema.default({ domains: [] }),
+    memory: memorySchema.default({ pastWorks: [] }),
+    rules: contentRulesSchema.default({ principles: [] }),
     extra: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough()
@@ -130,15 +131,26 @@ export type ContentRules = z.infer<typeof contentRulesSchema>
 export const injectionSettingsSchema = z
   .object({
     enabled: z.boolean().default(true),
-    sections: z.record(sectionKeySchema, z.boolean()).default({
-      identity: true,
-      positioning: true,
-      audience: true,
-      voice: true,
-      knowledge: true,
-      memory: false,
-      rules: true,
-    }),
+    sections: z
+      .object({
+        identity: z.boolean().default(true),
+        positioning: z.boolean().default(true),
+        audience: z.boolean().default(true),
+        voice: z.boolean().default(true),
+        knowledge: z.boolean().default(true),
+        memory: z.boolean().default(false),
+        rules: z.boolean().default(true),
+      })
+      .strict()
+      .default({
+        identity: true,
+        positioning: true,
+        audience: true,
+        voice: true,
+        knowledge: true,
+        memory: false,
+        rules: true,
+      }),
   })
   .strict()
 
