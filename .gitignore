@@ -1,5 +1,5 @@
-# Nested repositories / local source checkouts
-gpt_image_playground/
+# Personal local history (not tracked in git)
+local-history/
 
 # Dependencies
 node_modules/
@@ -34,6 +34,9 @@ pnpm-debug.log*
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
 *.local
 
 # Tool caches
@@ -43,6 +46,10 @@ pnpm-debug.log*
 .parcel-cache/
 .eslintcache
 .tsbuildinfo
+.loop-state.json
+
+# Local feature workspace loop state (kept out of git; .prd/.spec/.issues/.test stay tracked)
+.feature/**/.loop-local-state.json
 
 # OS / editor files
 .DS_Store

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>Chapter 06 · 工程约束 + 测试 + 收尾</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0E1438;color:#E8F5FF;font-family:'Noto Sans SC',sans-serif;overflow:hidden;cursor:pointer;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 55% at 55% 60%,rgba(240,124,184,.14) 0%,transparent 65%),radial-gradient(ellipse 45% 40% at 15% 75%,rgba(56,88,200,.25) 0%,transparent 55%),radial-gradient(ellipse 30% 25% at 85% 20%,rgba(255,184,216,.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden}
+[data-step]{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;padding:80px 160px;z-index:1}
+[data-step].active{display:flex}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes si{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+@keyframes fl{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fr{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pi{from{opacity:0;transform:scale(.3) rotate(-30deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes drift{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(8deg)}100%{transform:translateY(0) rotate(0deg)}}
+.an{opacity:0;animation-fill-mode:forwards}
+.progress-bar{position:absolute;bottom:0;left:0;height:4px;background:linear-gradient(90deg,#F07CB8,#FFB8D8,#5BCAE8);transition:width .8s ease;z-index:2}
+.indicator{position:absolute;bottom:20px;right:40px;font-size:14px;color:rgba(240,124,184,.5);letter-spacing:2px;z-index:2;font-weight:300}
+.hint{position:absolute;bottom:20px;left:40px;font-size:14px;color:rgba(255,184,216,.25);letter-spacing:1px;z-index:2}
+.ice{position:absolute;width:10px;height:10px;border:1.5px solid rgba(91,202,232,.4);transform:rotate(45deg);z-index:0;animation:drift 11.5s ease infinite}
+.sparkle{position:absolute;z-index:0}
+.sparkle::before,.sparkle::after{content:'';position:absolute;background:#E8F5FF;border-radius:1px}
+.sparkle::before{width:2px;height:12px;left:5px;top:0}
+.sparkle::after{width:12px;height:2px;left:0;top:5px}
+.petal{position:absolute;width:18px;height:22px;border-radius:50% 50% 50% 0;z-index:0;animation:drift 14.4s ease infinite}
+.ribbon{position:absolute;z-index:0;opacity:.12}
+
+/* Ch6 unique */
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(255,184,216,.1)}50%{box-shadow:0 0 40px rgba(255,184,216,.25)}}
+@keyframes floatUp{0%{opacity:0;transform:translateY(20px) scale(.5)}50%{opacity:1}100%{opacity:0;transform:translateY(-60px) scale(1.2)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes rotateIn{from{opacity:0;transform:rotate(-180deg) scale(0)}to{opacity:1;transform:rotate(0deg) scale(1)}}
+@keyframes heroGlow{0%,100%{text-shadow:0 0 30px rgba(255,184,216,.2)}50%{text-shadow:0 0 60px rgba(255,184,216,.4),0 0 90px rgba(91,202,232,.2)}}
+.pillar{padding:28px 32px;border-radius:14px;text-align:center;flex:1;max-width:380px;position:relative;overflow:hidden}
+.pillar-glow{position:absolute;top:-1px;left:15%;right:15%;height:2px;border-radius:1px}
+.cycle-node{width:180px;height:180px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.cycle-arrow{font-size:32px;color:rgba(91,202,232,.5)}
+.finale-star{position:absolute;z-index:0;animation:floatUp 8.6s ease infinite}
+</style>
+</head>
+<body>
+<div class="slide" id="pres">
+  <div class="ice" style="top:8%;left:5%;animation-delay:0s"></div>
+  <div class="ice" style="top:15%;left:92%;width:8px;height:8px;border-color:rgba(91,202,232,.3);animation-delay:1s"></div>
+  <div class="ice" style="top:72%;left:3%;width:6px;height:6px;border-color:rgba(91,202,232,.25);animation-delay:2.3s"></div>
+  <div class="ice" style="top:80%;left:95%;animation-delay:.5s"></div>
+  <div class="ice" style="top:45%;left:97%;width:7px;height:7px;border-color:rgba(91,202,232,.2);animation-delay:1.8s"></div>
+  <div class="sparkle" style="top:12%;left:20%;opacity:.35;transform:scale(.65);animation:twinkle 7.6s ease infinite"></div>
+  <div class="sparkle" style="top:6%;left:78%;opacity:.3;transform:scale(.55);animation:twinkle 9.0s ease infinite;animation-delay:.6s"></div>
+  <div class="sparkle" style="top:82%;left:85%;opacity:.3;transform:scale(.6);animation:twinkle 8.3s ease infinite;animation-delay:1.3s"></div>
+  <div class="sparkle" style="top:55%;left:2%;opacity:.2;transform:scale(.5);animation:twinkle 9.7s ease infinite;animation-delay:2.2s"></div>
+  <div class="sparkle" style="top:35%;left:95%;opacity:.25;transform:scale(.5);animation:twinkle 7.7s ease infinite;animation-delay:.9s"></div>
+  <div class="sparkle" style="top:42%;left:8%;opacity:.3;transform:scale(.55);animation:twinkle 8.6s ease infinite;animation-delay:1.7s"></div>
+  <div class="sparkle" style="top:90%;left:50%;opacity:.2;transform:scale(.45);animation:twinkle 9.5s ease infinite;animation-delay:2.5s"></div>
+  <div class="petal" style="top:14%;left:90%;background:rgba(240,124,184,.07);transform:rotate(-25deg);animation-delay:.3s"></div>
+  <div class="petal" style="top:75%;left:8%;background:rgba(255,184,216,.05);transform:rotate(35deg);width:14px;height:18px;animation-delay:1.6s"></div>
+  <div class="petal" style="top:3%;left:50%;background:rgba(240,124,184,.04);transform:rotate(55deg);width:12px;height:16px;animation-delay:2.8s"></div>
+  <div class="petal" style="top:88%;left:60%;background:rgba(255,184,216,.05);transform:rotate(-15deg);width:16px;height:20px;animation-delay:1.1s"></div>
+  <div class="petal" style="top:20%;left:3%;background:rgba(240,124,184,.05);transform:rotate(40deg);width:13px;height:17px;animation-delay:2.1s"></div>
+  <svg class="ribbon" style="top:2%;right:8%;width:60px;height:40px" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#F07CB8"/></svg>
+  <svg class="ribbon" style="bottom:6%;left:2%;width:44px;height:28px;opacity:.08" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#FFB8D8"/></svg>
+  <svg class="ribbon" style="top:40%;right:2%;width:36px;height:24px;opacity:.06" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#9988E8"/></svg>
+
+  <div data-step="0">
+    <div class="an" style="font-size:16px;letter-spacing:5px;color:#F07CB8;margin-bottom:12px;animation:fu 1.3s ease 0.3s forwards">CHAPTER 06 · 工程约束</div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:46px;line-height:1.2;text-align:center;margin-bottom:40px;animation:fu 1.3s ease 0.6s forwards">Git + CI/CD + Hooks</div>
+    <div style="display:flex;align-items:stretch;justify-content:center;gap:40px;width:100%">
+      <!-- CI Pillar -->
+      <div class="an pillar" style="max-width:380px;padding:48px 36px;border-radius:16px;background:linear-gradient(160deg,rgba(91,202,232,.12),rgba(56,88,200,.08));border:1px solid rgba(91,202,232,.18);animation:fl 1.1s ease 1.0s forwards">
+        <div class="pillar-glow" style="background:linear-gradient(90deg,transparent,rgba(91,202,232,.35),transparent)"></div>
+        <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:18px"><circle cx="28" cy="28" r="24" fill="none" stroke="rgba(91,202,232,.4)" stroke-width="2"/><path d="M18 28 L25 35 L38 22" stroke="#5BCAE8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 6 L28 12 M28 44 L28 50 M6 28 L12 28 M44 28 L50 28" stroke="rgba(91,202,232,.25)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div style="font-family:'Noto Serif SC',serif;font-size:28px;font-weight:700;color:#5BCAE8;margin-bottom:10px">CI / CD</div>
+        <div style="font-size:16px;line-height:1.8;color:rgba(232,245,255,.55)">你的<span style="color:#5BCAE8">机器审查官</span><br>代码不过 CI<br>就别想合进去</div>
+        <div style="margin-top:14px;font-size:14px;color:rgba(240,124,184,.35)">（CI 大人饶命）</div>
+      </div>
+      <!-- Hooks Pillar -->
+      <div class="an pillar" style="max-width:380px;padding:48px 36px;border-radius:16px;background:linear-gradient(160deg,rgba(240,124,184,.1),rgba(153,136,232,.08));border:1px solid rgba(240,124,184,.18);animation:fu 1.1s ease 1.3s forwards">
+        <div class="pillar-glow" style="background:linear-gradient(90deg,transparent,rgba(240,124,184,.35),transparent)"></div>
+        <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:18px"><rect x="12" y="8" width="32" height="40" rx="4" fill="none" stroke="rgba(240,124,184,.4)" stroke-width="2"/><line x1="20" y1="18" x2="36" y2="18" stroke="rgba(255,184,216,.35)" stroke-width="1.5"/><line x1="20" y1="26" x2="36" y2="26" stroke="rgba(255,184,216,.35)" stroke-width="1.5"/><line x1="20" y1="34" x2="36" y2="34" stroke="rgba(255,184,216,.35)" stroke-width="1.5"/><circle cx="17" cy="18" r="2.5" fill="#FFB8D8" opacity=".6"/><circle cx="17" cy="26" r="2.5" fill="#FFB8D8" opacity=".6"/><circle cx="17" cy="34" r="2.5" fill="#FFB8D8" opacity=".6"/></svg>
+        <div style="font-family:'Noto Serif SC',serif;font-size:28px;font-weight:700;color:#FFB8D8;margin-bottom:10px">Hooks</div>
+        <div style="font-size:16px;line-height:1.8;color:rgba(232,245,255,.55)">Agent 生命周期中<span style="color:#FFB8D8">设卡</span><br>每一步<br>都能加检查</div>
+      </div>
+      <!-- Worktree Pillar -->
+      <div class="an pillar" style="max-width:380px;padding:48px 36px;border-radius:16px;background:linear-gradient(160deg,rgba(153,136,232,.1),rgba(91,202,232,.06));border:1px solid rgba(153,136,232,.18);animation:fr 1.1s ease 1.6s forwards">
+        <div class="pillar-glow" style="background:linear-gradient(90deg,transparent,rgba(153,136,232,.35),transparent)"></div>
+        <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:18px"><line x1="28" y1="48" x2="28" y2="22" stroke="rgba(153,136,232,.5)" stroke-width="2.5" stroke-linecap="round"/><line x1="28" y1="30" x2="16" y2="16" stroke="rgba(153,136,232,.4)" stroke-width="2" stroke-linecap="round"/><line x1="28" y1="30" x2="40" y2="16" stroke="rgba(153,136,232,.4)" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="18" r="4" fill="#9988E8" opacity=".6"/><circle cx="16" cy="13" r="3.5" fill="#9988E8" opacity=".4"/><circle cx="40" cy="13" r="3.5" fill="#9988E8" opacity=".4"/><circle cx="28" cy="48" r="3" fill="rgba(153,136,232,.3)"/></svg>
+        <div style="font-family:'Noto Serif SC',serif;font-size:28px;font-weight:700;color:#9988E8;margin-bottom:10px">Git Worktree</div>
+        <div style="font-size:16px;line-height:1.8;color:rgba(232,245,255,.55)">一个人<br>当<span style="color:#9988E8">一支团队</span>用</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-step="1">
+    <div class="an" style="font-size:16px;letter-spacing:5px;color:#F07CB8;margin-bottom:12px;animation:fu 1.3s ease 0.3s forwards">CHAPTER 06 · 测试</div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:44px;line-height:1.2;text-align:center;margin-bottom:50px;animation:fu 1.3s ease 0.6s forwards">让 Agent 交出<span style="color:#FFB8D8">能跑的</span>代码</div>
+    <!-- Test-driven cycle -->
+    <div class="an" style="display:flex;align-items:center;justify-content:center;gap:24px;animation:fu 1.1s ease 1.0s forwards">
+      <div class="cycle-node" style="background:linear-gradient(135deg,rgba(91,202,232,.15),rgba(56,88,200,.1));border:2px solid rgba(91,202,232,.25)">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="margin-bottom:6px"><rect x="6" y="4" width="28" height="32" rx="3" fill="none" stroke="#5BCAE8" stroke-width="1.5"/><path d="M14 16 L18 20 L26 12" stroke="#5BCAE8" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="14" y1="26" x2="26" y2="26" stroke="rgba(91,202,232,.35)" stroke-width="1.5"/></svg>
+        <div style="font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;color:#5BCAE8">写测试</div>
+        <div style="font-size:13px;color:rgba(232,245,255,.35);margin-top:2px">先定义期望</div>
+      </div>
+      <div class="cycle-arrow">
+        <svg width="48" height="24" viewBox="0 0 48 24"><path d="M4 12 L36 12" stroke="rgba(91,202,232,.4)" stroke-width="2" stroke-linecap="round"/><path d="M32 6 L40 12 L32 18" stroke="#5BCAE8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="cycle-node" style="background:linear-gradient(135deg,rgba(240,124,184,.12),rgba(255,184,216,.08));border:2px solid rgba(240,124,184,.25)">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="margin-bottom:6px"><rect x="8" y="6" width="24" height="28" rx="2" fill="none" stroke="#FFB8D8" stroke-width="1.5"/><text x="20" y="24" text-anchor="middle" fill="#FFB8D8" font-size="14" font-family="monospace">{}</text></svg>
+        <div style="font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;color:#FFB8D8">Agent 写码</div>
+        <div style="font-size:13px;color:rgba(232,245,255,.35);margin-top:2px">交给 Agent</div>
+      </div>
+      <div class="cycle-arrow">
+        <svg width="48" height="24" viewBox="0 0 48 24"><path d="M4 12 L36 12" stroke="rgba(240,124,184,.4)" stroke-width="2" stroke-linecap="round"/><path d="M32 6 L40 12 L32 18" stroke="#FFB8D8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="cycle-node" style="background:linear-gradient(135deg,rgba(153,136,232,.12),rgba(91,202,232,.08));border:2px solid rgba(153,136,232,.25)">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="margin-bottom:6px"><circle cx="20" cy="20" r="14" fill="none" stroke="#9988E8" stroke-width="1.5"/><path d="M13 20 L18 25 L27 15" stroke="#9988E8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;color:#9988E8">验证</div>
+        <div style="font-size:13px;color:rgba(232,245,255,.35);margin-top:2px">跑测试通过</div>
+      </div>
+    </div>
+    <!-- Loop arrow back -->
+    <div class="an" style="margin-top:12px;animation:fu 0.9s ease 1.4s forwards">
+      <svg width="520" height="36" viewBox="0 0 520 36"><path d="M480 4 Q510 4 510 18 Q510 32 480 32 L40 32 Q10 32 10 18" stroke="rgba(91,202,232,.2)" stroke-width="1.5" fill="none" stroke-dasharray="4 4"/><path d="M14 24 L10 16 L6 24" stroke="rgba(91,202,232,.3)" stroke-width="1.5" fill="none" stroke-linecap="round"/><text x="260" y="29" text-anchor="middle" fill="rgba(91,202,232,.3)" font-size="11" font-family="'Noto Sans SC',sans-serif">不通过? 重来!</text></svg>
+    </div>
+    <div class="an" style="margin-top:36px;display:flex;align-items:center;gap:10px;animation:si 0.9s ease 1.8s forwards">
+      <div style="width:70px;height:1.5px;background:linear-gradient(90deg,transparent,rgba(240,124,184,.3))"></div>
+      <svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".5"/></svg>
+      <div style="width:70px;height:1.5px;background:linear-gradient(90deg,rgba(240,124,184,.3),transparent)"></div>
+    </div>
+    <div class="an" style="margin-top:28px;font-family:'Noto Serif SC',serif;font-size:30px;font-weight:700;color:rgba(232,245,255,.85);animation:fu 1.1s ease 1.9s forwards">这是你确保 Agent 产出质量的<span style="color:#FFB8D8;border-bottom:2px solid rgba(240,124,184,.3)">最后一道防线</span></div>
+    <div class="an" style="margin-top:18px;font-size:16px;color:rgba(255,184,216,.35);font-weight:300;animation:fu 0.9s ease 2.2s forwards">（测试是最后的倔强）</div>
+  </div>
+
+  <div data-step="2">
+    <!-- Extra floating stars for the finale -->
+    <div class="finale-star" style="top:8%;left:12%;animation-delay:0s"><svg width="16" height="16" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".3"/></svg></div>
+    <div class="finale-star" style="top:15%;left:78%;animation-delay:.6s"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".25"/></svg></div>
+    <div class="finale-star" style="top:72%;left:88%;animation-delay:1.2s"><svg width="14" height="14" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#9988E8" opacity=".3"/></svg></div>
+    <div class="finale-star" style="top:80%;left:10%;animation-delay:1.8s"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".2"/></svg></div>
+    <div class="finale-star" style="top:25%;left:5%;animation-delay:2.4s"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".2"/></svg></div>
+    <div class="finale-star" style="top:60%;left:92%;animation-delay:.3s"><svg width="18" height="18" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".15"/></svg></div>
+    <div class="finale-star" style="top:5%;left:50%;animation-delay:1.5s"><svg width="8" height="8" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#9988E8" opacity=".35"/></svg></div>
+    <div class="finale-star" style="top:90%;left:45%;animation-delay:2s"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#F07CB8" opacity=".2"/></svg></div>
+    <div class="finale-star" style="top:40%;left:96%;animation-delay:.9s"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".3"/></svg></div>
+    <div class="finale-star" style="top:55%;left:2%;animation-delay:2.7s"><svg width="14" height="14" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".18"/></svg></div>
+
+    <div class="an" style="font-size:14px;letter-spacing:4px;color:rgba(91,202,232,.5);margin-bottom:8px;animation:fu 0.9s ease 0.3s forwards">安全部分，下期补充</div>
+    <div class="an" style="font-size:18px;color:rgba(232,245,255,.4);line-height:1.8;max-width:750px;text-align:center;margin-bottom:40px;animation:fu 1.1s ease 0.8s forwards">Agent 能做的事越多<br>你的<span style="color:#FFB8D8">安全意识</span>就得越强</div>
+    <div class="an" style="display:flex;align-items:center;gap:10px;margin-bottom:32px;animation:si 0.9s ease 1.3s forwards">
+      <svg width="14" height="14" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".6"/></svg>
+      <div style="width:80px;height:1.5px;background:linear-gradient(90deg,#F07CB8,#FFB8D8)"></div>
+      <svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".5"/></svg>
+      <div style="width:80px;height:1.5px;background:linear-gradient(90deg,#FFB8D8,#5BCAE8)"></div>
+      <svg width="14" height="14" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".6"/></svg>
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:26px;color:rgba(232,245,255,.45);margin-bottom:12px;animation:fu 1.1s ease 1.6s forwards"><span style="color:#FFB8D8">Vibe Coding</span> 半年谈</div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:52px;line-height:1.3;text-align:center;max-width:1000px;animation:fu 1.4s ease 1.9s forwards;animation-name:fu,heroGlow;animation-duration:.8s,4s;animation-delay:1.2s,2s;animation-iteration-count:1,infinite;animation-fill-mode:forwards,forwards">从一个<span style="color:rgba(232,245,255,.4)">写代码</span>的人<br>变成一个<span style="background:linear-gradient(90deg,#FFB8D8,#5BCAE8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">指挥 Agent</span> 的人</div>
+    <div class="an" style="margin-top:44px;display:flex;align-items:center;gap:16px;animation:pi 1.1s ease 2.6s forwards">
+      <svg width="28" height="28" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8"/></svg>
+      <div style="font-family:'Noto Serif SC',serif;font-size:36px;font-weight:700;color:#FFB8D8;letter-spacing:4px">下期见!</div>
+      <svg width="28" height="28" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8"/></svg>
+    </div>
+    <div class="an" style="margin-top:16px;font-size:16px;color:rgba(255,184,216,.35);font-weight:300;animation:fu 0.9s ease 3.0s forwards">（下期见呀 &#9825;）</div>
+  </div>
+
+  <div class="progress-bar" id="prog"></div>
+  <div class="indicator" id="ind">1 / 3</div>
+  <div class="hint">点击继续 →</div>
+</div>
+<script>
+(function(){
+  var pres=document.getElementById('pres');
+  var total=3;var cur=0;
+  var prog=document.getElementById('prog');
+  var ind=document.getElementById('ind');
+  var templates=[];
+  for(var i=0;i<total;i++){var el=pres.querySelector('[data-step="'+i+'"]');if(el)templates.push(el.outerHTML)}
+  function render(){
+    var all=pres.querySelectorAll('[data-step]');for(var i=0;i<all.length;i++)all[i].remove();
+    var w=document.createElement('div');w.innerHTML=templates[cur];
+    var fresh=w.firstElementChild;fresh.classList.add('active');
+    pres.insertBefore(fresh,prog);
+    prog.style.width=((cur+1)/total*100)+'%';
+    ind.textContent=(cur+1)+' / '+total;
+  }
+  function advance(){if(cur<total-1){cur++;render()}}
+  function retreat(){if(cur>0){cur--;render()}}
+  pres.addEventListener('click',advance);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' ')advance();
+    if(e.key==='ArrowLeft')retreat();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

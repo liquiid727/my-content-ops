@@ -1,0 +1,22 @@
+{
+  "name": "content-ops-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:vault": "npm --prefix vault-server run dev",
+    "build": "npm --prefix vault-server run build && npm run creator-studio:build",
+    "test": "npm run creator-studio:test",
+    "install:all": "npm --prefix vault-server install && npm --prefix creator-studio install",
+    "creator-studio:install": "npm --prefix creator-studio install",
+    "creator-studio:dev": "npm --prefix creator-studio run dev",
+    "creator-studio:dev:web": "npm --prefix creator-studio run dev:web",
+    "creator-studio:dev:server": "npm --prefix creator-studio run dev:server",
+    "creator-studio:build": "npm --prefix creator-studio run build",
+    "creator-studio:start": "npm --prefix creator-studio run start",
+    "creator-studio:typecheck": "npm --prefix creator-studio run typecheck",
+    "creator-studio:lint": "npm --prefix creator-studio run lint",
+    "creator-studio:test": "npm --prefix creator-studio run test",
+    "creator-studio:test:foundation": "npm --prefix creator-studio run test:foundation"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "march-7th",
+  "name": "March 7th",
+  "nameZh": "三月七",
+  "description": "Deep indigo night with pink-magenta accent and star-dust glow. Dreamy, elegant, slightly mysterious.",
+  "descriptionZh": "深邃靛紫夜色底 + 粉紫星光点缀，三月七美学——梦幻、细腻、有一点神秘感。",
+  "mood": [
+    "dark",
+    "dreamy",
+    "elegant",
+    "purple",
+    "starlight"
+  ],
+  "bestFor": [
+    "科技叙事",
+    "个人 vlog / 回顾",
+    "AI / 工具评测",
+    "开发者 / 创作者向内容"
+  ],
+  "preview": {
+    "shell": "#0f0a1e",
+    "surface": "#1c1432",
+    "text": "#f0ecff",
+    "accent": "#e879f9"
+  }
+}

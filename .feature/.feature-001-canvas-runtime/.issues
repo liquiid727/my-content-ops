@@ -1,0 +1,246 @@
+# Canvas Runtime Issues
+
+> 来源：`.prd` + `.spec/01-system.md` `.spec/02-data-model.md` `.spec/03-api.md` `.spec/04-runtime.md` `.spec/05-canvas-ui.md`
+> 生成日期：2026-08-10
+> 依赖 Personal Style 契约：`.feature-002-creator-profile/.spec`（先于/并行于 #1 评审）
+
+## Issue #1: 共享契约与数据模型（Canvas Runtime 底座）
+**Status:** pending
+**Type:** backend
+**Priority:** high
+**Dependencies:** None
+
+### Description
+在 `packages/contracts` 新增 `artifacts.ts` / `canvas.ts` / `operations.ts` / `runs.ts` 契约（Artifact/ArtifactVersion/CanvasNode/Edge/Graph/OperationDefinition/Run 类型 + zod schema）；在 `apps/server/src/db/schema.ts` 新增 `artifacts` / `artifact_versions` / `canvas_nodes` / `edges` / `runs` 表，`projects` 表新增 `graph_id` / `context_id` / `personal_style_id` 可空列；写迁移。Artifact 用 `kind + role`，媒体走 `contentRef → assets`。
+
+### Acceptance Criteria
+- [ ] `packages/contracts` 导出上述类型与 schema，`index.ts` 汇总导出
+- [ ] 五张新表 + project 三列迁移可运行，Drizzle schema 类型推断正确
+- [ ] `runs.task_id` unique；`artifacts`/`edges` 建 project_id 索引
+- [ ] 既有 Foundation 表/契约不破坏（`test:foundation` 通过）
+- [ ] Typecheck/lint 通过
+
+### SPEC Reference
+- [02-data-model §2-§6](./.spec/02-data-model.md) ｜ [01-system §2.2](./.spec/01-system.md)
+
+## Issue #2: 后端 Artifact 与 Canvas CRUD API
+**Status:** pending
+**Type:** backend
+**Priority:** high
+**Dependencies:** #1
+
+### Description
+实现 `artifacts` / `canvas_nodes` / `edges` 的 routes + service + repository：graph 读写、节点创建/移动/删除、边创建/删除、artifact 摘要/版本列表/版本详情/恢复/手动编辑。删除语义：删 CanvasNode 默认 artifact 变 orphan；用户显式「同时删除内容」才软删 artifact。
+
+### Acceptance Criteria
+- [ ] `GET /projects/:id/graph`、`POST /projects/:id/nodes`、`PATCH/DELETE /nodes/:id`、`POST/DELETE /edges` 可用
+- [ ] `GET /artifacts/:id`、`GET /artifacts/:id/versions`、`GET /artifact-versions/:id`、`POST /artifacts/:id/versions/restore`、`PATCH /artifacts/:id` 可用
+- [ ] 手动编辑产生 source=user 新版本并更新 current_version_id
+- [ ] 错误：`ARTIFACT_NOT_FOUND` / `NODE_NOT_FOUND` / `EDGE_NOT_FOUND` / `REVISION_CONFLICT`
+- [ ] 单元/集成测试覆盖 CRUD + 删除语义；Typecheck/lint 通过
+
+### SPEC Reference
+- [03-api §2.1-§2.2 §5](./.spec/03-api.md) ｜ [02-data-model §3-§7](./.spec/02-data-model.md)
+
+## Issue #3: Operation Registry 与 Run 编排（复用 Task Runtime）
+**Status:** pending
+**Type:** backend
+**Priority:** high
+**Dependencies:** #1, #2
+
+### Description
+实现 `operations/registry`（`getAvailableOperations` 按 kind/role/输入过滤）与 Run 编排：创建 Run = 建 `runs` + `tasks(type='operation.<opId>')`，executor 在 Task Runner 内执行，回写 `runs` 输出并广播 `run.*` / `artifact.*` / `node.*` / `edge.*` SSE 事件。支持幂等（idempotencyKey）、取消（abort signal）、重试（新 Run）。MVP Operation 定义：`generate_outline` / `generate_script` / `polish` / `edit` / `generate_cover` / `generate_voice` / `publish`（骨架）。
+
+### Acceptance Criteria
+- [ ] Registry 按 artifact kind/role + 输入满足度返回 OperationDefinition，无写死分支
+- [ ] POST `/operations/:opId/runs` 创建 Run + Task，202 返回 `{runId, taskId, status}`
+- [ ] GET `/runs/:id`、POST `/runs/:id/cancel`、POST `/runs/:id/retry` 可用（retry 新建 Run 不覆盖旧 Run）
+- [ ] 幂等：同 idempotencyKey 重复创建返回同一 Run
+- [ ] SSE 事件 `run.* / artifact.* / node.* / edge.* / stream.reset` 广播正确
+- [ ] 单元/集成测试覆盖行为四类（create/transform/branch/action）与幂等/取消/重试；Typecheck/lint 通过
+
+### SPEC Reference
+- [04-runtime §2-§4 §8](./.spec/04-runtime.md) ｜ [03-api §2.3 §4 §5](./.spec/03-api.md)
+
+## Issue #4: Provider 能力扩展与真实文本 LLM
+**Status:** pending
+**Type:** backend
+**Priority:** high
+**Dependencies:** #3
+
+### Description
+扩展 `GenerationProvider` 能力集（`text_generation` / `image_generation` / `audio_generation` / `video_generation`），Registry 支持 `require(capability)`。接入真实文本 LLM Provider（经 `provider_configs` + `secret_store` 配置，模型 ID 属配置不硬编码）；Seed Provider 保留为无配置 fallback。`generations` 表记录 provider/model/usage/latency。
+
+### Acceptance Criteria
+- [ ] 能力集与 `require(capability)` 就位；executor 经 `ProviderHandle` 调用
+- [ ] 真实文本 provider（LLM）可经配置启用；无 key 时 Seed fallback 仍可用
+- [ ] 生成记录写入 `generations`，含 provider/model/usage/latency
+- [ ] 单元测试（mock HTTP 层）+ Seed 回归；Typecheck/lint 通过
+
+### SPEC Reference
+- [04-runtime §5](./.spec/04-runtime.md)
+
+## Issue #5: Context Assembler（含 Personal Style 注入）
+**Status:** pending
+**Type:** backend
+**Priority:** high
+**Dependencies:** #1, #4（契约依赖 creator-profile .spec 评审）
+
+### Description
+实现 `context/assembler.ts`：分层拼装 System Capability Context + Personal Style + Project Context + Connected Artifact Inputs + Reference Assets + Operation Config + 用户临时指令。Personal Style 经 `projects.personal_style_id → creator_profiles.profile_json + injection_json → renderContext()` 注入（调用 creator-profile 的渲染契约）。`GET /projects/:id/context?scope=X` 返回分层文本。
+
+### Acceptance Criteria
+- [ ] `GET /projects/:id/context` 返回 `{ layers, text }`，分层顺序固定
+- [ ] Personal Style 开关（injection.enabled / sections）生效：关掉 Voice 则注入文本不含 Voice
+- [ ] 上游 connected inputs（edge 输入）注入正确
+- [ ] 单元测试覆盖分层 + 开关；Typecheck/lint 通过
+
+### SPEC Reference
+- [04-runtime §6](./.spec/04-runtime.md) ｜ `.feature-002-creator-profile/.spec §3.4 §5.1`
+
+## Issue #6: 前端 Canvas Shell（@xyflow/react）
+**Status:** pending
+**Type:** frontend
+**Priority:** high
+**Dependencies:** #1, #2
+
+### Description
+搭建 `apps/web/src/canvas/`：ReactFlowProvider + `<ReactFlow>` 壳、六个 Node Family Renderer（Text/Image/Audio/Video/Collection/Action）、LOD（zoom 分级）、Pan/Zoom/Selection/Drag/MiniMap/Toolbar、空状态。视觉用语义 token，暗色低饱和。CanvasStore 管理 viewport/positions/selection；移动结束节流写回服务端。
+
+### Acceptance Criteria
+- [ ] 画布可 Pan/Zoom、节点可拖动/多选/选中，MiniMap 与 Toolbar 可用
+- [ ] 六个 Renderer 在 LOD 三档下正确渲染，无 layout jump
+- [ ] 空状态引导 + 双击创建 Node 入口
+- [ ] CanvasStore 与 React Flow nodes/edges 同步，移动写回服务端
+- [ ] 浏览器验证（`run` skill）：创建/拖动/缩放/空状态；Typecheck/lint 通过
+
+### SPEC Reference
+- [05-canvas-ui §2-§4 §6 §8](./.spec/05-canvas-ui.md)
+
+## Issue #7: 前端 Artifact / Run Stores 与 SSE
+**Status:** pending
+**Type:** frontend
+**Priority:** high
+**Dependencies:** #3, #6
+
+### Description
+实现 `artifacts/`（api client + summary cache）、`runtime/`（run-store + SSE 订阅 + 事件归并/节流）。Node Renderer 只订阅 node layout + artifact summary + active run summary + selection；Run 流式更新 Inspector，Canvas 节流刷新（500~2000ms）。切 Project 保存/恢复 viewport/selection。
+
+### Acceptance Criteria
+- [ ] ArtifactStore 摘要/当前版本/元数据缓存与失效正确
+- [ ] RunStore 订阅 SSE，run.*/artifact.*/node.*/edge.* 事件归并、去重、节流生效
+- [ ] 文本生成不按 token 刷 Node；完成后一次刷新 Preview
+- [ ] 浏览器验证：执行 Run 后状态流转与画布更新；Typecheck/lint 通过
+
+### SPEC Reference
+- [05-canvas-ui §6-§7](./.spec/05-canvas-ui.md) ｜ [03-api §4](./.spec/03-api.md)
+
+## Issue #8: Inspector（Registry 驱动 + 流式 + 版本历史 + Collection）
+**Status:** pending
+**Type:** frontend
+**Priority:** high
+**Dependencies:** #6, #7
+
+### Description
+实现 `inspector/`：固定布局（Header/Tabs/Input Context/Preview/Config/Actions/Results/Version）。操作区由 `GET /artifacts/:id/operations` 驱动（按 group/placement/priority 分组）。支持 Run 流式、失败态（重试/改参/换模型/取消）、版本历史与恢复、Collection 选择/对比/再生成/Promote。手动编辑经 revisionedPatch 产生新版本。
+
+### Acceptance Criteria
+- [ ] 单击节点打开 Inspector，操作由 Registry 自动生成（无写死按钮）
+- [ ] 失败显示 human-readable + provider message 折叠 + 重试/取消
+- [ ] Version History 可查看与恢复（restore 不删历史链）
+- [ ] Collection 支持 Select/Compare/Regenerate/Promote/Delete
+- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+
+### SPEC Reference
+- [05-canvas-ui §5](./.spec/05-canvas-ui.md) ｜ [03-api §2.3 §3](./.spec/03-api.md)
+
+## Issue #9: 第一条真实链路 Topic → Outline → Script
+**Status:** pending
+**Type:** fullstack
+**Priority:** high
+**Dependencies:** #5, #8
+
+### Description
+打通端到端：创建 Topic Artifact → Inspector 执行 `generate_outline`（真实文本 LLM）→ 生成 Outline Artifact + CanvasNode + Edge → 执行 `generate_script` → Script。验证 Run 全状态（queued/running/completed/failed）、上下文注入（含 Personal Style）、结果落库与画布更新。
+
+### Acceptance Criteria
+- [ ] 从空 Project 一路走到 Script 节点，链路全部可用
+- [ ] Run loading / complete / failed / retry / version 均验证通过
+- [ ] `GET /projects/:id/context` 注入包含 Personal Style 与上游内容
+- [ ] 浏览器验证全链路（`run` skill）；`test:foundation` + 新增测试通过；Typecheck/lint 通过
+
+### SPEC Reference
+- [04-runtime §3 §4 §6](./.spec/04-runtime.md) ｜ [03-api §2.3](./.spec/03-api.md)
+
+## Issue #10: 媒体链路 Script → Cover（图片）+ Voice（TTS）
+**Status:** pending
+**Type:** fullstack
+**Priority:** medium
+**Dependencies:** #9, #4（图片/TTS provider）
+
+### Description
+接入图片生成（Script→Cover，Collection 多候选）与 TTS（Script→Voice）。Image 节点缩略图 lazy、Audio 节点波形 + 点击播放 lazy mount。媒体走 `contentRef → assets`。
+
+### Acceptance Criteria
+- [ ] `generate_cover` 产生 Image Collection，可 Select/Promote；选中写入 current_version
+- [ ] `generate_voice` 产生 Audio 节点，点击播放 lazy 加载
+- [ ] 媒体文件落 `assets`/file store，画布不预载原图/音频
+- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+
+### SPEC Reference
+- [04-runtime §5](./.spec/04-runtime.md) ｜ [05-canvas-ui §3 §7](./.spec/05-canvas-ui.md)
+
+## Issue #11: Action 节点与 Publish 骨架
+**Status:** pending
+**Type:** fullstack
+**Priority:** medium
+**Dependencies:** #9
+
+### Description
+实现 `action/publish` Operation（骨架）：ActionNode 表现副作用与状态；Publish 全局入口固定在右上角 Header；`preview` 可看，`publish` 标记状态（MVP 不接真实平台）。
+
+### Acceptance Criteria
+- [ ] ActionNode 渲染 + 状态展示
+- [ ] Header 右侧 Publish 入口存在并可触发 preview/骨架 publish
+- [ ] publish Run 按 `action` behavior 执行，不产出内容 Artifact
+- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+
+### SPEC Reference
+- [04-runtime §2 §3](./.spec/04-runtime.md) ｜ [05-canvas-ui §1 §3](./.spec/05-canvas-ui.md)
+
+## Issue #12: 性能（culling / LOD / 缓存 / project 卸载 + benchmark）
+**Status:** pending
+**Type:** frontend
+**Priority:** medium
+**Dependencies:** #6, #7, #10
+
+### Description
+开启视口剔除（React Flow `onlyRenderVisibleElements`）、LOD 细化、Project Graph/Artifact Summary/Thumbnail 缓存、切 Project 不保留多 Canvas DOM。写 100/300/500/1000 node benchmark 脚本并达标（100 首屏 <1.5s；300 流畅；500 culling+LOD 可用）。
+
+### Acceptance Criteria
+- [ ] 视口外节点轻量 placeholder，不挂重组件/不加载原媒体
+- [ ] LOD 三档切换无 layout jump；节点中心一致
+- [ ] 切 Project 只保留一个重 Canvas，viewpoint/selection 恢复
+- [ ] benchmark 脚本可跑，300+ 节点操作流畅
+- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+
+### SPEC Reference
+- [01-system §3](./.spec/01-system.md) ｜ [05-canvas-ui §3 §7](./.spec/05-canvas-ui.md)
+
+## Issue #13: Hardening 与验收退出门禁
+**Status:** pending
+**Type:** infra
+**Priority:** medium
+**Dependencies:** #1-#12
+
+### Description
+对照 `.prd` 的 MVP Definition of Done（来源 §59）逐条验收；补齐 loading/empty/error 三态、无障碍（对比/选中非纯色/焦点/aria-label）、键盘交互；跑全量 `test:foundation` + 新增测试 + Node LTS 门禁。
+
+### Acceptance Criteria
+- [ ] `.prd` MVP Definition of Done 全部勾选
+- [ ] 主要状态均有 loading / empty / error
+- [ ] 无障碍与键盘交互（来源 §52-§53）满足
+- [ ] `npm --prefix creator-studio run test:foundation` 全绿；typecheck/lint 通过
+
+### SPEC Reference
+- [.prd §8](./.prd) ｜ [01-system §3](./.spec/01-system.md) ｜ [05-canvas-ui §9](./.spec/05-canvas-ui.md)

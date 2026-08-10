@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>Chapter 01 · 开场：半年前 vs 半年后</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0E1438;color:#E8F5FF;font-family:'Noto Sans SC',sans-serif;overflow:hidden;cursor:pointer;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 55% at 55% 60%,rgba(240,124,184,.14) 0%,transparent 65%),radial-gradient(ellipse 45% 40% at 15% 75%,rgba(56,88,200,.25) 0%,transparent 55%),radial-gradient(ellipse 30% 25% at 85% 20%,rgba(255,184,216,.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden}
+[data-step]{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;padding:80px 160px;z-index:1}
+[data-step].active{display:flex}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes si{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+@keyframes fl{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fr{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pi{from{opacity:0;transform:scale(.3) rotate(-30deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes drift{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(8deg)}100%{transform:translateY(0) rotate(0deg)}}
+.an{opacity:0;animation-fill-mode:forwards}
+.progress-bar{position:absolute;bottom:0;left:0;height:4px;background:linear-gradient(90deg,#F07CB8,#FFB8D8,#5BCAE8);transition:width .8s ease;z-index:2}
+.indicator{position:absolute;bottom:20px;right:40px;font-size:14px;color:rgba(240,124,184,.5);letter-spacing:2px;z-index:2;font-weight:300}
+.hint{position:absolute;bottom:20px;left:40px;font-size:14px;color:rgba(255,184,216,.25);letter-spacing:1px;z-index:2}
+.ice{position:absolute;width:10px;height:10px;border:1.5px solid rgba(91,202,232,.4);transform:rotate(45deg);z-index:0;animation:drift 11.5s ease infinite}
+.sparkle{position:absolute;z-index:0}
+.sparkle::before,.sparkle::after{content:'';position:absolute;background:#E8F5FF;border-radius:1px}
+.sparkle::before{width:2px;height:12px;left:5px;top:0}
+.sparkle::after{width:12px;height:2px;left:0;top:5px}
+.petal{position:absolute;width:18px;height:22px;border-radius:50% 50% 50% 0;z-index:0;animation:drift 14.4s ease infinite}
+.ribbon{position:absolute;z-index:0;opacity:.12}
+</style>
+</head>
+<body>
+<div class="slide" id="pres">
+  <div class="ice" style="top:10%;left:8%;animation-delay:0s"></div>
+  <div class="ice" style="top:22%;left:88%;width:7px;height:7px;border-color:rgba(91,202,232,.25);animation-delay:1.2s"></div>
+  <div class="ice" style="top:75%;left:6%;width:6px;height:6px;border-color:rgba(91,202,232,.3);animation-delay:2.1s"></div>
+  <div class="ice" style="top:65%;left:93%;animation-delay:.7s"></div>
+  <div class="sparkle" style="top:15%;left:25%;opacity:.4;transform:scale(.7);animation:twinkle 7.2s ease infinite"></div>
+  <div class="sparkle" style="top:8%;left:72%;opacity:.3;transform:scale(.6);animation:twinkle 8.6s ease infinite;animation-delay:.8s"></div>
+  <div class="sparkle" style="top:78%;left:82%;opacity:.35;transform:scale(.6);animation:twinkle 8.1s ease infinite;animation-delay:1.5s"></div>
+  <div class="sparkle" style="top:60%;left:3%;opacity:.25;transform:scale(.5);animation:twinkle 9.2s ease infinite;animation-delay:2s"></div>
+  <div class="petal" style="top:18%;left:92%;background:rgba(240,124,184,.08);transform:rotate(-20deg);animation-delay:.5s"></div>
+  <div class="petal" style="top:70%;left:4%;background:rgba(255,184,216,.06);transform:rotate(30deg);width:14px;height:18px;animation-delay:1.8s"></div>
+  <div class="petal" style="top:5%;left:40%;background:rgba(240,124,184,.05);transform:rotate(60deg);width:12px;height:16px;animation-delay:2.5s"></div>
+  <svg class="ribbon" style="top:3%;right:5%;width:70px;height:46px" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#F07CB8"/></svg>
+  <svg class="ribbon" style="bottom:8%;left:3%;width:46px;height:30px;opacity:.08" viewBox="0 0 60 40"><path d="M30 8 Q20 0 10 8 Q0 16 10 20 L30 32 L50 20 Q60 16 50 8 Q40 0 30 8Z" fill="#FFB8D8"/></svg>
+
+  <div data-step="0">
+    <div class="an" style="font-size:16px;letter-spacing:5px;color:#F07CB8;margin-bottom:24px;animation:fu 1.3s ease 0.3s forwards">CHAPTER 01 · 开场</div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-weight:900;font-size:68px;line-height:1.15;text-align:center;margin-bottom:24px;animation:fu 1.3s ease 0.8s forwards"><span style="color:#FFB8D8">Vibe Coding</span> 半年谈</div>
+    <div class="an" style="font-size:26px;font-weight:300;color:rgba(232,245,255,.45);text-align:center;line-height:1.6;animation:fu 1.3s ease 1.3s forwards">从<span style="color:#FFB8D8;font-weight:400">「氛围编程」</span>到<span style="color:#5BCAE8;font-weight:400">「指挥作战」</span></div>
+    <div class="an" style="display:flex;align-items:center;gap:10px;margin:40px 0 36px;animation:si 0.9s ease 1.8s forwards">
+      <svg width="14" height="14" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".6"/></svg>
+      <div style="width:70px;height:1.5px;background:linear-gradient(90deg,#F07CB8,#FFB8D8)"></div>
+      <svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8" opacity=".5"/></svg>
+      <div style="width:70px;height:1.5px;background:linear-gradient(90deg,#FFB8D8,#5BCAE8)"></div>
+      <svg width="14" height="14" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#5BCAE8" opacity=".6"/></svg>
+    </div>
+    <div class="an" style="font-size:20px;color:rgba(255,184,216,.4);font-weight:300;max-width:800px;text-align:center;line-height:1.9;animation:fu 1.3s ease 2.1s forwards">半年前的我，还在对着 AI 说「帮我写个登录」<br>然后双手合十，祈祷它别翻车 ><</div>
+  </div>
+
+  <div data-step="1">
+    <div style="display:flex;align-items:center;justify-content:center;gap:60px;width:100%">
+      <div class="an" style="flex:1;max-width:520px;padding:56px 48px;border-radius:16px;background:rgba(56,88,200,.12);border:1px solid rgba(91,202,232,.12);animation:fl 1.1s ease 0.3s forwards;position:relative">
+        <div style="position:absolute;top:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,rgba(91,202,232,.3),transparent);border-radius:1px"></div>
+        <div style="font-size:14px;letter-spacing:3px;color:rgba(91,202,232,.5);margin-bottom:14px">半年前</div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:40px;font-weight:700;color:rgba(232,245,255,.35);margin-bottom:14px">氛围编程</div>
+        <div style="font-size:18px;line-height:1.8;color:rgba(232,245,255,.22)">给 AI 一句模糊的话<br>闭眼等结果<br>心里默念「差不多得了吧」</div>
+        <div style="margin-top:16px;font-size:15px;color:rgba(240,124,184,.35)">（祈祷.jpg）</div>
+      </div>
+      <div class="an" style="display:flex;flex-direction:column;align-items:center;gap:8px;animation:pi 0.9s ease 1.0s forwards">
+        <svg width="36" height="36" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8"/></svg>
+        <div style="font-size:14px;color:#F07CB8;letter-spacing:2px">蜕变!</div>
+      </div>
+      <div class="an" style="flex:1;max-width:520px;padding:56px 48px;border-radius:16px;background:linear-gradient(150deg,rgba(240,124,184,.1),rgba(255,184,216,.06));border:1px solid rgba(240,124,184,.18);animation:fr 1.1s ease 0.6s forwards;position:relative">
+        <div style="position:absolute;top:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,rgba(240,124,184,.4),transparent);border-radius:1px"></div>
+        <div style="font-size:14px;letter-spacing:3px;color:#F07CB8;margin-bottom:14px">半年后</div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:40px;font-weight:700;color:#E8F5FF;margin-bottom:14px">指挥作战</div>
+        <div style="font-size:18px;line-height:1.8;color:rgba(232,245,255,.45)">手下有一批 Agent 小兵<br>发号施令、协同打仗<br>一个人就是一支团队!</div>
+        <div style="margin-top:16px;font-size:15px;color:rgba(91,202,232,.5)">（将军三月七上线）</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-step="2">
+    <div class="an" style="display:inline-flex;align-items:center;gap:10px;padding:8px 24px;border:1px solid rgba(240,124,184,.35);border-radius:100px;font-size:14px;letter-spacing:3px;color:#FFB8D8;margin-bottom:48px;animation:fu 0.9s ease 0.3s forwards">
+      <svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5Z" fill="#FFB8D8"/></svg>
+      实战笔记
+    </div>
+    <div class="an" style="font-family:'Noto Serif SC',serif;font-size:48px;font-weight:700;line-height:1.55;text-align:center;max-width:1000px;animation:fu 1.3s ease 0.8s forwards">被 Claude Code、Codex 们<br><span style="color:#FFB8D8;border-bottom:2px solid rgba(240,124,184,.3)">反复拍在沙滩上</span>之后<br>爬起来总结的经验</div>
+    <div class="an" style="margin-top:48px;font-size:20px;color:rgba(255,184,216,.35);font-weight:300;animation:fu 0.9s ease 1.4s forwards">希望能帮到同样在水里扑腾的你呀 ♡</div>
+  </div>
+
+  <div class="progress-bar" id="prog"></div>
+  <div class="indicator" id="ind">1 / 3</div>
+  <div class="hint">点击继续 →</div>
+</div>
+<script>
+(function(){
+  var pres=document.getElementById('pres');
+  var total=3;var cur=0;
+  var prog=document.getElementById('prog');
+  var ind=document.getElementById('ind');
+  var templates=[];
+  for(var i=0;i<total;i++){var el=pres.querySelector('[data-step="'+i+'"]');if(el)templates.push(el.outerHTML)}
+  function render(){
+    var all=pres.querySelectorAll('[data-step]');for(var i=0;i<all.length;i++)all[i].remove();
+    var w=document.createElement('div');w.innerHTML=templates[cur];
+    var fresh=w.firstElementChild;fresh.classList.add('active');
+    pres.insertBefore(fresh,prog);
+    prog.style.width=((cur+1)/total*100)+'%';
+    ind.textContent=(cur+1)+' / '+total;
+  }
+  function advance(){if(cur<total-1){cur++;render()}}
+  function retreat(){if(cur>0){cur--;render()}}
+  pres.addEventListener('click',advance);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' ')advance();
+    if(e.key==='ArrowLeft')retreat();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

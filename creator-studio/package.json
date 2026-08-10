@@ -1,0 +1,61 @@
+{
+  "name": "creator-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "packages/contracts",
+    "apps/web",
+    "apps/server"
+  ],
+  "scripts": {
+    "predev": "npm run build --workspace @creator-studio/contracts",
+    "dev": "concurrently --kill-others --success first --names web,server --prefix-colors magenta,cyan \"npm run dev --workspace @creator-studio/web\" \"npm run dev --workspace @creator-studio/server\"",
+    "dev:web": "npm run dev --workspace @creator-studio/web",
+    "dev:server": "npm run dev --workspace @creator-studio/server",
+    "build": "npm run build --workspace @creator-studio/contracts && npm run build --workspace @creator-studio/web && npm run build --workspace @creator-studio/server",
+    "start": "npm run start --workspace @creator-studio/server",
+    "pretypecheck": "npm run build --workspace @creator-studio/contracts",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint . --max-warnings 0",
+    "pretest": "npm run build --workspace @creator-studio/contracts",
+    "test": "vitest run",
+    "test:unit": "vitest run apps/web",
+    "test:contract": "vitest run packages/contracts",
+    "test:integration": "vitest run apps/server",
+    "test:e2e": "npm run build && npm run test:e2e:built",
+    "test:e2e:built": "playwright test",
+    "test:runtime": "npm run build && npm run test:runtime:built",
+    "test:runtime:built": "node scripts/foundation-runtime-check.mjs",
+    "test:performance": "npm run build && npm run test:performance:built",
+    "test:performance:built": "node scripts/foundation-performance.mjs",
+    "test:boundary": "node scripts/foundation-boundary-check.mjs",
+    "test:foundation": "npm run typecheck && npm run lint && npm run test:unit && npm run test:contract && npm run test:integration && npm run test:boundary && npm run build && npm run test:e2e:built && npm run test:runtime:built && npm run test:performance:built"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^16.5.0",
+    "jsdom": "^27.2.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1",
+    "vite": "^7.2.7",
+    "vitest": "^4.0.15"
+  }
+}

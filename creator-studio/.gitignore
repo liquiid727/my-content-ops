@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+apps/*/dist/
+packages/*/dist/
+data/*
+!data/.gitignore
+*.tsbuildinfo
+playwright-report/
+test-results/

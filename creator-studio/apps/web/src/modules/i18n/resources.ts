@@ -1,0 +1,154 @@
+export const zhCN = {
+  common: {
+    brand: 'Creator Studio', localWorkspace: '本地工作区', foundation: '基础阶段', interfaceOnline: '界面系统已就绪',
+    currentContext: '当前位置', notifications: '通知', openNavigation: '打开导航', closeNavigation: '关闭导航',
+    workspaceSidebar: '工作区侧栏', primaryNavigation: '主导航', closeDialog: '关闭对话框', dismissNotification: '关闭通知',
+    retry: '重试', reload: '重新加载', reconnect: '重新连接', save: '保存', saving: '保存中…', cancel: '取消',
+    loadMore: '加载更多', loadingMore: '加载中…', viewAll: '查看全部', optional: '可选', bytes: '字节',
+    revision: '版本 {{revision}}', request: '请求 {{requestId}}', loadingPage: '正在加载页面', loadingRoute: '正在加载路由',
+  },
+  navigation: {
+    dashboard: '概览', projects: '项目', assets: '素材', tasks: '任务', settings: '设置', projectWorkspace: '项目工作区', unknown: '未知页面',
+  },
+  theme: {
+    label: '主题', dark: '深色', light: '浅色', system: '跟随系统', localApplied: '主题已在本地应用', syncFailed: 'CreatorProfile 同步失败；本地选择已保留，可稍后重试。',
+  },
+  language: {
+    label: '语言', chinese: '中文', english: 'English', localApplied: '语言已在本地应用', syncFailed: 'CreatorProfile 同步失败；本地选择已保留，可稍后重试。',
+  },
+  dashboard: {
+    eyebrow: '基础阶段 / 概览', title: '清晰掌控你的创作工作台。', description: '从一个清晰项目开始，在同一处跟进素材、后台任务和本地连接。', startProject: '开始一个项目',
+    currentProjects: '当前项目', activeTasks: '活动任务', workspaceStatus: '工作区状态', localReady: '本地服务就绪', projectsSection: '项目', recentProjects: '最近项目',
+    loadingProjects: '正在加载最近项目', createFirst: '创建第一个项目', emptyDesk: '案头还是空的', emptyProjectsDescription: '标题、素材与生成任务都会围绕项目组织。',
+    missingBrief: '尚未填写项目说明。', openOverview: '打开概览', runtime: '运行状态', recentTasks: '最近任务', taskLedger: '实时账本', loadingTasks: '正在加载最近任务',
+    noTasks: '还没有任务', noTasksDescription: '生成和连接检查任务会在这里显示进度。', previewNotification: '预览通知', workspaceReady: '工作区已就绪', workspaceReadyDescription: '项目、素材与任务数据区域已连接本地服务。',
+  },
+  projects: {
+    eyebrow: '工作区 / 项目', title: '项目', description: '把一个内容方向留在案头，然后从同一处继续写、生成和整理。', newProject: '新建项目', status: '状态', statusFilter: '按状态筛选项目',
+    current: '当前项目', draft: '草稿', active: '进行中', archived: '已归档', updatedMostRecently: '按最近更新时间排序', retryLoad: '重试', createFirst: '创建第一个项目',
+    archivedEmptyDescription: '归档项目会保留在这里，需要时仍可查看。', emptyDescription: '从标题和内容类型开始，之后的素材与任务都会归属于这个项目。', noArchived: '还没有归档项目', emptyDesk: '案头还是空的',
+    missingBrief: '尚未填写项目说明。', updatedAt: '更新于 {{date}}', loading: '正在整理项目…', createDialogTitle: '新建项目', createDialogDescription: '先记录清晰的创作意图。创建后会直接进入项目概览。',
+    form: {
+      title: '项目标题', titlePlaceholder: '例如：普通人如何搭建第一个 AI Agent', contentType: '内容类型', general: '通用内容', shortVideo: '短视频', longVideo: '长视频', article: '文章', podcast: '播客',
+      status: '状态', brief: '项目说明', briefPlaceholder: '写下受众、目标和交付形式。', targetPlatform: '目标平台（可选）', platformPlaceholder: '例如：抖音', targetDuration: '目标时长（毫秒，可选）',
+      invalid: '请检查项目内容。', saveFailed: '保存失败，请重试。', saveChanges: '保存修改', create: '创建项目',
+    },
+  },
+  projectDetail: {
+    eyebrow: '项目 / 详情', overview: '概览', ideas: '创意', topics: '选题', scripts: '脚本', rhythm: '节奏', shots: '镜头', assets: '素材', tasks: '任务', projectSections: '项目分区',
+    overviewDescription: '项目身份、创作阶段与最近活动。', routeDescription: '项目“{{projectId}}”的路由契约。', loading: '正在打开项目案卷…', loadFailed: '项目加载失败。',
+    updated: '项目已更新', conflict: '项目已在其他位置更新，最新版本已载入。请重新确认后保存。', archiveConfirm: '归档后项目会从默认列表移除，但数据仍会保留。继续吗？', archived: '项目已归档', archivedDescription: '可在项目的“已归档”筛选中查看。',
+    archiveConflict: '归档前项目已被更新。已载入最新版本，请再次确认。', archiveFailed: '归档失败，请重试。', noDescription: '这个项目还没有说明，可以通过编辑补上受众与目标。', edit: '编辑', archive: '归档',
+    currentStage: '当前阶段', pipeline: '创作流水线', nextStep: '下一步：{{label}}', generateTopics: '生成选题方向', noActiveTasks: '没有活动任务', noActiveTasksDescription: '这个项目目前没有运行中的任务。后续生成操作会在这里显示进度。',
+    activeTasks: '活动任务', noAssets: '还没有素材', noAssetsDescription: '上传或生成素材后，最近内容会出现在这里。', recentAssets: '最近素材', assetLibrary: '素材库', continue: '继续创作', nextModules: '后续创作模块', viewScope: '查看范围',
+    editDialogTitle: '编辑项目', editDialogDescription: '保存时会校验当前版本，避免覆盖其他位置的更新。', returnOverview: '返回项目概览',
+    planned: '计划中 · {{phase}}',
+    plannedDescriptions: {
+      ideas: '创意捕捉与探索计划在基础阶段之后提供。', topics: '选题与调研整合计划在基础阶段之后提供。', scripts: '脚本创作、草稿与版本历史计划在基础阶段之后提供。', rhythm: '节奏与时间线决策计划在基础阶段之后提供。', shots: '镜头规划与生成编排计划在基础阶段之后提供。', assets: '项目关联素材将在素材与版本基础能力完成后显示。', tasks: '项目任务进度与恢复能力将在任务运行时完成后显示。',
+    },
+    stages: { idea: '创意', topic: '选题', script: '脚本', rhythm: '节奏', shot: '镜头', asset: '素材', publish: '发布', completed: '已完成', inProgress: '进行中', notStarted: '未开始', pending: '待处理' },
+  },
+  assets: {
+    eyebrow: '工作区 / 素材', title: '素材', description: '本地文件只通过安全内容 URL 提供；页面不会显示真实磁盘路径。', upload: '上传素材', uploading: '上传中…', chooseFile: '选择要上传的素材',
+    filterType: '按素材类型筛选', allTypes: '全部类型', image: '图片', audio: '音频', video: '视频', document: '文档', other: '其他', filterProject: '按项目 ID 筛选', filterPlaceholder: '输入项目 ULID 筛选（可选）',
+    loading: '正在加载素材', empty: '还没有素材', emptyDescription: '上传或生成的文件会按更新时间出现在这里。', readFile: '读取文件', requestFailed: '素材请求失败。', uploadFailed: '上传失败。', size: '{{size}} 字节',
+  },
+  tasks: {
+    eyebrow: '运行状态 / 任务', title: '任务', description: 'SQLite 是任务状态的权威来源；页面先校准快照，再通过可续传事件流跟进变化。', connected: '实时事件已连接', reconnecting: '事件流重连中', calibrating: '正在校准任务快照',
+    lastEvent: '最后事件 #{{id}}', loading: '正在加载任务', empty: '还没有任务', emptyDescription: '任务由各创作模块发起，开始创作后会在这里显示可恢复的运行记录。', records: '任务运行记录', workspaceTask: '工作区任务', projectTask: '项目 {{id}}',
+    attempt: '{{progress}}% · 第 {{attempt}} 次尝试', cancel: '取消任务', cancelling: '取消中…', loadFailed: '任务状态加载失败。', queued: '排队中', running: '运行中', waitingReview: '等待审核', completed: '已完成', failed: '失败', cancelled: '已取消',
+  },
+  settings: {
+    eyebrow: '工作区 / 设置', title: '设置', description: '外观即时保存在本地并同步 Profile；凭据只写入本地服务，浏览器只看到配置状态。', loading: '正在加载设置', loadFailed: '加载失败。', saved: '设置已保存，凭据不会再次显示。', saveFailed: '保存失败。', checkFailed: '连接检查失败。',
+    appearance: '外观与语言', appearanceDescription: '选择中文或英文，以及深色、浅色或跟随系统；同步失败时保留本地选择并提示。', provider: 'Provider', configuredCredential: '已有凭据', unconfiguredCredential: '未配置凭据', providerCredential: 'Provider 凭据', secretPlaceholder: '写入后不再返回', testConnection: '测试连接', checking: '检查中…',
+    larkCommand: 'Lark 命令', larkCredential: 'Lark 凭据', obsidianRoot: 'Vault 根目录', absolutePath: '绝对目录', obsidianCredential: 'Obsidian 凭据', stubOnly: '仅提供确定性 stub', connectionSuccess: '基础阶段确定性 stub 连接成功；真实调用尚未开放。',
+  },
+  notFound: { eyebrow: '404 · 未找到页面', title: '这个页面不存在。', description: '请检查地址，或返回概览继续使用 Creator Studio。', returnDashboard: '返回概览' },
+  routeError: { eyebrow: '页面不可用', title: '无法加载此页面。', description: 'Creator Studio 的其他部分仍然可用。请返回概览后重试。', returnDashboard: '返回概览' },
+  session: { initFailed: '无法初始化 Creator Studio', retryBootstrap: '重试初始化', initializing: '正在初始化 Creator Studio', loadingWorkspace: '正在读取本地工作区…' },
+  errors: {
+    generic: '请求失败，请稍后重试。', unexpectedResponse: '服务返回了无法识别的响应。', requestTimeout: '请求超时，请重试。', requestCancelled: '请求已取消。', networkUnavailable: '无法连接本地服务。',
+    validationFailed: '请求内容无效，请检查输入。', resourceNotFound: '请求的资源不存在。', projectConflict: '项目已在其他位置更新，请刷新后重试。', fileTooLarge: '文件超过允许大小。', assetInUse: '素材仍被其他对象引用，无法删除。',
+    idempotencyReused: '该请求标识已用于不同内容，请重试。', taskUnsupported: '不支持此任务类型。', taskFinished: '任务已经结束，无法取消。', taskFailed: '任务执行失败。', connectorUnavailable: '连接器不可用，请检查配置。', providerUnavailable: 'Provider 不可用，请检查配置。', connectorPathDenied: '目录不可访问，请检查路径。', sessionRequired: '本地会话已失效，请重新载入。',
+  },
+} as const
+
+export const enUS = {
+  common: {
+    brand: 'Creator Studio', localWorkspace: 'Local workspace', foundation: 'Foundation', interfaceOnline: 'Interface systems online',
+    currentContext: 'Current context', notifications: 'Notifications', openNavigation: 'Open navigation', closeNavigation: 'Close navigation',
+    workspaceSidebar: 'Workspace sidebar', primaryNavigation: 'Primary navigation', closeDialog: 'Close dialog', dismissNotification: 'Dismiss notification',
+    retry: 'Retry', reload: 'Reload', reconnect: 'Reconnect', save: 'Save', saving: 'Saving…', cancel: 'Cancel',
+    loadMore: 'Load more', loadingMore: 'Loading…', viewAll: 'View all', optional: 'Optional', bytes: 'bytes',
+    revision: 'Revision {{revision}}', request: 'request {{requestId}}', loadingPage: 'Loading page', loadingRoute: 'Loading route',
+  },
+  navigation: {
+    dashboard: 'Dashboard', projects: 'Projects', assets: 'Assets', tasks: 'Tasks', settings: 'Settings', projectWorkspace: 'Project workspace', unknown: 'Unknown route',
+  },
+  theme: {
+    label: 'Theme', dark: 'Dark', light: 'Light', system: 'System', localApplied: 'Theme applied locally', syncFailed: 'CreatorProfile sync failed. Your local choice was kept; try again later.',
+  },
+  language: {
+    label: 'Language', chinese: '中文', english: 'English', localApplied: 'Language applied locally', syncFailed: 'CreatorProfile sync failed. Your local choice was kept; try again later.',
+  },
+  dashboard: {
+    eyebrow: 'Foundation / Dashboard', title: 'Your studio, clearly routed.', description: 'Start with a clear project and track assets, background tasks, and local connections in one place.', startProject: 'Start a project',
+    currentProjects: 'Current projects', activeTasks: 'Active tasks', workspaceStatus: 'Workspace status', localReady: 'Local services ready', projectsSection: 'Projects', recentProjects: 'Recent projects',
+    loadingProjects: 'Loading recent projects', createFirst: 'Create your first project', emptyDesk: 'Your desk is empty', emptyProjectsDescription: 'Titles, assets, and generation tasks are organized around projects.',
+    missingBrief: 'No project brief yet.', openOverview: 'Open Overview', runtime: 'Runtime', recentTasks: 'Recent tasks', taskLedger: 'Live ledger', loadingTasks: 'Loading recent tasks',
+    noTasks: 'No tasks yet', noTasksDescription: 'Generation and connection-check tasks will show their progress here.', previewNotification: 'Preview notification', workspaceReady: 'Workspace ready', workspaceReadyDescription: 'Project, Asset, and Task data are connected to local services.',
+  },
+  projects: {
+    eyebrow: 'Workspace / Projects', title: 'Projects', description: 'Keep a content direction on your desk, then write, generate, and organize it from one place.', newProject: 'New project', status: 'Status', statusFilter: 'Filter projects by status',
+    current: 'Current projects', draft: 'Draft', active: 'Active', archived: 'Archived', updatedMostRecently: 'Updated most recently', retryLoad: 'Retry', createFirst: 'Create your first project',
+    archivedEmptyDescription: 'Archived projects stay here and remain available when needed.', emptyDescription: 'Start with a title and content type; future assets and tasks will belong to this project.', noArchived: 'No archived projects', emptyDesk: 'Your desk is empty',
+    missingBrief: 'No project brief yet.', updatedAt: 'Updated {{date}}', loading: 'Organizing projects…', createDialogTitle: 'New project', createDialogDescription: 'Capture a clear creative intent first. You will go directly to Project Overview after creation.',
+    form: {
+      title: 'Project title', titlePlaceholder: 'For example: How to build your first AI agent', contentType: 'Content type', general: 'General content', shortVideo: 'Short video', longVideo: 'Long video', article: 'Article', podcast: 'Podcast',
+      status: 'Status', brief: 'Project brief', briefPlaceholder: 'Describe the audience, goal, and deliverable.', targetPlatform: 'Target platform (optional)', platformPlaceholder: 'For example: YouTube', targetDuration: 'Target duration in milliseconds (optional)',
+      invalid: 'Check the project details.', saveFailed: 'Could not save. Try again.', saveChanges: 'Save changes', create: 'Create project',
+    },
+  },
+  projectDetail: {
+    eyebrow: 'Projects / Detail', overview: 'Overview', ideas: 'Ideas', topics: 'Topics', scripts: 'Scripts', rhythm: 'Rhythm', shots: 'Shots', assets: 'Assets', tasks: 'Tasks', projectSections: 'Project sections',
+    overviewDescription: 'Project identity, creative stage, and recent activity.', routeDescription: 'Project route contract for “{{projectId}}”.', loading: 'Opening the project record…', loadFailed: 'Could not load the project.',
+    updated: 'Project updated', conflict: 'This project changed elsewhere. The latest version has been loaded; review it before saving.', archiveConfirm: 'Archiving removes this project from the default list but keeps its data. Continue?', archived: 'Project archived', archivedDescription: 'Find it with the Archived filter on Projects.',
+    archiveConflict: 'The project changed before it was archived. The latest version is loaded; confirm again.', archiveFailed: 'Could not archive the project. Try again.', noDescription: 'This project has no brief yet. Edit it to add an audience and goals.', edit: 'Edit', archive: 'Archive',
+    currentStage: 'Current stage', pipeline: 'Creative pipeline', nextStep: 'Next: {{label}}', generateTopics: 'Generate topic directions', noActiveTasks: 'No active tasks', noActiveTasksDescription: 'This project has no running tasks. Future generation work will show progress here.',
+    activeTasks: 'Active tasks', noAssets: 'No assets yet', noAssetsDescription: 'Recent content will appear here after you upload or generate assets.', recentAssets: 'Recent assets', assetLibrary: 'Asset library', continue: 'Continue', nextModules: 'Next creative modules', viewScope: 'View scope',
+    editDialogTitle: 'Edit project', editDialogDescription: 'The current revision is checked on save to avoid overwriting changes made elsewhere.', returnOverview: 'Return to Project Overview',
+    planned: 'Planned · {{phase}}',
+    plannedDescriptions: {
+      ideas: 'Idea capture and exploration are planned beyond the Foundation delivery.', topics: 'Topic selection and research synthesis are planned beyond the Foundation delivery.', scripts: 'Script authoring, drafts, and version history are planned beyond the Foundation delivery.', rhythm: 'Pacing and timeline decisions are planned beyond the Foundation delivery.', shots: 'Shot planning and generation orchestration are planned beyond the Foundation delivery.', assets: 'Project assets will appear after the Asset and Version foundation is implemented.', tasks: 'Project-scoped task progress and recovery will appear after the Task Runtime is implemented.',
+    },
+    stages: { idea: 'Idea', topic: 'Topic', script: 'Script', rhythm: 'Rhythm', shot: 'Shot', asset: 'Asset', publish: 'Publish', completed: 'Completed', inProgress: 'In progress', notStarted: 'Not started', pending: 'Pending' },
+  },
+  assets: {
+    eyebrow: 'Workspace / Assets', title: 'Assets', description: 'Local files are served only through secure content URLs; real disk paths are never shown.', upload: 'Upload asset', uploading: 'Uploading…', chooseFile: 'Choose an asset to upload',
+    filterType: 'Filter by asset type', allTypes: 'All types', image: 'Image', audio: 'Audio', video: 'Video', document: 'Document', other: 'Other', filterProject: 'Filter by Project ID', filterPlaceholder: 'Enter a Project ULID (optional)',
+    loading: 'Loading assets', empty: 'No assets yet', emptyDescription: 'Uploaded and generated files appear here by most recent update.', readFile: 'Open file', requestFailed: 'Could not load assets.', uploadFailed: 'Upload failed.', size: '{{size}} bytes',
+  },
+  tasks: {
+    eyebrow: 'Runtime / Tasks', title: 'Tasks', description: 'SQLite is the source of truth for task state. The page reconciles a snapshot before following the resumable event stream.', connected: 'Live events connected', reconnecting: 'Reconnecting event stream', calibrating: 'Reconciling task snapshot',
+    lastEvent: 'Last event #{{id}}', loading: 'Loading tasks', empty: 'No tasks yet', emptyDescription: 'Creative modules start tasks; their recoverable run history will appear here.', records: 'Task run history', workspaceTask: 'Workspace task', projectTask: 'Project {{id}}',
+    attempt: '{{progress}}% · attempt {{attempt}}', cancel: 'Cancel task', cancelling: 'Cancelling…', loadFailed: 'Could not load task status.', queued: 'Queued', running: 'Running', waitingReview: 'Waiting for review', completed: 'Completed', failed: 'Failed', cancelled: 'Cancelled',
+  },
+  settings: {
+    eyebrow: 'Workspace / Settings', title: 'Settings', description: 'Appearance is saved locally and synced to your Profile. Credentials are stored only by the local service; the browser sees configuration status.', loading: 'Loading settings', loadFailed: 'Could not load settings.', saved: 'Settings saved. Credentials will not be shown again.', saveFailed: 'Could not save settings.', checkFailed: 'Connection check failed.',
+    appearance: 'Appearance and language', appearanceDescription: 'Choose Chinese or English plus Dark, Light, or System. If sync fails, the local choice is kept and reported.', provider: 'Provider', configuredCredential: 'Credential configured', unconfiguredCredential: 'No credential configured', providerCredential: 'Provider credential', secretPlaceholder: 'Never returned after saving', testConnection: 'Test connection', checking: 'Checking…',
+    larkCommand: 'Lark command', larkCredential: 'Lark credential', obsidianRoot: 'Vault root', absolutePath: 'Absolute directory', obsidianCredential: 'Obsidian credential', stubOnly: 'deterministic stub only', connectionSuccess: 'Foundation deterministic stub connected successfully; real calls are not available yet.',
+  },
+  notFound: { eyebrow: '404 · Not Found', title: 'This route does not exist.', description: 'Check the address, or return to the Dashboard to continue through Creator Studio.', returnDashboard: 'Return to Dashboard' },
+  routeError: { eyebrow: 'Route unavailable', title: 'This page could not be loaded.', description: 'The rest of Creator Studio is still available. Return to the Dashboard and try again.', returnDashboard: 'Return to Dashboard' },
+  session: { initFailed: 'Could not initialize Creator Studio', retryBootstrap: 'Retry initialization', initializing: 'Initializing Creator Studio', loadingWorkspace: 'Loading the local workspace…' },
+  errors: {
+    generic: 'The request failed. Try again later.', unexpectedResponse: 'The service returned an unrecognized response.', requestTimeout: 'The request timed out. Try again.', requestCancelled: 'The request was cancelled.', networkUnavailable: 'Could not connect to the local service.',
+    validationFailed: 'The request is invalid. Check your input.', resourceNotFound: 'The requested resource does not exist.', projectConflict: 'This project changed elsewhere. Refresh and try again.', fileTooLarge: 'The file exceeds the allowed size.', assetInUse: 'The asset is still referenced and cannot be deleted.',
+    idempotencyReused: 'This request identifier was reused for different content. Try again.', taskUnsupported: 'This task type is not supported.', taskFinished: 'The task has already finished and cannot be cancelled.', taskFailed: 'Task execution failed.', connectorUnavailable: 'The connector is unavailable. Check its configuration.', providerUnavailable: 'The Provider is unavailable. Check its configuration.', connectorPathDenied: 'The directory cannot be accessed. Check the path.', sessionRequired: 'The local session expired. Reload Creator Studio.',
+  },
+} as const
+
+export const resources = {
+  'zh-CN': { translation: zhCN },
+  'en-US': { translation: enUS },
+} as const

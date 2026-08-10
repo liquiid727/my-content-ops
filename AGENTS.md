@@ -1,0 +1,72 @@
+# AGENTS.md
+
+Guidance for coding agents (Codex / Claude Code) working in this repository. 与 `CLAUDE.md` 互补：`CLAUDE.md` 面向 Claude Code，本文件面向所有 agent，重点补充 **Feature 工作流（`.feature` 工作区）** 的约定。
+
+# Content Ops — 项目说明
+
+个人自媒体 AI 创作工作台 monorepo。创作者 Aiden（公众号「AI晚点」+ 小红书/抖音/B站多平台）。仓库当前有两条技术线，改动前先分清改的是哪一条。旧版前端 `gpt_image_playground/` 已删除。
+
+## 两条技术线
+
+1. **`vault-server/`** — Obsidian 知识检索 API（已运行）。Hono + tsx，监听 `127.0.0.1:3721`。
+   - `GET /status` 健康检查；`GET /search?q=...&limit=N` BM25 全文检索。
+   - 索引 `VAULT_PATH`（默认 `~/Journal/personal_journey`）下的 `.md`，chokidar 监听增量更新。
+   - 被内容知识 agent 与 Creator Studio 的 Knowledge 模块使用。
+
+2. **`creator-studio/`** — 新创作工作台（建设中，Foundation 阶段）。npm workspace：`apps/web`（Vite+React+Zustand+Tailwind）、`apps/server`（Hono+SQLite+Drizzle）、`packages/contracts`（前后端共享契约）。
+   - Web 默认 `127.0.0.1:5173`，Server 默认 `127.0.0.1:4310`，Vite 把 `/api` 代理到本地 Server。
+   - 技术基线：`specs/000-system/spec.md` + `docs/frontend_design.md`（Task Runtime + SSE、Provider/Connector seam、`/api/v1` REST + 错误 envelope + `revision` 乐观并发）。
+   - 实施单元：`issues/foundation/` 的 FND-01～FND-14，按依赖图推进。
+   - **UI 规范**：组件一律走 `apps/web/src/shared/ui/`（button/input/select/dialog/skeleton/toast/empty-state），图标用 `lucide-react`，Dialog 基于 Radix，主题 next-themes + `styles/tokens.css` 语义 token（`--surface/--elevated/--primary/--border`…），默认暗色。**禁止在页面里直接铺裸 `<button>/<input>/<select>`**；需要新控件时先补进 `shared/ui`。
+
+## Feature 工作流（.feature 工作区）
+
+所有需求文档默认写入仓库根目录下的 `.feature/` 工作区。每个 feature 一个独立目录，配套的 `.prd / .spec / .issues / .test` 需求文档都放在该目录下：
+
+```
+.feature/
+└── .feature-<NNN>-<slug>/
+    ├── .prd                    # 需求文档 PRD —— /prd 产出
+    ├── .spec                   # 技术规格 SPEC —— /prd-to-spec 产出
+    ├── .issues                 # 本地 issue 列表 —— /to-issues 产出（默认本地存放）
+    ├── .test                   # 测试计划 / 测试文档
+    └── .loop-local-state.json  # /loop-it-local 检查点状态（已加入 .gitignore，不入库）
+```
+
+- **命名**：`<NNN>` 三位序号按已有目录自动递增（001、002、…），`<slug>` 取 kebab-case 功能名（如 `priority-system`）
+- **文件名不带扩展名，内容为 Markdown**
+- **默认本地**：issues 默认写在 `.issues`，不自动同步 GitHub / iCafe（可选同步）
+
+### 需求文档管线
+
+```
+/prd → /prd-to-spec（可选）→ /to-issues → /loop-it-local
+ │          │                │            │
+ │ 需求(what) │ 技术(how)      │ tickets    │ 实现(code)
+```
+
+- **`/prd`**：从 feature 描述生成 PRD → 创建 `.feature/.feature-<NNN>-<slug>/` → 写入 `.prd`
+- **`/prd-to-spec`**：读取 `.prd` → 生成技术 SPEC → 写入同目录 `.spec`
+- **`/to-issues`**：读取 `.prd`/`.spec` → 拆解为 Issue 列表 → 写入同目录 `.issues`（每条带 `**Status:**`）
+- **`/loop-it-local`**：解析 `.issues` → 按依赖拓扑排序 → 逐个「内联实现 → `/review-it` → `/note-it` → 本地 ship（commit + 更新 `.issues` 状态 + `--ff-only` 合并）」→ 重复直到全部完成。纯本地，不依赖 gh CLI。
+
+## 内容生产
+
+- **内容策划**：用内容知识 agent 从 Obsidian 知识库检索素材、规划选题、给出各平台框架。知识库为 `~/Journal/personal_journey/`（PARA 结构），检索优先走 vault-server。
+- **口播稿 / 视频演示**：`半年谈/`、`半年谈-v2/` 是 web-video-presentation skill 产出的点击驱动 HTML 演示（每章一个 html + script/outline）。预览用 `npx serve <目录> -l <port>`。
+
+## 常用命令
+
+```bash
+make dev                 # vault-server + creator-studio web+server 一起起（scripts/dev.mjs，并行管理子进程）
+make dev-vault           # 只启动 vault-server（端口 3721）
+make dev-studio          # 只启动 creator-studio web+server（web:5173，server:4310）
+make dev-studio-web      # 只启动 creator-studio web
+make dev-studio-server   # 只启动 creator-studio server
+make build               # vault-server tsc + creator-studio build
+make test                # creator-studio 单测（vitest）
+make studio-test-foundation  # creator-studio 完整 foundation 退出门禁
+make smoke               # 冒烟测试 vault + creator-studio
+```
+
+环境变量：`VAULT_PATH`（默认 `~/Journal/personal_journey`）、`VAULT_PORT`/`PORT`（3721）、`CREATOR_STUDIO_PORT`（4310）、`CREATOR_STUDIO_WEB_PORT`（5173）、`CREATOR_STUDIO_DATA_DIR`（数据目录，默认 `creator-studio/data/`）。

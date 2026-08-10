@@ -1,0 +1,75 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * Theme · march-7th  /  三月七
+ *   Deep indigo shell, rich purple surface stack, pink-magenta accent.
+ *   Noto Serif SC for Chinese (elegant weight contrast) with Outfit for
+ *   Latin — geometric roundness that keeps it friendly not stiff.
+ *   SIGNATURE: scattered star-dust dots (tiny radial blobs) drifting
+ *   across the background, locked at right-center so text never competes.
+ *
+ *   character knobs:
+ *     • hero numbers   — Outfit, weight 700, tight tracking
+ *     • rule           — 1px solid deep purple (barely visible, refined)
+ *     • card radius    — medium (12px) — not harsh, not bubbly
+ *     • surface        — star-dust SVG scatter + soft vignette
+ *     • motion         — smooth & cinematic (900ms reveals, ease-out-quint)
+ * ───────────────────────────────────────────────────────────────────── */
+:root {
+  /* ─── palette ─── */
+  --shell:        #0f0a1e;
+  --surface:      #1c1432;
+  --surface-2:    #241b3e;
+  --surface-3:    #2d2349;
+  --text:         #f0ecff;
+  --text-2:       #d4c8f0;
+  --text-mute:    #8878b8;
+  --text-faint:   #4e4278;
+  --rule:         #2e2450;
+  --accent:       #e879f9;
+  --accent-soft:  rgba(232, 121, 249, 0.12);
+  --accent-glow:  rgba(232, 121, 249, 0.50);
+
+  /* secondary lavender — use for highlights, underlines, callout borders */
+  --accent-2:     #a78bfa;
+  --accent-2-soft: rgba(167, 139, 250, 0.14);
+
+  /* ─── fonts ─── */
+  --font-display-cn: "Noto Serif SC", "Source Han Serif SC", serif;
+  --font-display-en: "Outfit", "Plus Jakarta Sans", "Inter", -apple-system, sans-serif;
+  --font-body:       "Noto Sans SC", "Outfit", "Inter", -apple-system, sans-serif;
+  --font-mono:       "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+  --font-features:   "ss01", "cv02", "tnum";
+
+  /* ─── motion: smooth cinematic ─── */
+  --dur-base:       600ms;
+  --dur-slow:       900ms;
+  --dur-cinematic:  1300ms;
+
+  /* ─── design identity: refined, medium radius ─── */
+  --r-card:        var(--r-md);
+  --r-stage:       0;
+  --rule-w:        1px;
+  --rule-style:    solid;
+  --hero-num-font:    var(--font-display-en);
+  --hero-num-style:   normal;
+  --hero-num-weight:  700;
+  --hero-num-track:   -0.04em;
+  --stage-pad-x:   120px;
+  --stage-pad-y:   90px;
+  --card-shadow:
+    0 1px 0 var(--rule),
+    0 20px 60px rgba(10, 5, 30, 0.55),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+  --shadow-stage:
+    0 80px 200px rgba(10, 5, 30, 0.80),
+    0 0 0 1px rgba(46, 36, 80, 0.60);
+
+  /* ─── SIGNATURE: star-dust scatter + soft purple vignette ─── */
+  --surface-vignette:
+    radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(10, 5, 30, 0.70) 100%);
+
+  --surface-pattern:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'><g opacity='0.55'><circle cx='1620' cy='140' r='2' fill='%23e879f9'/><circle cx='1740' cy='260' r='1.5' fill='%23a78bfa'/><circle cx='1580' cy='380' r='1' fill='%23f0ecff'/><circle cx='1820' cy='200' r='1' fill='%23e879f9'/><circle cx='1700' cy='480' r='2' fill='%23a78bfa'/><circle cx='1640' cy='580' r='1.5' fill='%23e879f9'/><circle cx='1780' cy='640' r='1' fill='%23f0ecff'/><circle cx='1520' cy='700' r='2' fill='%23a78bfa'/><circle cx='1840' cy='750' r='1.5' fill='%23e879f9'/><circle cx='1680' cy='820' r='1' fill='%23f0ecff'/><circle cx='1600' cy='920' r='2' fill='%23a78bfa'/><circle cx='1760' cy='960' r='1' fill='%23e879f9'/><circle cx='200' cy='180' r='1.5' fill='%23a78bfa'/><circle cx='120' cy='340' r='1' fill='%23e879f9'/><circle cx='300' cy='500' r='2' fill='%23f0ecff'/><circle cx='80' cy='680' r='1.5' fill='%23a78bfa'/><circle cx='240' cy='860' r='1' fill='%23e879f9'/></g></svg>");
+  --surface-pattern-size: 100% 100%;
+  --surface-pattern-blend: screen;
+  --surface-pattern-opacity: 1;
+}
