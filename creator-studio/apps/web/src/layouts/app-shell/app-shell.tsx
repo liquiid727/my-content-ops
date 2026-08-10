@@ -1,4 +1,4 @@
-import { Bell, FolderKanban, Images, LayoutDashboard, ListTodo, Menu, Settings, Sparkles, X } from 'lucide-react'
+import { Bell, FolderKanban, Images, LayoutDashboard, ListTodo, Menu, Settings, Sparkles, UserRound, X } from 'lucide-react'
 import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -11,6 +11,7 @@ import { Button, ToastRegion } from '../../shared/ui'
 const navigation = [
   { labelKey: 'navigation.dashboard', icon: LayoutDashboard, to: '/', end: true },
   { labelKey: 'navigation.projects', icon: FolderKanban, to: '/projects' },
+  { labelKey: 'navigation.profile', icon: UserRound, to: '/profile' },
   { labelKey: 'navigation.assets', icon: Images, to: '/assets' },
   { labelKey: 'navigation.tasks', icon: ListTodo, to: '/tasks' },
   { labelKey: 'navigation.settings', icon: Settings, to: '/settings' },
@@ -19,6 +20,7 @@ const navigation = [
 function getCurrentContextKey(pathname: string) {
   if (pathname.startsWith('/projects/')) return 'navigation.projectWorkspace'
   if (pathname.startsWith('/projects')) return 'navigation.projects'
+  if (pathname.startsWith('/profile')) return 'navigation.profile'
   if (pathname.startsWith('/assets')) return 'navigation.assets'
   if (pathname.startsWith('/tasks')) return 'navigation.tasks'
   if (pathname.startsWith('/settings')) return 'navigation.settings'

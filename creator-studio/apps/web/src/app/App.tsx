@@ -7,6 +7,7 @@ import { RouteErrorBoundary, RouteSkeleton } from '../routes/route-boundary'
 const DashboardPage = lazy(() => import('../routes/dashboard-page'))
 const ProjectsPage = lazy(() => import('../routes/projects-page'))
 const AssetsPage = lazy(() => import('../routes/assets-page'))
+const CreatorProfilePage = lazy(() => import('../routes/creator-profile-page'))
 const TasksPage = lazy(() => import('../routes/tasks-page'))
 const SettingsPage = lazy(() => import('../routes/settings-page'))
 const ProjectDetailPage = lazy(() => import('../routes/project-detail-page'))
@@ -28,6 +29,7 @@ function RoutedWorkspace() {
             {projectSections.map((section) => (
               <Route element={<ProjectDetailPage />} key={section} path={`/projects/:projectId/${section}`} />
             ))}
+            <Route element={<CreatorProfilePage />} path="/profile" />
             <Route element={<AssetsPage />} path="/assets" />
             <Route element={<TasksPage />} path="/tasks" />
             <Route element={<SettingsPage />} path="/settings" />

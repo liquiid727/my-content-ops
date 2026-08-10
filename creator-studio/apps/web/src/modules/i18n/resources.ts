@@ -8,7 +8,7 @@ export const zhCN = {
     revision: '版本 {{revision}}', request: '请求 {{requestId}}', loadingPage: '正在加载页面', loadingRoute: '正在加载路由',
   },
   navigation: {
-    dashboard: '概览', projects: '项目', assets: '素材', tasks: '任务', settings: '设置', projectWorkspace: '项目工作区', unknown: '未知页面',
+    dashboard: '概览', projects: '项目', assets: '素材', tasks: '任务', settings: '设置', profile: '画像', projectWorkspace: '项目工作区', unknown: '未知页面',
   },
   theme: {
     label: '主题', dark: '深色', light: '浅色', system: '跟随系统', localApplied: '主题已在本地应用', syncFailed: 'CreatorProfile 同步失败；本地选择已保留，可稍后重试。',
@@ -33,6 +33,26 @@ export const zhCN = {
       status: '状态', brief: '项目说明', briefPlaceholder: '写下受众、目标和交付形式。', targetPlatform: '目标平台（可选）', platformPlaceholder: '例如：抖音', targetDuration: '目标时长（毫秒，可选）',
       invalid: '请检查项目内容。', saveFailed: '保存失败，请重试。', saveChanges: '保存修改', create: '创建项目',
     },
+  },
+  profile: {
+    eyebrow: '工作区 / 画像', title: '创作者画像', description: '定义你是谁、为谁创作、怎么说话——让生成的内容带上你的风格。',
+    loading: '正在加载画像…', loadFailed: '画像加载失败。', save: '保存画像', saving: '保存中…', saved: '画像已保存', saveFailed: '保存失败，请重试。',
+    conflict: '画像已在其他位置更新，已载入最新版本。请重新确认后保存。', reload: '刷新并重新加载',
+    summary: '基本资料', identity: '身份', positioning: '定位', audience: '受众', voice: '声音', knowledge: '知识', memory: '记忆', rules: '规则',
+    injection: '注入设置', injectionDescription: '决定哪些区块会进入生成时的上下文注入。', injectionEnabled: '全局注入',
+    preview: '渲染预览', previewDescription: '预览将如何被注入到创作上下文。', previewScope: '创作场景', previewEmpty: '（空）当前开关或画像内容为空，不会注入任何内容。',
+    empty: '还没有画像内容', emptyDescription: '从身份开始填写，或先查看默认画像。',
+    fields: {
+      displayName: '显示名称', bio: '简介', creatorName: '创作者名称', nicknames: '平台昵称（每行：平台 = 昵称）', currentRole: '当前角色', background: '背景', personalStory: '个人故事', mission: '使命',
+      summary: '一句话定位', nicheTags: '细分标签（每行一个）', differentiation: '差异化', valueProposition: '价值主张', channels: '发布渠道（每行：平台 | 侧重）',
+      primaryAudience: '核心受众', knowledgeLevel: '认知水平', painPoints: '痛点（每行一个）', goals: '目标（每行一个）',
+      toneLike: '语气偏好', toneAvoid: '避免语气', writingStylePreferred: '写作偏好', sentencePatterns: '句式偏好', vocabularyCommon: '常用词', vocabularyBanned: '禁用词',
+      domains: '领域（每行一个）', toolsAndSkills: '工具与技能（每行一个）', strengths: '优势（每行一个）',
+      pastWorks: '过往作品（每行：标题 | 平台 | 反思）', learnings: '经验教训（每行一个）',
+      principles: '原则（每行一个）', likedStructures: '喜欢的结构（每行一个）', likedHooks: '喜欢的开头（每行一个）', bannedWords: '禁用词（每行一个）',
+    },
+    scope: { project: '项目', topic: '选题', outline: '大纲', script: '脚本', cover: '封面', voice: '配音', video: '视频', publish: '发布' },
+    injectionSections: { identity: '身份', positioning: '定位', audience: '受众', voice: '声音', knowledge: '知识', memory: '记忆', rules: '规则' },
   },
   projectDetail: {
     eyebrow: '项目 / 详情', overview: '概览', ideas: '创意', topics: '选题', scripts: '脚本', rhythm: '节奏', shots: '镜头', assets: '素材', tasks: '任务', projectSections: '项目分区',
@@ -68,7 +88,7 @@ export const zhCN = {
   session: { initFailed: '无法初始化 Creator Studio', retryBootstrap: '重试初始化', initializing: '正在初始化 Creator Studio', loadingWorkspace: '正在读取本地工作区…' },
   errors: {
     generic: '请求失败，请稍后重试。', unexpectedResponse: '服务返回了无法识别的响应。', requestTimeout: '请求超时，请重试。', requestCancelled: '请求已取消。', networkUnavailable: '无法连接本地服务。',
-    validationFailed: '请求内容无效，请检查输入。', resourceNotFound: '请求的资源不存在。', projectConflict: '项目已在其他位置更新，请刷新后重试。', fileTooLarge: '文件超过允许大小。', assetInUse: '素材仍被其他对象引用，无法删除。',
+    validationFailed: '请求内容无效，请检查输入。', resourceNotFound: '请求的资源不存在。', revisionConflict: '内容已在其他位置更新，请刷新后重试。', importFailed: '无法读取该路径，请确认 vault 路径有效。', projectConflict: '项目已在其他位置更新，请刷新后重试。', fileTooLarge: '文件超过允许大小。', assetInUse: '素材仍被其他对象引用，无法删除。',
     idempotencyReused: '该请求标识已用于不同内容，请重试。', taskUnsupported: '不支持此任务类型。', taskFinished: '任务已经结束，无法取消。', taskFailed: '任务执行失败。', connectorUnavailable: '连接器不可用，请检查配置。', providerUnavailable: 'Provider 不可用，请检查配置。', connectorPathDenied: '目录不可访问，请检查路径。', sessionRequired: '本地会话已失效，请重新载入。',
   },
 } as const
@@ -83,7 +103,7 @@ export const enUS = {
     revision: 'Revision {{revision}}', request: 'request {{requestId}}', loadingPage: 'Loading page', loadingRoute: 'Loading route',
   },
   navigation: {
-    dashboard: 'Dashboard', projects: 'Projects', assets: 'Assets', tasks: 'Tasks', settings: 'Settings', projectWorkspace: 'Project workspace', unknown: 'Unknown route',
+    dashboard: 'Dashboard', projects: 'Projects', assets: 'Assets', tasks: 'Tasks', settings: 'Settings', profile: 'Profile', projectWorkspace: 'Project workspace', unknown: 'Unknown route',
   },
   theme: {
     label: 'Theme', dark: 'Dark', light: 'Light', system: 'System', localApplied: 'Theme applied locally', syncFailed: 'CreatorProfile sync failed. Your local choice was kept; try again later.',
@@ -108,6 +128,26 @@ export const enUS = {
       status: 'Status', brief: 'Project brief', briefPlaceholder: 'Describe the audience, goal, and deliverable.', targetPlatform: 'Target platform (optional)', platformPlaceholder: 'For example: YouTube', targetDuration: 'Target duration in milliseconds (optional)',
       invalid: 'Check the project details.', saveFailed: 'Could not save. Try again.', saveChanges: 'Save changes', create: 'Create project',
     },
+  },
+  profile: {
+    eyebrow: 'Workspace / Profile', title: 'Creator profile', description: 'Define who you are, who you create for, and how you speak — so generated content carries your style.',
+    loading: 'Loading profile…', loadFailed: 'Could not load the profile.', save: 'Save profile', saving: 'Saving…', saved: 'Profile saved', saveFailed: 'Could not save. Try again.',
+    conflict: 'This profile changed elsewhere. The latest version was loaded; review it before saving.', reload: 'Reload the latest',
+    summary: 'Basics', identity: 'Identity', positioning: 'Positioning', audience: 'Audience', voice: 'Voice', knowledge: 'Knowledge', memory: 'Memory', rules: 'Rules',
+    injection: 'Injection settings', injectionDescription: 'Choose which sections are injected into the generation context.', injectionEnabled: 'Global injection',
+    preview: 'Render preview', previewDescription: 'Preview how the profile is injected into the creative context.', previewScope: 'Creative scene', previewEmpty: '(empty) Nothing is injected with the current switches and content.',
+    empty: 'No profile content yet', emptyDescription: 'Start with Identity, or check the default profile.',
+    fields: {
+      displayName: 'Display name', bio: 'Bio', creatorName: 'Creator name', nicknames: 'Platform nicknames (one per line: platform = name)', currentRole: 'Current role', background: 'Background', personalStory: 'Personal story', mission: 'Mission',
+      summary: 'One-line positioning', nicheTags: 'Niche tags (one per line)', differentiation: 'Differentiation', valueProposition: 'Value proposition', channels: 'Channels (one per line: platform | focus)',
+      primaryAudience: 'Primary audience', knowledgeLevel: 'Knowledge level', painPoints: 'Pain points (one per line)', goals: 'Goals (one per line)',
+      toneLike: 'Tone: like', toneAvoid: 'Tone: avoid', writingStylePreferred: 'Writing style preferences', sentencePatterns: 'Sentence patterns', vocabularyCommon: 'Vocabulary: common', vocabularyBanned: 'Vocabulary: banned',
+      domains: 'Domains (one per line)', toolsAndSkills: 'Tools and skills (one per line)', strengths: 'Strengths (one per line)',
+      pastWorks: 'Past works (one per line: title | platform | reflections)', learnings: 'Learnings (one per line)',
+      principles: 'Principles (one per line)', likedStructures: 'Liked structures (one per line)', likedHooks: 'Liked hooks (one per line)', bannedWords: 'Banned words (one per line)',
+    },
+    scope: { project: 'Project', topic: 'Topic', outline: 'Outline', script: 'Script', cover: 'Cover', voice: 'Voice', video: 'Video', publish: 'Publish' },
+    injectionSections: { identity: 'Identity', positioning: 'Positioning', audience: 'Audience', voice: 'Voice', knowledge: 'Knowledge', memory: 'Memory', rules: 'Rules' },
   },
   projectDetail: {
     eyebrow: 'Projects / Detail', overview: 'Overview', ideas: 'Ideas', topics: 'Topics', scripts: 'Scripts', rhythm: 'Rhythm', shots: 'Shots', assets: 'Assets', tasks: 'Tasks', projectSections: 'Project sections',
@@ -143,7 +183,7 @@ export const enUS = {
   session: { initFailed: 'Could not initialize Creator Studio', retryBootstrap: 'Retry initialization', initializing: 'Initializing Creator Studio', loadingWorkspace: 'Loading the local workspace…' },
   errors: {
     generic: 'The request failed. Try again later.', unexpectedResponse: 'The service returned an unrecognized response.', requestTimeout: 'The request timed out. Try again.', requestCancelled: 'The request was cancelled.', networkUnavailable: 'Could not connect to the local service.',
-    validationFailed: 'The request is invalid. Check your input.', resourceNotFound: 'The requested resource does not exist.', projectConflict: 'This project changed elsewhere. Refresh and try again.', fileTooLarge: 'The file exceeds the allowed size.', assetInUse: 'The asset is still referenced and cannot be deleted.',
+    validationFailed: 'The request is invalid. Check your input.', resourceNotFound: 'The requested resource does not exist.', revisionConflict: 'This content changed elsewhere. Refresh and try again.', importFailed: 'Could not read that path. Check the vault path.', projectConflict: 'This project changed elsewhere. Refresh and try again.', fileTooLarge: 'The file exceeds the allowed size.', assetInUse: 'The asset is still referenced and cannot be deleted.',
     idempotencyReused: 'This request identifier was reused for different content. Try again.', taskUnsupported: 'This task type is not supported.', taskFinished: 'The task has already finished and cannot be cancelled.', taskFailed: 'Task execution failed.', connectorUnavailable: 'The connector is unavailable. Check its configuration.', providerUnavailable: 'The Provider is unavailable. Check its configuration.', connectorPathDenied: 'The directory cannot be accessed. Check the path.', sessionRequired: 'The local session expired. Reload Creator Studio.',
   },
 } as const
