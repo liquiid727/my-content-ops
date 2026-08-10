@@ -5,7 +5,7 @@ description: |
   给出各平台（公众号/小红书/抖音/B站）的具体内容框架和标题建议。
   触发场景：用户提出内容 idea、问"写什么"、需要从知识库找素材、规划内容选题、
   或需要将某个笔记主题转化为可发布内容时。
-model: claude-sonnet-4-6
+model: deepseek-v4-flash
 tools:
   - Bash
   - Read
