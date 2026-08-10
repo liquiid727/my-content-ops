@@ -1,6 +1,8 @@
 import {
   creatorProfileEntityResponseSchema,
   idSchema,
+  importProfileRequestSchema,
+  importProfileResponseSchema,
   renderRequestSchema,
   renderResponseSchema,
   updateCreatorProfileSchema,
@@ -49,6 +51,15 @@ export function configureCreatorProfileRoutes(app: Hono<HttpBindings>, service: 
     const result = await service.render(identity(context), input)
     return context.json(renderResponseSchema.parse({
       data: { text: result.text },
+      meta: { requestId: context.get('requestId') },
+    }))
+  })
+
+  app.post('/creator-profile/import', async (context) => {
+    const input = parseWithSchema(importProfileRequestSchema, await readJson(context))
+    const result = await service.importVault(identity(context), input)
+    return context.json(importProfileResponseSchema.parse({
+      data: { profile: result.profile, imported: result.imported },
       meta: { requestId: context.get('requestId') },
     }))
   })

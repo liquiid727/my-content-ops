@@ -3,14 +3,15 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const { get, update, render: renderPreview } = vi.hoisted(() => ({
+const { get, update, render: renderPreview, importVault } = vi.hoisted(() => ({
   get: vi.fn(),
   update: vi.fn(),
   render: vi.fn(),
+  importVault: vi.fn(),
 }))
 
 vi.mock('../modules/creator-profile/creator-profile-api', () => ({
-  creatorProfileApi: { get, update, render: renderPreview },
+  creatorProfileApi: { get, update, render: renderPreview, importVault },
 }))
 
 import CreatorProfilePage from './creator-profile-page'
@@ -61,5 +62,18 @@ describe('CreatorProfilePage', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存画像' }))
 
     expect(update).toHaveBeenCalledWith(PROFILE_ID, 1, expect.objectContaining({ displayName: '新名字', bio: 'AI 应用创作者' }))
+  })
+
+  it('imports a vault note into the selected section', async () => {
+    get.mockResolvedValue({ data: PROFILE, meta: { requestId: REQUEST_ID } })
+    importVault.mockResolvedValue({ data: { profile: { ...PROFILE, revision: 2 }, imported: ['positioning'] }, meta: { requestId: REQUEST_ID } })
+
+    render(<CreatorProfilePage />)
+    await screen.findByDisplayValue('阿篓的AI篓子')
+
+    fireEvent.change(screen.getByPlaceholderText('50_Channels/账号/00-定位.md'), { target: { value: '50_Channels/阿篓的AI篓子/00-账号定位.md' } })
+    fireEvent.click(screen.getByRole('button', { name: '导入' }))
+
+    expect(importVault).toHaveBeenCalledWith({ vaultPath: '50_Channels/阿篓的AI篓子/00-账号定位.md', targetSection: 'positioning' })
   })
 })

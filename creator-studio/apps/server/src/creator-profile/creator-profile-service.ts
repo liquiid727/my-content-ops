@@ -5,11 +5,14 @@ import {
   serializeIsoDateTime,
   type CreatorProfileEntity,
   type CreatorProfilePatch,
+  type ImportProfileRequest,
   type RenderRequest,
+  type SectionKey,
 } from '@creator-studio/contracts'
 
 import type { CreatorProfileRecord } from '../db/schema.js'
 import { createRevisionConflictError, HttpError } from '../http/errors.js'
+import { ConfigRepository } from '../repositories/index.js'
 import {
   CreatorProfileNotFoundError,
   CreatorProfileRepository,
@@ -17,6 +20,9 @@ import {
 } from './creator-profile-repository.js'
 import { renderContext } from './context-render.js'
 import { ALAOS_BIO, ALAOS_DISPLAY_NAME, ALAOS_INJECTION, ALAOS_PROFILE } from './seed-profile.js'
+import { applyImportToSection, readVaultMarkdown, VaultImportError } from './vault-import.js'
+
+const IMPORT_FAILED = 'IMPORT_FAILED'
 
 export interface CreatorProfileServiceIdentity {
   workspaceId: string
@@ -45,6 +51,7 @@ export function mapProfile(record: CreatorProfileRecord): CreatorProfileEntity {
 export class CreatorProfileService {
   constructor(
     private readonly profiles: CreatorProfileRepository,
+    private readonly configs: ConfigRepository,
     private readonly now: () => number = Date.now,
   ) {}
 
@@ -85,6 +92,41 @@ export class CreatorProfileService {
     return { text: renderContext(profile, injection, input.scope) }
   }
 
+  async importVault(
+    identity: CreatorProfileServiceIdentity,
+    input: ImportProfileRequest,
+  ): Promise<{ profile: CreatorProfileEntity; imported: SectionKey[] }> {
+    const record = await this.profiles.getByWorkspaceAndId(identity.workspaceId, identity.creatorProfileId)
+    if (!record) throw profileNotFound()
+
+    const vaultRoot = await this.resolveVaultRoot(identity.workspaceId)
+    let markdown: string
+    try {
+      markdown = await readVaultMarkdown(vaultRoot, input.vaultPath)
+    } catch (error) {
+      if (error instanceof VaultImportError) {
+        throw new HttpError({ status: 422, code: IMPORT_FAILED, message: error.message })
+      }
+      throw error
+    }
+
+    const current = personalStyleSchema.parse(JSON.parse(record.profileJson))
+    const nextProfile = applyImportToSection(current, input.targetSection, markdown)
+
+    try {
+      const updated = await this.profiles.update(
+        record.id,
+        identity.workspaceId,
+        record.revision,
+        { profileJson: JSON.stringify(nextProfile) },
+        this.now(),
+      )
+      return { profile: mapProfile(updated), imported: [input.targetSection] }
+    } catch (error) {
+      this.rethrowWriteError(error)
+    }
+  }
+
   getDefault(identity: CreatorProfileServiceIdentity): CreatorProfileEntity {
     return creatorProfileEntitySchema.parse({
       id: identity.creatorProfileId,
@@ -98,6 +140,19 @@ export class CreatorProfileService {
       createdAt: serializeIsoDateTime(new Date(0)),
       updatedAt: serializeIsoDateTime(new Date(0)),
     })
+  }
+
+  private async resolveVaultRoot(workspaceId: string): Promise<string> {
+    const connector = await this.configs.getConnector(workspaceId, 'obsidian')
+    if (!connector) {
+      throw new HttpError({ status: 422, code: IMPORT_FAILED, message: '请先在设置中配置 Obsidian Vault。' })
+    }
+    const values = JSON.parse(connector.configJson) as { vaultRoot?: unknown }
+    const vaultRoot = typeof values.vaultRoot === 'string' ? values.vaultRoot.trim() : ''
+    if (!vaultRoot) {
+      throw new HttpError({ status: 422, code: IMPORT_FAILED, message: 'Obsidian Vault 根目录未配置。' })
+    }
+    return vaultRoot
   }
 
   private rethrowWriteError(error: unknown): never {

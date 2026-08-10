@@ -1,9 +1,9 @@
-import type { CreatorProfilePatch } from '@creator-studio/contracts'
+import type { CreatorProfilePatch, SectionKey } from '@creator-studio/contracts'
 import { RefreshCw, UserRound } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { CreatorProfileForm, useCreatorProfileStore } from '../modules/creator-profile'
+import { CreatorProfileForm, useCreatorProfileStore, VaultImportCard } from '../modules/creator-profile'
 import { Button, EmptyState, Skeleton, useToastStore } from '../shared/ui'
 import { RouteHeading } from './route-heading'
 
@@ -12,10 +12,12 @@ export default function CreatorProfilePage() {
   const profile = useCreatorProfileStore((state) => state.profile)
   const loading = useCreatorProfileStore((state) => state.loading)
   const saving = useCreatorProfileStore((state) => state.saving)
+  const importing = useCreatorProfileStore((state) => state.importing)
   const error = useCreatorProfileStore((state) => state.error)
   const revisionConflict = useCreatorProfileStore((state) => state.revisionConflict)
   const load = useCreatorProfileStore((state) => state.load)
   const save = useCreatorProfileStore((state) => state.save)
+  const importVault = useCreatorProfileStore((state) => state.importVault)
   const clearError = useCreatorProfileStore((state) => state.clearError)
   const notify = useToastStore((state) => state.notify)
 
@@ -27,6 +29,11 @@ export default function CreatorProfilePage() {
     if (!profile) return
     const saved = await save(profile.id, revision, patch)
     if (saved) notify({ title: t('profile.saved') })
+  }
+
+  async function handleImport(vaultPath: string, targetSection: SectionKey) {
+    const imported = await importVault(vaultPath, targetSection)
+    if (imported) notify({ title: t('profile.importSuccess', { section: t(`profile.injectionSections.${imported[0]}`) }) })
   }
 
   return (
@@ -71,8 +78,9 @@ export default function CreatorProfilePage() {
       ) : null}
 
       {!loading && profile ? (
-        <div className="mt-8">
-          <CreatorProfileForm profile={profile} onSave={handleSave} saving={saving} />
+        <div className="mt-8 space-y-6">
+          <VaultImportCard importing={importing} onImport={(path, section) => handleImport(path, section)} />
+          <CreatorProfileForm key={profile.revision} profile={profile} onSave={handleSave} saving={saving} />
         </div>
       ) : null}
     </div>

@@ -2,6 +2,7 @@ import {
   type CreatorProfileEntity,
   type CreatorProfilePatch,
   type InjectScope,
+  type SectionKey,
 } from '@creator-studio/contracts'
 import { create } from 'zustand'
 
@@ -23,11 +24,13 @@ interface CreatorProfileState {
   profile: CreatorProfileEntity | null
   loading: boolean
   saving: boolean
+  importing: boolean
   error: string | undefined
   revisionConflict: boolean
   previewText: string
   load: () => Promise<CreatorProfileEntity | null>
   save: (profileId: string, revision: number, patch: CreatorProfilePatch) => Promise<CreatorProfileEntity | null>
+  importVault: (vaultPath: string, targetSection: SectionKey) => Promise<SectionKey[] | null>
   renderPreview: (scope: InjectScope, profileId?: string) => Promise<void>
   clearError: () => void
 }
@@ -36,6 +39,7 @@ export const useCreatorProfileStore = create<CreatorProfileState>((set) => ({
   profile: null,
   loading: false,
   saving: false,
+  importing: false,
   error: undefined,
   revisionConflict: false,
   previewText: '',
@@ -64,6 +68,18 @@ export const useCreatorProfileStore = create<CreatorProfileState>((set) => ({
         error: errorMessage(error),
         revisionConflict: isRevisionConflict(error),
       })
+      return null
+    }
+  },
+
+  importVault: async (vaultPath, targetSection) => {
+    set({ importing: true, error: undefined, revisionConflict: false })
+    try {
+      const response = await creatorProfileApi.importVault({ vaultPath, targetSection })
+      set({ profile: response.data.profile, importing: false })
+      return response.data.imported
+    } catch (error) {
+      set({ importing: false, error: errorMessage(error) })
       return null
     }
   },

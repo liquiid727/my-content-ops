@@ -36,7 +36,7 @@ const projectService = new ProjectService(
   new AssetRepository(database.db),
   new VersionRepository(database.db),
 )
-const creatorProfileService = new CreatorProfileService(new CreatorProfileRepository(database.db))
+const creatorProfileService = new CreatorProfileService(new CreatorProfileRepository(database.db), new ConfigRepository(database.db))
 const assetService = new AssetService(
   new AssetRepository(database.db),
   new ProjectRepository(database.db),
