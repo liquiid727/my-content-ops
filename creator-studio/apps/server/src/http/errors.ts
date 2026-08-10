@@ -2,6 +2,8 @@ import {
   errorEnvelopeSchema,
   PROJECT_REVISION_CONFLICT_CODE,
   projectRevisionConflictDetailsSchema,
+  REVISION_CONFLICT_CODE,
+  revisionConflictDetailsSchema,
 } from '@creator-studio/contracts'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 
@@ -38,6 +40,15 @@ export function createProjectRevisionConflictError(currentRevision: number): Htt
     code: PROJECT_REVISION_CONFLICT_CODE,
     message: '项目已在其他位置更新，请刷新后重试。',
     details: projectRevisionConflictDetailsSchema.parse({ currentRevision }),
+  })
+}
+
+export function createRevisionConflictError(currentRevision: number): HttpError {
+  return new HttpError({
+    status: 409,
+    code: REVISION_CONFLICT_CODE,
+    message: '内容已在其他位置更新，请刷新后重试。',
+    details: revisionConflictDetailsSchema.parse({ currentRevision }),
   })
 }
 

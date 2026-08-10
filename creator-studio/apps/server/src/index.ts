@@ -3,6 +3,7 @@ import { CREATOR_STUDIO_METADATA } from '@creator-studio/contracts/metadata'
 import { fileURLToPath } from 'node:url'
 
 import { createStaticApp } from './app.js'
+import { configureCreatorProfileRoutes, CreatorProfileRepository, CreatorProfileService } from './creator-profile/index.js'
 import { AssetFileStore, AssetService, configureAssetRoutes } from './assets/index.js'
 import { BootstrapService, configurePreferenceRoutes, ensureLocalIdentity } from './bootstrap/index.js'
 import { openDatabase } from './db/database.js'
@@ -35,6 +36,7 @@ const projectService = new ProjectService(
   new AssetRepository(database.db),
   new VersionRepository(database.db),
 )
+const creatorProfileService = new CreatorProfileService(new CreatorProfileRepository(database.db))
 const assetService = new AssetService(
   new AssetRepository(database.db),
   new ProjectRepository(database.db),
@@ -56,8 +58,9 @@ const app = createStaticApp({
   requestLogger: consoleRequestLogger,
   security: createLocalSecurityContext({ port, identity }),
   configure: (api) => {
-    configureProjectRoutes(api, projectService)
     configurePreferenceRoutes(api, workspaceRepository)
+    configureCreatorProfileRoutes(api, creatorProfileService)
+    configureProjectRoutes(api, projectService)
     configureAssetRoutes(api, assetService)
     configureVersionRoutes(api, versionService)
     configureTaskRoutes(api, taskService)
