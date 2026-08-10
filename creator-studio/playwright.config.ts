@@ -13,7 +13,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `CREATOR_STUDIO_PORT=${port} CREATOR_STUDIO_DATA_DIR="$(mktemp -d)" npm run start`,
+    command: `CREATOR_STUDIO_PORT=${port} CREATOR_STUDIO_DATA_DIR="$(mktemp -d)" pnpm run start`,
     url: `http://127.0.0.1:${port}/api/v1/health`,
     reuseExistingServer: false,
     timeout: 30_000,

@@ -1,24 +1,24 @@
 # Creator Studio
 
-Creator Studio is an independent npm-workspace application inside the content-ops repository. It contains a Vite + React client, a local Hono server, and a browser/server-neutral contracts package. The legacy `gpt_image_playground` frontend has been removed from the repository.
+Creator Studio is an independent pnpm-workspace application inside the content-ops repository. It contains a Vite + React client, a local Hono server, and a browser/server-neutral contracts package. The legacy `gpt_image_playground` frontend has been removed from the repository.
 
 ## Requirements
 
 - Node.js 22.12 or newer (an active LTS release is recommended; `.nvmrc` selects Node 22)
-- npm 10 or newer
+- pnpm 10 or newer
 
-No global npm packages are required.
+No global pnpm packages are required.
 
 ## Install and develop
 
 From this directory:
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
-The single `dev` command starts both processes and stops the other process when either exits:
+The `dev` launcher (`scripts/dev.mjs`) prints an emoji banner with the service URLs, color-codes each service's logs (`🌐 web` / `⚙️ server`), and shows a ✅ ready banner once the API health check passes. Running `pnpm run dev` first builds the shared contracts package via `predev`. It stops both processes when either exits:
 
 - Web: `http://127.0.0.1:5173`
 - Server: `http://127.0.0.1:4310`
@@ -28,14 +28,14 @@ Override the ports with `CREATOR_STUDIO_WEB_PORT` and `CREATOR_STUDIO_PORT`. Vit
 From the repository root, the equivalent entry point is:
 
 ```bash
-npm run creator-studio:dev
+pnpm run creator-studio:dev
 ```
 
 ## Build and run production
 
 ```bash
-npm run build
-npm run start
+pnpm run build
+pnpm run start
 ```
 
 The build creates `apps/web/dist` and `apps/server/dist`. Production is served from `http://127.0.0.1:4310`; the Hono server serves the web assets and falls back to `index.html` for client-side routes.
@@ -45,24 +45,24 @@ The build creates `apps/web/dist` and `apps/server/dist`. Production is served f
 Run the complete Foundation exit gate (typecheck, lint, unit, contract, integration, production build, E2E, runtime failure/lifecycle checks, and the seeded performance baseline):
 
 ```bash
-npm run test:foundation
+pnpm run test:foundation
 ```
 
 Individual checks are also available:
 
 ```bash
-npm run typecheck
-npm run lint
-npm run test:unit
-npm run test:contract
-npm run test:integration
-npm run test:boundary
-npm run test:e2e
-npm run test:runtime
-npm run test:performance
+pnpm run typecheck
+pnpm run lint
+pnpm run test:unit
+pnpm run test:contract
+pnpm run test:integration
+pnpm run test:boundary
+pnpm run test:e2e
+pnpm run test:runtime
+pnpm run test:performance
 ```
 
-Tests use temporary data directories and do not touch `creator-studio/data/`. Playwright requires a locally installed Chromium (`npx playwright install chromium` if it is missing).
+Tests use temporary data directories and do not touch `creator-studio/data/`. Playwright requires a locally installed Chromium (`pnpm exec playwright install chromium` if it is missing).
 
 ## Local data
 
@@ -98,5 +98,5 @@ To restore, keep the server stopped, move the current data directory aside, copy
 - **Migration checksum/history failure:** do not edit an applied migration. Restore the matching code and data backup, or add a new migration. Never delete `schema_migrations` to bypass the check.
 - **Invalid local session after restart:** reload the page; `/bootstrap` rotates a stale local cookie. Requests from another Host or Origin remain rejected.
 - **Connector unavailable:** use Settings → Test connection. Lark must resolve to an executable and Obsidian must reference a readable directory; errors intentionally omit sensitive absolute paths.
-- **E2E browser missing:** run `npx playwright install chromium` and retry `npm run test:e2e`.
+- **E2E browser missing:** run `pnpm exec playwright install chromium` and retry `pnpm run test:e2e`.
 - **Diagnosing a failed request or Task:** correlate the UI request ID or Task ID with server logs. Logs include request ID, method, path, status, and duration only.

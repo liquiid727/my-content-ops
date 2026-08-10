@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - 索引 `VAULT_PATH`（默认 `~/Journal/personal_journey`）下的 `.md`，chokidar 监听增量更新。
    - 被 content-knowledge agent 与 Creator Studio 的 Knowledge 模块使用。
 
-2. **`creator-studio/`** — 新创作工作台（建设中，Foundation 阶段）。npm workspace：`apps/web`（Vite+React+Zustand+Tailwind）、`apps/server`（Hono+SQLite+Drizzle）、`packages/contracts`（前后端共享契约）。
+2. **`creator-studio/`** — 新创作工作台（建设中，Foundation 阶段）。pnpm workspace：`apps/web`（Vite+React+Zustand+Tailwind）、`apps/server`（Hono+SQLite+Drizzle）、`packages/contracts`（前后端共享契约）。包管理器为 pnpm（根 `pnpm-workspace.yaml` + `pnpm-lock.yaml`）。
    - Web 默认 `127.0.0.1:5173`，Server 默认 `127.0.0.1:4310`，Vite 把 `/api` 代理到本地 Server。
    - 技术基线：`specs/000-system/spec.md` + `docs/frontend_design.md`（Task Runtime + SSE、Provider/Connector seam、`/api/v1` REST + 错误 envelope + `revision` 乐观并发）。
    - 实施单元：`issues/foundation/` 的 FND-01～FND-14，按依赖图推进；完成条件见 `specs/000-system/acceptance.md`。
@@ -38,8 +38,8 @@ make studio-test-foundation  # creator-studio 完整 foundation 退出门禁
 make smoke               # 冒烟测试 vault + creator-studio
 ```
 
-后端类型检查/构建：`npm --prefix vault-server run build`（tsc）
-Creator Studio 完整检查入口：`npm --prefix creator-studio run test:foundation`
+后端类型检查/构建：`pnpm -C vault-server run build`（tsc）
+Creator Studio 完整检查入口：`pnpm -C creator-studio run test:foundation`
 
 环境变量：`VAULT_PATH`（默认 `~/Journal/personal_journey`）、`VAULT_PORT`/`PORT`（3721）、`CREATOR_STUDIO_PORT`（4310）、`CREATOR_STUDIO_WEB_PORT`（5173）、`CREATOR_STUDIO_DATA_DIR`（数据目录，默认 `creator-studio/data/`）。
 

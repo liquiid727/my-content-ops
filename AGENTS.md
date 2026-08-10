@@ -13,7 +13,7 @@ Guidance for coding agents (Codex / Claude Code) working in this repository. 与
    - 索引 `VAULT_PATH`（默认 `~/Journal/personal_journey`）下的 `.md`，chokidar 监听增量更新。
    - 被内容知识 agent 与 Creator Studio 的 Knowledge 模块使用。
 
-2. **`creator-studio/`** — 新创作工作台（建设中，Foundation 阶段）。npm workspace：`apps/web`（Vite+React+Zustand+Tailwind）、`apps/server`（Hono+SQLite+Drizzle）、`packages/contracts`（前后端共享契约）。
+2. **`creator-studio/`** — 新创作工作台（建设中，Foundation 阶段）。pnpm workspace：`apps/web`（Vite+React+Zustand+Tailwind）、`apps/server`（Hono+SQLite+Drizzle）、`packages/contracts`（前后端共享契约）。包管理器为 pnpm（根 `pnpm-workspace.yaml` + `pnpm-lock.yaml`）。
    - Web 默认 `127.0.0.1:5173`，Server 默认 `127.0.0.1:4310`，Vite 把 `/api` 代理到本地 Server。
    - 技术基线：`specs/000-system/spec.md` + `docs/frontend_design.md`（Task Runtime + SSE、Provider/Connector seam、`/api/v1` REST + 错误 envelope + `revision` 乐观并发）。
    - 实施单元：`issues/foundation/` 的 FND-01～FND-14，按依赖图推进。

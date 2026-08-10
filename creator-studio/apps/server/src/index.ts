@@ -76,7 +76,7 @@ const server = serve(
     port,
   },
   ({ address, port: boundPort }) => {
-    console.log(`${CREATOR_STUDIO_METADATA.name} ${CREATOR_STUDIO_METADATA.version} server ready at http://${address}:${boundPort}`)
+    console.log(`✅ ${CREATOR_STUDIO_METADATA.name} ${CREATOR_STUDIO_METADATA.version} ready → http://${address}:${boundPort}`)
   },
 )
 

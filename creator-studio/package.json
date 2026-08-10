@@ -5,36 +5,31 @@
   "type": "module",
   "engines": {
     "node": ">=22.12.0",
-    "npm": ">=10.0.0"
+    "pnpm": ">=10.0.0"
   },
-  "workspaces": [
-    "packages/contracts",
-    "apps/web",
-    "apps/server"
-  ],
   "scripts": {
-    "predev": "npm run build --workspace @creator-studio/contracts",
-    "dev": "concurrently --kill-others --success first --names web,server --prefix-colors magenta,cyan \"npm run dev --workspace @creator-studio/web\" \"npm run dev --workspace @creator-studio/server\"",
-    "dev:web": "npm run dev --workspace @creator-studio/web",
-    "dev:server": "npm run dev --workspace @creator-studio/server",
-    "build": "npm run build --workspace @creator-studio/contracts && npm run build --workspace @creator-studio/web && npm run build --workspace @creator-studio/server",
-    "start": "npm run start --workspace @creator-studio/server",
-    "pretypecheck": "npm run build --workspace @creator-studio/contracts",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "predev": "pnpm --filter @creator-studio/contracts run build",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "pnpm --filter @creator-studio/web run dev",
+    "dev:server": "pnpm --filter @creator-studio/server run dev",
+    "build": "pnpm --filter @creator-studio/contracts run build && pnpm --filter @creator-studio/web run build && pnpm --filter @creator-studio/server run build",
+    "start": "pnpm --filter @creator-studio/server run start",
+    "pretypecheck": "pnpm --filter @creator-studio/contracts run build",
+    "typecheck": "pnpm --filter '@creator-studio/*' run typecheck",
     "lint": "eslint . --max-warnings 0",
-    "pretest": "npm run build --workspace @creator-studio/contracts",
+    "pretest": "pnpm --filter @creator-studio/contracts run build",
     "test": "vitest run",
     "test:unit": "vitest run apps/web",
     "test:contract": "vitest run packages/contracts",
     "test:integration": "vitest run apps/server",
-    "test:e2e": "npm run build && npm run test:e2e:built",
+    "test:e2e": "pnpm run build && pnpm run test:e2e:built",
     "test:e2e:built": "playwright test",
-    "test:runtime": "npm run build && npm run test:runtime:built",
+    "test:runtime": "pnpm run build && pnpm run test:runtime:built",
     "test:runtime:built": "node scripts/foundation-runtime-check.mjs",
-    "test:performance": "npm run build && npm run test:performance:built",
+    "test:performance": "pnpm run build && pnpm run test:performance:built",
     "test:performance:built": "node scripts/foundation-performance.mjs",
     "test:boundary": "node scripts/foundation-boundary-check.mjs",
-    "test:foundation": "npm run typecheck && npm run lint && npm run test:unit && npm run test:contract && npm run test:integration && npm run test:boundary && npm run build && npm run test:e2e:built && npm run test:runtime:built && npm run test:performance:built"
+    "test:foundation": "pnpm run typecheck && pnpm run lint && pnpm run test:unit && pnpm run test:contract && pnpm run test:integration && pnpm run test:boundary && pnpm run build && pnpm run test:e2e:built && pnpm run test:runtime:built && pnpm run test:performance:built"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -45,7 +40,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
-    "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^16.5.0",

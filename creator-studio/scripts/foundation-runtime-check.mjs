@@ -9,7 +9,7 @@ import Database from 'better-sqlite3'
 
 const root = resolve(import.meta.dirname, '..')
 const entry = join(root, 'apps/server/dist/index.js')
-if (!existsSync(entry)) throw new Error('Production server is not built. Run npm run build first.')
+if (!existsSync(entry)) throw new Error('Production server is not built. Run pnpm run build first.')
 
 function reservePort() {
   return new Promise((resolvePort, reject) => {

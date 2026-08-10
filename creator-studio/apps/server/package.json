@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@creator-studio/contracts": "0.1.0",
+    "@creator-studio/contracts": "workspace:*",
     "@hono/node-server": "^1.19.6",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.2",
