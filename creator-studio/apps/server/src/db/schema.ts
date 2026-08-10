@@ -193,6 +193,7 @@ export const artifacts = sqliteTable(
     role: text('role').notNull(),
     currentVersionId: text('current_version_id'),
     createdBy: text('created_by').notNull(),
+    revision: integer('revision').notNull().default(1),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
     deletedAt: integer('deleted_at'),

@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
-import { idSchema, isoDateTimeSchema } from './common.js'
-import { successEnvelopeSchema } from './envelopes.js'
+import { idSchema, isoDateTimeSchema, revisionSchema } from './common.js'
+import { listEnvelopeSchema, successEnvelopeSchema } from './envelopes.js'
+import { revisionedPatchSchema } from './protocol.js'
 
 /** Artifact 类型：text/image/audio/video/collection/action（业务语义由 role 表达）。 */
 export const artifactKindSchema = z.enum(['text', 'image', 'audio', 'video', 'collection', 'action'])
@@ -24,6 +25,7 @@ export const artifactSchema = z.object({
   kind: artifactKindSchema,
   role: z.string().trim().min(1),
   currentVersionId: idSchema.nullable(),
+  revision: revisionSchema.default(1),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
 }).strict()
@@ -44,5 +46,34 @@ export const artifactVersionSchema = z.object({
 export const artifactResponseSchema = successEnvelopeSchema(artifactSchema)
 export const artifactVersionResponseSchema = successEnvelopeSchema(artifactVersionSchema)
 
+/** Artifact 摘要 + 当前版本摘要（`GET /artifacts/:id`）。 */
+export const artifactDetailSchema = artifactSchema.extend({
+  currentVersion: artifactVersionSchema.nullable(),
+}).strict()
+export const artifactDetailResponseSchema = successEnvelopeSchema(artifactDetailSchema)
+
+export const artifactVersionListResponseSchema = listEnvelopeSchema(artifactVersionSchema)
+
+/** 手动编辑当前内容 → 新 Version(source=user)。 */
+export const artifactPatchSchema = z
+  .object({
+    text: z.string().max(1_000_000).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+  .refine((patch) => Object.keys(patch).length > 0, { message: 'At least one artifact field is required' })
+export type ArtifactPatch = z.infer<typeof artifactPatchSchema>
+export const updateArtifactSchema = revisionedPatchSchema(artifactPatchSchema)
+export type UpdateArtifact = z.infer<typeof updateArtifactSchema>
+
+/** 恢复历史版本为 current（不删历史链）。 */
+export const restoreArtifactVersionSchema = z
+  .object({
+    versionId: idSchema,
+  })
+  .strict()
+export type RestoreArtifactVersion = z.infer<typeof restoreArtifactVersionSchema>
+
 export type Artifact = z.infer<typeof artifactSchema>
 export type ArtifactVersion = z.infer<typeof artifactVersionSchema>
+export type ArtifactDetail = z.infer<typeof artifactDetailSchema>

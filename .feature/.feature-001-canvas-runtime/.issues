@@ -24,7 +24,7 @@
 - [02-data-model §2-§6](./.spec/02-data-model.md) ｜ [01-system §2.2](./.spec/01-system.md)
 
 ## Issue #2: 后端 Artifact 与 Canvas CRUD API
-**Status:** pending
+**Status:** shipped
 **Type:** backend
 **Priority:** high
 **Dependencies:** #1
@@ -33,11 +33,11 @@
 实现 `artifacts` / `canvas_nodes` / `edges` 的 routes + service + repository：graph 读写、节点创建/移动/删除、边创建/删除、artifact 摘要/版本列表/版本详情/恢复/手动编辑。删除语义：删 CanvasNode 默认 artifact 变 orphan；用户显式「同时删除内容」才软删 artifact。
 
 ### Acceptance Criteria
-- [ ] `GET /projects/:id/graph`、`POST /projects/:id/nodes`、`PATCH/DELETE /nodes/:id`、`POST/DELETE /edges` 可用
-- [ ] `GET /artifacts/:id`、`GET /artifacts/:id/versions`、`GET /artifact-versions/:id`、`POST /artifacts/:id/versions/restore`、`PATCH /artifacts/:id` 可用
-- [ ] 手动编辑产生 source=user 新版本并更新 current_version_id
-- [ ] 错误：`ARTIFACT_NOT_FOUND` / `NODE_NOT_FOUND` / `EDGE_NOT_FOUND` / `REVISION_CONFLICT`
-- [ ] 单元/集成测试覆盖 CRUD + 删除语义；Typecheck/lint 通过
+- [x] `GET /projects/:id/graph`、`POST /projects/:id/nodes`、`PATCH/DELETE /nodes/:id`、`POST/DELETE /edges` 可用
+- [x] `GET /artifacts/:id`、`GET /artifacts/:id/versions`、`GET /artifact-versions/:id`、`POST /artifacts/:id/versions/restore`、`PATCH /artifacts/:id` 可用
+- [x] 手动编辑产生 source=user 新版本并更新 current_version_id
+- [x] 错误：`ARTIFACT_NOT_FOUND` / `NODE_NOT_FOUND` / `EDGE_NOT_FOUND` / `REVISION_CONFLICT`
+- [x] 单元/集成测试覆盖 CRUD + 删除语义；Typecheck/lint 通过
 
 ### SPEC Reference
 - [03-api §2.1-§2.2 §5](./.spec/03-api.md) ｜ [02-data-model §3-§7](./.spec/02-data-model.md)

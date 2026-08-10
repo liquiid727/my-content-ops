@@ -3,9 +3,11 @@ import { CREATOR_STUDIO_METADATA } from '@creator-studio/contracts/metadata'
 import { fileURLToPath } from 'node:url'
 
 import { createStaticApp } from './app.js'
+import { ArtifactRepository, ArtifactService, configureArtifactRoutes } from './artifacts/index.js'
 import { configureCreatorProfileRoutes, CreatorProfileRepository, CreatorProfileService } from './creator-profile/index.js'
 import { AssetFileStore, AssetService, configureAssetRoutes } from './assets/index.js'
 import { BootstrapService, configurePreferenceRoutes, ensureLocalIdentity } from './bootstrap/index.js'
+import { CanvasRepository, CanvasService, configureCanvasRoutes } from './canvas/index.js'
 import { openDatabase } from './db/database.js'
 import { consoleRequestLogger } from './http/logging.js'
 import { createLocalSecurityContext } from './http/security.js'
@@ -37,6 +39,14 @@ const projectService = new ProjectService(
   new VersionRepository(database.db),
 )
 const creatorProfileService = new CreatorProfileService(new CreatorProfileRepository(database.db), new ConfigRepository(database.db))
+const artifactRepository = new ArtifactRepository(database.db)
+const artifactService = new ArtifactService(artifactRepository, new ProjectRepository(database.db))
+const canvasService = new CanvasService(
+  new CanvasRepository(database.db),
+  artifactRepository,
+  artifactService,
+  new ProjectRepository(database.db),
+)
 const assetService = new AssetService(
   new AssetRepository(database.db),
   new ProjectRepository(database.db),
@@ -61,6 +71,8 @@ const app = createStaticApp({
     configurePreferenceRoutes(api, workspaceRepository)
     configureCreatorProfileRoutes(api, creatorProfileService)
     configureProjectRoutes(api, projectService)
+    configureCanvasRoutes(api, canvasService)
+    configureArtifactRoutes(api, artifactService)
     configureAssetRoutes(api, assetService)
     configureVersionRoutes(api, versionService)
     configureTaskRoutes(api, taskService)
