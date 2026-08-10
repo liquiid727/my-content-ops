@@ -98,7 +98,7 @@
 - [.prd US-004](./.prd) ｜ [.spec §4.3 §5.1](./.spec)
 
 ## Issue #6: Seed 画像 + 验收退出门禁
-**Status:** pending
+**Status:** shipped
 **Type:** infra
 **Priority:** medium
 **Dependencies:** #1-#5
@@ -107,10 +107,10 @@
 固化阿篓（AI晚点）seed 画像数据；对照 `.prd` US-001~005 与 MVP 目标逐条验收；补 loading/empty/error 三态；跑全量 `test:foundation` + 新增测试 + Node LTS 门禁。确认 Personal Style 契约被 canvas-runtime 引用成功。
 
 ### Acceptance Criteria
-- [ ] 默认画像（阿篓）可用，新建 workspace 自动 seed
-- [ ] `.prd` US-001~005 验收条件全部满足；主要状态有 loading/empty/error
-- [ ] 与 canvas-runtime Context Assembly 的契约对齐验证通过（`renderContext` 被引用）
-- [ ] `test:foundation` 全绿；typecheck/lint 通过
+- [x] 默认画像（阿篓）可用，新建 workspace 自动 seed
+- [x] `.prd` US-001~005 验收条件全部满足；主要状态有 loading/empty/error
+- [x] 与 canvas-runtime Context Assembly 的契约对齐验证通过（`renderContext` 被引用）
+- [x] `test:foundation` 全绿；typecheck/lint 通过
 
 ### SPEC Reference
 - [.prd §8](./.prd) ｜ [.spec §10.3](./.spec)

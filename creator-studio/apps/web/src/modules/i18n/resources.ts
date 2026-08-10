@@ -42,7 +42,7 @@ export const zhCN = {
     injection: '注入设置', injectionDescription: '决定哪些区块会进入生成时的上下文注入。', injectionEnabled: '全局注入',
     preview: '渲染预览', previewDescription: '预览将如何被注入到创作上下文。', previewScope: '创作场景', previewEmpty: '（空）当前开关或画像内容为空，不会注入任何内容。',
     importTitle: '导入 Vault 笔记', importDescription: '从 Obsidian Vault 读取一篇 Markdown 笔记，覆盖写入对应区块。需先在设置中配置 Vault 根目录。', importVaultPath: 'Vault 内相对路径', importTargetSection: '导入到区块', import: '导入', importing: '导入中…', importSuccess: '已导入到「{{section}}」',
-    empty: '还没有画像内容', emptyDescription: '从身份开始填写，或先查看默认画像。',
+    empty: '还没有画像内容', emptyDescription: '从身份开始填写，或先查看默认画像。', creatorLevel: '创作等级：{{level}}',
     fields: {
       displayName: '显示名称', bio: '简介', creatorName: '创作者名称', nicknames: '平台昵称（每行：平台 = 昵称）', currentRole: '当前角色', background: '背景', personalStory: '个人故事', mission: '使命',
       summary: '一句话定位', nicheTags: '细分标签（每行一个）', differentiation: '差异化', valueProposition: '价值主张', channels: '发布渠道（每行：平台 | 侧重）',
@@ -138,7 +138,7 @@ export const enUS = {
     injection: 'Injection settings', injectionDescription: 'Choose which sections are injected into the generation context.', injectionEnabled: 'Global injection',
     preview: 'Render preview', previewDescription: 'Preview how the profile is injected into the creative context.', previewScope: 'Creative scene', previewEmpty: '(empty) Nothing is injected with the current switches and content.',
     importTitle: 'Import from Vault', importDescription: 'Read a Markdown note from your Obsidian vault and overwrite the matching section. Configure the vault root in settings first.', importVaultPath: 'Relative path in vault', importTargetSection: 'Target section', import: 'Import', importing: 'Importing…', importSuccess: 'Imported into “{{section}}”',
-    empty: 'No profile content yet', emptyDescription: 'Start with Identity, or check the default profile.',
+    empty: 'No profile content yet', emptyDescription: 'Start with Identity, or check the default profile.', creatorLevel: 'Creator level: {{level}}',
     fields: {
       displayName: 'Display name', bio: 'Bio', creatorName: 'Creator name', nicknames: 'Platform nicknames (one per line: platform = name)', currentRole: 'Current role', background: 'Background', personalStory: 'Personal story', mission: 'Mission',
       summary: 'One-line positioning', nicheTags: 'Niche tags (one per line)', differentiation: 'Differentiation', valueProposition: 'Value proposition', channels: 'Channels (one per line: platform | focus)',

@@ -313,17 +313,38 @@ export function CreatorProfileForm({ profile, saving, onSave }: CreatorProfileFo
   return (
     <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); void handleSave() }}>
       <SectionCard title={t('profile.summary')}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t('profile.fields.displayName')}>
-            <Input
-              onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))}
-              required
-              value={draft.displayName}
-            />
-          </Field>
-          <Field label={t('profile.fields.bio')}>
-            <Input onChange={(event) => setDraft((current) => ({ ...current, bio: event.target.value }))} value={draft.bio} />
-          </Field>
+        <div className="flex items-start gap-4">
+          <div
+            aria-hidden="true"
+            className="flex h-14 w-14 shrink-0 select-none items-center justify-center rounded-full border border-border bg-elevated font-display text-xl font-semibold text-primary"
+          >
+            {draft.displayName.trim().charAt(0) || '?'}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t('profile.fields.displayName')}>
+                <Input
+                  onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))}
+                  required
+                  value={draft.displayName}
+                />
+              </Field>
+              <Field label={t('profile.fields.bio')}>
+                <Input onChange={(event) => setDraft((current) => ({ ...current, bio: event.target.value }))} value={draft.bio} />
+              </Field>
+            </div>
+            {draft.profile.positioning.nicheTags.length > 0 ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-muted">{t('profile.fields.nicheTags')}</span>
+                {draft.profile.positioning.nicheTags.map((tag) => (
+                  <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary" key={tag}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <p className="mt-4 text-xs text-muted">{t('profile.creatorLevel', { level: 'AI Builder' })}</p>
+          </div>
         </div>
       </SectionCard>
 
