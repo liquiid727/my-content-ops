@@ -19,6 +19,7 @@ export const createProjectSchema = z
     brief: projectBriefSchema.default(''),
     targetPlatform: projectTargetPlatformSchema.nullable().optional(),
     targetDurationMs: projectTargetDurationMsSchema.nullable().optional(),
+    personalStyleId: idSchema.optional(),
   })
   .strict()
 
@@ -52,6 +53,9 @@ export const projectSchema = z
     contentType: projectContentTypeSchema,
     targetPlatform: projectTargetPlatformSchema.nullable(),
     targetDurationMs: projectTargetDurationMsSchema.nullable(),
+    graphId: idSchema.nullable(),
+    contextId: idSchema.nullable(),
+    personalStyleId: idSchema.nullable(),
     revision: revisionSchema,
     createdAt: isoDateTimeSchema,
     updatedAt: isoDateTimeSchema,

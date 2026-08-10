@@ -1,4 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+async function selectRadixOption(page: Page, triggerLabel: string, optionName: string): Promise<void> {
+  await page.getByLabel(triggerLabel).click()
+  await page.getByRole('option', { name: optionName }).click()
+}
 
 test('creates, edits, and archives a Project through its Overview', async ({ page }) => {
   const title = `E2E Project ${Date.now()}`
@@ -7,7 +12,7 @@ test('creates, edits, and archives a Project through its Overview', async ({ pag
   await page.goto('/projects')
   await page.getByRole('button', { name: '新建项目' }).click()
   await page.getByLabel('项目标题').fill(title)
-  await page.getByLabel('内容类型').selectOption('short_video')
+  await selectRadixOption(page, '内容类型', '短视频')
   await page.getByLabel('项目说明').fill('验证 Project 生命周期的本地端到端流程。')
   await page.getByRole('button', { name: '创建项目' }).click()
 
@@ -27,7 +32,8 @@ test('creates, edits, and archives a Project through its Overview', async ({ pag
   await expect(page).toHaveURL('/projects')
   await expect(page.getByText(updatedTitle)).toHaveCount(0)
 
-  await page.getByLabel('按状态筛选项目').selectOption('archived')
+  await page.getByLabel('按状态筛选项目').click()
+  await page.getByRole('option', { name: '已归档' }).click()
   await expect(page.getByText(updatedTitle)).toBeVisible()
   await page.getByText(updatedTitle).click()
   await expect(page.getByText('已归档').first()).toBeVisible()
@@ -63,7 +69,7 @@ test('Asset list presents loading, error, empty, and success states', async ({ p
   await expect(page.getByRole('heading', { name: '还没有素材' })).toBeVisible()
 
   mode = 'success'
-  await page.getByLabel('按素材类型筛选').selectOption('image')
+  await selectRadixOption(page, '按素材类型筛选', '图片')
   await expect(page.getByRole('heading', { name: 'reference.png' })).toBeVisible()
   await expect(page.getByRole('link', { name: '读取文件' })).toHaveAttribute('href', /\/api\/v1\/assets\/.+\/content/)
 })
@@ -105,7 +111,7 @@ test('Tasks restores its REST snapshot before continuing with live events', asyn
 
 test('Theme applies immediately and persists to CreatorProfile', async ({ page }) => {
   await page.goto('/')
-  await page.getByLabel('主题').selectOption('light')
+  await selectRadixOption(page, '主题', '浅色')
   await expect(page.locator('html')).not.toHaveClass(/dark/)
   await expect.poll(async () => page.evaluate(async () => {
     const response = await fetch('/api/v1/bootstrap')
@@ -113,7 +119,7 @@ test('Theme applies immediately and persists to CreatorProfile', async ({ page }
     return body.data.creatorProfile.preferences.theme
   })).toBe('light')
   await page.reload()
-  await expect(page.getByLabel('主题')).toHaveValue('light')
+  await expect(page.getByLabel('主题')).toHaveText('浅色')
 })
 
 test('Assets uploads a validated local file and shows the result', async ({ page }) => {
@@ -129,7 +135,7 @@ test('Assets uploads a validated local file and shows the result', async ({ page
 
 test('Language switches the complete shell and persists to CreatorProfile', async ({ page }) => {
   await page.goto('/')
-  await page.getByLabel('语言').selectOption('en-US')
+  await selectRadixOption(page, '语言', 'English')
   await expect(page.getByRole('heading', { name: 'Your studio, clearly routed.' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-US')
   await expect.poll(async () => page.evaluate(async () => {
@@ -138,8 +144,8 @@ test('Language switches the complete shell and persists to CreatorProfile', asyn
     return body.data.creatorProfile.preferences.locale
   })).toBe('en-US')
   await page.reload()
-  await expect(page.getByLabel('Language')).toHaveValue('en-US')
-  await page.getByLabel('Language').selectOption('zh-CN')
+  await expect(page.getByLabel('Language')).toHaveText('English')
+  await selectRadixOption(page, 'Language', '中文')
   await expect.poll(async () => page.evaluate(async () => {
     const response = await fetch('/api/v1/bootstrap')
     const body = await response.json() as { data: { creatorProfile: { preferences: { locale: string } } } }

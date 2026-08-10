@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const workspaces = sqliteTable('workspaces', {
   id: text('id').primaryKey(),
@@ -33,6 +33,9 @@ export const projects = sqliteTable('projects', {
   targetPlatform: text('target_platform'),
   targetDurationMs: integer('target_duration_ms'),
   coverAssetId: text('cover_asset_id'),
+  graphId: text('graph_id'),
+  contextId: text('context_id'),
+  personalStyleId: text('personal_style_id'),
   settingsJson: text('settings_json').notNull().default('{}'),
   createdBy: text('created_by').notNull(),
   revision: integer('revision').notNull().default(1),
@@ -180,6 +183,85 @@ export const idempotencyRecords = sqliteTable('idempotency_records', {
   createdAt: integer('created_at').notNull(),
 })
 
+export const artifacts = sqliteTable(
+  'artifacts',
+  {
+    id: text('id').primaryKey(),
+    workspaceId: text('workspace_id').notNull(),
+    projectId: text('project_id').notNull(),
+    kind: text('kind', { enum: ['text', 'image', 'audio', 'video', 'collection', 'action'] }).notNull(),
+    role: text('role').notNull(),
+    currentVersionId: text('current_version_id'),
+    createdBy: text('created_by').notNull(),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+    deletedAt: integer('deleted_at'),
+  },
+  (table) => [index('artifacts_project_id_idx').on(table.projectId)],
+)
+
+export const artifactVersions = sqliteTable(
+  'artifact_versions',
+  {
+    id: text('id').primaryKey(),
+    artifactId: text('artifact_id').notNull(),
+    versionNumber: integer('version_number').notNull(),
+    parentVersionId: text('parent_version_id'),
+    contentRefType: text('content_ref_type', { enum: ['asset', 'inline'] }),
+    contentRefId: text('content_ref_id'),
+    inlineText: text('inline_text'),
+    metadataJson: text('metadata_json').notNull().default('{}'),
+    source: text('source', { enum: ['ai', 'user', 'import', 'system'] }).notNull(),
+    operationRunId: text('operation_run_id'),
+    createdBy: text('created_by').notNull(),
+    createdAt: integer('created_at').notNull(),
+  },
+  (table) => [index('artifact_versions_artifact_id_idx').on(table.artifactId)],
+)
+
+export const canvasNodes = sqliteTable('canvas_nodes', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  artifactId: text('artifact_id').notNull(),
+  x: real('x').notNull(),
+  y: real('y').notNull(),
+  width: real('width'),
+  height: real('height'),
+  collapsed: integer('collapsed', { mode: 'boolean' }).notNull().default(false),
+  zIndex: integer('z_index').notNull().default(0),
+  renderer: text('renderer').notNull().default('TextNode'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+export const edges = sqliteTable(
+  'edges',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id').notNull(),
+    sourceArtifactId: text('source_artifact_id').notNull(),
+    targetArtifactId: text('target_artifact_id').notNull(),
+    inputSlot: text('input_slot').notNull(),
+    createdAt: integer('created_at').notNull(),
+  },
+  (table) => [index('edges_project_id_idx').on(table.projectId)],
+)
+
+export const runs = sqliteTable('runs', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  projectId: text('project_id').notNull(),
+  taskId: text('task_id').notNull().unique(),
+  operationId: text('operation_id').notNull(),
+  sourceArtifactId: text('source_artifact_id'),
+  inputVersionIdsJson: text('input_version_ids_json').notNull().default('[]'),
+  outputVersionIdsJson: text('output_version_ids_json'),
+  outputArtifactIdsJson: text('output_artifact_ids_json'),
+  configJson: text('config_json').notNull().default('{}'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
 export const databaseSchema = {
   workspaces,
   creatorProfiles,
@@ -193,6 +275,11 @@ export const databaseSchema = {
   connectorConfigs,
   syncRecords,
   idempotencyRecords,
+  artifacts,
+  artifactVersions,
+  canvasNodes,
+  edges,
+  runs,
 }
 
 export type WorkspaceRecord = typeof workspaces.$inferSelect
@@ -206,3 +293,8 @@ export type GenerationRecord = typeof generations.$inferSelect
 export type ProviderConfigRecord = typeof providerConfigs.$inferSelect
 export type ConnectorConfigRecord = typeof connectorConfigs.$inferSelect
 export type IdempotencyRecord = typeof idempotencyRecords.$inferSelect
+export type ArtifactRecord = typeof artifacts.$inferSelect
+export type ArtifactVersionRecord = typeof artifactVersions.$inferSelect
+export type CanvasNodeRecord = typeof canvasNodes.$inferSelect
+export type EdgeRecord = typeof edges.$inferSelect
+export type RunRecord = typeof runs.$inferSelect

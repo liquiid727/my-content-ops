@@ -5,7 +5,7 @@
 > 依赖 Personal Style 契约：`.feature-002-creator-profile/.spec`（先于/并行于 #1 评审）
 
 ## Issue #1: 共享契约与数据模型（Canvas Runtime 底座）
-**Status:** pending
+**Status:** shipped
 **Type:** backend
 **Priority:** high
 **Dependencies:** None
@@ -14,11 +14,11 @@
 在 `packages/contracts` 新增 `artifacts.ts` / `canvas.ts` / `operations.ts` / `runs.ts` 契约（Artifact/ArtifactVersion/CanvasNode/Edge/Graph/OperationDefinition/Run 类型 + zod schema）；在 `apps/server/src/db/schema.ts` 新增 `artifacts` / `artifact_versions` / `canvas_nodes` / `edges` / `runs` 表，`projects` 表新增 `graph_id` / `context_id` / `personal_style_id` 可空列；写迁移。Artifact 用 `kind + role`，媒体走 `contentRef → assets`。
 
 ### Acceptance Criteria
-- [ ] `packages/contracts` 导出上述类型与 schema，`index.ts` 汇总导出
-- [ ] 五张新表 + project 三列迁移可运行，Drizzle schema 类型推断正确
-- [ ] `runs.task_id` unique；`artifacts`/`edges` 建 project_id 索引
-- [ ] 既有 Foundation 表/契约不破坏（`test:foundation` 通过）
-- [ ] Typecheck/lint 通过
+- [x] `packages/contracts` 导出上述类型与 schema，`index.ts` 汇总导出
+- [x] 五张新表 + project 三列迁移可运行，Drizzle schema 类型推断正确
+- [x] `runs.task_id` unique；`artifacts`/`edges` 建 project_id 索引
+- [x] 既有 Foundation 表/契约不破坏（`test:foundation` 通过）
+- [x] Typecheck/lint 通过
 
 ### SPEC Reference
 - [02-data-model §2-§6](./.spec/02-data-model.md) ｜ [01-system §2.2](./.spec/01-system.md)
