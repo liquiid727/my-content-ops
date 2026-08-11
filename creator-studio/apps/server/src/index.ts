@@ -8,6 +8,7 @@ import { configureCreatorProfileRoutes, CreatorProfileRepository, CreatorProfile
 import { AssetFileStore, AssetService, configureAssetRoutes } from './assets/index.js'
 import { BootstrapService, configurePreferenceRoutes, ensureLocalIdentity } from './bootstrap/index.js'
 import { CanvasRepository, CanvasService, configureCanvasRoutes } from './canvas/index.js'
+import { configureContextRoutes, ContextService } from './context/index.js'
 import { openDatabase } from './db/database.js'
 import { ProjectEventEmitter, ProjectEventRepository, configureProjectEventRoutes } from './events/index.js'
 import { consoleRequestLogger } from './http/logging.js'
@@ -69,6 +70,7 @@ const projectEventRepository = new ProjectEventRepository(database.db)
 const projectEventEmitter = new ProjectEventEmitter(projectEventRepository)
 const operationRegistry = new OperationRegistry(operationDefinitions)
 const runRepository = new RunRepository(database.db)
+const contextService = new ContextService(new ProjectRepository(database.db), artifactRepository, new CreatorProfileRepository(database.db))
 const operationTaskHandler = new OperationTaskHandler(
   operationRegistry,
   artifactRepository,
@@ -78,6 +80,7 @@ const operationTaskHandler = new OperationTaskHandler(
   taskRepository,
   providerService,
   projectEventEmitter,
+  contextService,
 )
 const taskHandlers = new TaskHandlerRegistry()
   .register(new SeedTaskHandler(providerRegistry))
@@ -108,6 +111,7 @@ const app = createStaticApp({
     configurePreferenceRoutes(api, workspaceRepository)
     configureCreatorProfileRoutes(api, creatorProfileService)
     configureProjectRoutes(api, projectService)
+    configureContextRoutes(api, contextService)
     configureCanvasRoutes(api, canvasService)
     configureArtifactRoutes(api, artifactService)
     configureRunRoutes(api, runService)

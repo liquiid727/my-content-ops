@@ -3,7 +3,7 @@ import { ulid } from 'ulid'
 
 import type { ArtifactVersion } from '@creator-studio/contracts'
 import type { ArtifactRecord, TaskRecord } from '../db/schema.js'
-import { assembleContext } from '../context/assembler.js'
+import { assembleContext, ContextService } from '../context/index.js'
 import { ProjectEventEmitter } from '../events/project-event-emitter.js'
 import { ArtifactRepository } from '../artifacts/artifact-repository.js'
 import { CanvasRepository } from '../canvas/canvas-repository.js'
@@ -53,6 +53,7 @@ export class OperationTaskHandler implements TaskHandler {
     private readonly tasks: TaskRepository,
     private readonly providers: ProviderService,
     private readonly events: ProjectEventEmitter,
+    private readonly contexts: ContextService,
     private readonly now: () => number = Date.now,
   ) {}
 
@@ -72,6 +73,7 @@ export class OperationTaskHandler implements TaskHandler {
     const [sourceVersion, sourceArtifact, connectedInputs] = await this.loadInputs(input)
     const projectRecord = await this.projects.getByWorkspaceAndId(input.workspaceId, input.projectId)
     const provider = await this.selectProvider(input.workspaceId, input.operationId)
+    const personalStyleText = await this.contexts.resolveOperationStyle(input.workspaceId, projectRecord ?? undefined, input.createdBy, input.operationId)
 
     const context = assembleContext({
       project: {
@@ -82,6 +84,7 @@ export class OperationTaskHandler implements TaskHandler {
       },
       scope: definition.id,
       operationLabel: definition.label,
+      personalStyleText,
       ...(sourceVersion ? { sourceVersion } : {}),
       connectedInputs,
       config: input.config,

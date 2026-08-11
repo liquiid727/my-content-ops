@@ -81,7 +81,7 @@
 - [04-runtime §5](./.spec/04-runtime.md)
 
 ## Issue #5: Context Assembler（含 Personal Style 注入）
-**Status:** pending
+**Status:** shipped
 **Type:** backend
 **Priority:** high
 **Dependencies:** #1, #4（契约依赖 creator-profile .spec 评审）
@@ -90,10 +90,10 @@
 实现 `context/assembler.ts`：分层拼装 System Capability Context + Personal Style + Project Context + Connected Artifact Inputs + Reference Assets + Operation Config + 用户临时指令。Personal Style 经 `projects.personal_style_id → creator_profiles.profile_json + injection_json → renderContext()` 注入（调用 creator-profile 的渲染契约）。`GET /projects/:id/context?scope=X` 返回分层文本。
 
 ### Acceptance Criteria
-- [ ] `GET /projects/:id/context` 返回 `{ layers, text }`，分层顺序固定
-- [ ] Personal Style 开关（injection.enabled / sections）生效：关掉 Voice 则注入文本不含 Voice
-- [ ] 上游 connected inputs（edge 输入）注入正确
-- [ ] 单元测试覆盖分层 + 开关；Typecheck/lint 通过
+- [x] `GET /projects/:id/context` 返回 `{ layers, text }`，分层顺序固定
+- [x] Personal Style 开关（injection.enabled / sections）生效：关掉 Voice 则注入文本不含 Voice
+- [x] 上游 connected inputs（edge 输入）注入正确
+- [x] 单元测试覆盖分层 + 开关；Typecheck/lint 通过
 
 ### SPEC Reference
 - [04-runtime §6](./.spec/04-runtime.md) ｜ `.feature-002-creator-profile/.spec §3.4 §5.1`

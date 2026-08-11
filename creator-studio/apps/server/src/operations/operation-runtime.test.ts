@@ -22,6 +22,8 @@ import {
 import { GenerationRepository } from '../repositories/generation-repository.js'
 import { ArtifactRepository, ArtifactService } from '../artifacts/index.js'
 import { CanvasRepository, CanvasService } from '../canvas/index.js'
+import { ContextService } from '../context/index.js'
+import { CreatorProfileRepository } from '../creator-profile/index.js'
 import { ProjectEventRepository } from '../events/index.js'
 import { ProjectEventEmitter } from '../events/index.js'
 import { configureArtifactRoutes } from '../artifacts/artifact-routes.js'
@@ -77,6 +79,7 @@ async function createHarness(run: (ctx: {
     const runRepository = new RunRepository(db)
     const projectEventRepository = new ProjectEventRepository(db)
     const eventEmitter = new ProjectEventEmitter(projectEventRepository, () => now++)
+    const contextService = new ContextService(projectRepository, artifactRepository, new CreatorProfileRepository(db))
     const operationTaskHandler = new OperationTaskHandler(
       operationRegistry,
       artifactRepository,
@@ -86,6 +89,7 @@ async function createHarness(run: (ctx: {
       taskRepository,
       providerService,
       eventEmitter,
+      contextService,
       () => now++,
     )
     const handlers = new TaskHandlerRegistry().register(new SeedTaskHandler(providerRegistry)).register(operationTaskHandler)

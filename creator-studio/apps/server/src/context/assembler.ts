@@ -11,7 +11,7 @@ export interface AssembleContextInput {
   operationLabel?: string
   sourceVersion?: ArtifactVersion | null
   connectedInputs: ArtifactVersion[]
-  config: Record<string, unknown>
+  config?: Record<string, unknown>
   /** Personal Style renderContext 产物（issue #5 注入）。 */
   personalStyleText?: string
   referenceAssets?: string[]

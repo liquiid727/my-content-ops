@@ -8,6 +8,8 @@ import { configureArtifactRoutes } from '../artifacts/artifact-routes.js'
 import { configureCanvasRoutes } from '../canvas/canvas-routes.js'
 import { configureProjectRoutes } from '../projects/project-routes.js'
 import { ProjectService } from '../projects/project-service.js'
+import { ContextService } from '../context/index.js'
+import { CreatorProfileRepository } from '../creator-profile/index.js'
 import { withTestDatabase } from '../db/test-database.js'
 import { ProjectEventEmitter, ProjectEventRepository } from '../events/index.js'
 import { createApiApp } from '../http/app.js'
@@ -65,8 +67,9 @@ describe('Provider integration', () => {
       const projectEventRepository = new ProjectEventRepository(db)
       const eventEmitter = new ProjectEventEmitter(projectEventRepository, () => now++)
       const generationRepository = new GenerationRepository(db)
+      const contextService = new ContextService(projectRepository, artifactRepository, new CreatorProfileRepository(db))
       const operationTaskHandler = new OperationTaskHandler(
-        operationRegistry, artifactRepository, canvasRepository, runRepository, projectRepository, taskRepository, providerService, eventEmitter, () => now++,
+        operationRegistry, artifactRepository, canvasRepository, runRepository, projectRepository, taskRepository, providerService, eventEmitter, contextService, () => now++,
       )
       const handlers = new TaskHandlerRegistry().register(new SeedTaskHandler(providerRegistry)).register(operationTaskHandler)
       const runner = new TaskRunner(taskRepository, generationRepository, handlers, () => now++)
