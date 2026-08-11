@@ -209,7 +209,7 @@
 - [04-runtime §2 §3](./.spec/04-runtime.md) ｜ [05-canvas-ui §1 §3](./.spec/05-canvas-ui.md)
 
 ## Issue #12: 性能（culling / LOD / 缓存 / project 卸载 + benchmark）
-**Status:** pending
+**Status:** shipped
 **Type:** frontend
 **Priority:** medium
 **Dependencies:** #6, #7, #10
@@ -218,11 +218,11 @@
 开启视口剔除（React Flow `onlyRenderVisibleElements`）、LOD 细化、Project Graph/Artifact Summary/Thumbnail 缓存、切 Project 不保留多 Canvas DOM。写 100/300/500/1000 node benchmark 脚本并达标（100 首屏 <1.5s；300 流畅；500 culling+LOD 可用）。
 
 ### Acceptance Criteria
-- [ ] 视口外节点轻量 placeholder，不挂重组件/不加载原媒体
-- [ ] LOD 三档切换无 layout jump；节点中心一致
-- [ ] 切 Project 只保留一个重 Canvas，viewpoint/selection 恢复
-- [ ] benchmark 脚本可跑，300+ 节点操作流畅
-- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+- [x] 视口外节点轻量 placeholder，不挂重组件/不加载原媒体（`onlyRenderVisibleElements` + LOD 分级，媒体节点仅 full LOD 才 mount 播放器/原图）
+- [x] LOD 三档切换无 layout jump；节点中心一致（`useLod` 按 zoom <0.35 / <0.7 / ≥0.7 切换，节点 anchor 稳定）
+- [x] 切 Project 只保留一个重 Canvas，viewpoint/selection 恢复（CanvasStore `projectStates` 快照缓存 + 恢复）
+- [x] benchmark 脚本可跑，300+ 节点操作流畅（`scripts/canvas-performance.mjs` 100/300/500/1000 全部达标）
+- [x] 浏览器验证（e2e 13 条全绿，含 3 条 Canvas 链路）；`test:foundation` 全绿；Typecheck/lint 通过
 
 ### SPEC Reference
 - [01-system §3](./.spec/01-system.md) ｜ [05-canvas-ui §3 §7](./.spec/05-canvas-ui.md)

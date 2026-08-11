@@ -32,7 +32,7 @@ interface CanvasShellProps {
 
 function CanvasInner({ projectId, className }: CanvasShellProps) {
   const { t } = useTranslation()
-  const { screenToFlowPosition } = useReactFlow()
+  const { fitView, screenToFlowPosition } = useReactFlow()
   const nodes = useCanvasStore((state) => state.nodes)
   const edges = useCanvasStore((state) => state.edges)
   const loading = useCanvasStore((state) => state.loading)
@@ -53,6 +53,23 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
   useEffect(() => {
     void loadGraph(projectId)
   }, [loadGraph, projectId])
+
+  // 节点数量增长（Run 产出新节点 / 初次加载）时 fitView 一次，
+  // 否则新节点落在视口外会被 onlyRenderVisibleElements 剔除，用户看不到新内容。
+  // 切 project 时重置计数基线，避免把「缓存恢复」误判为新内容而抢走 viewport。
+  const projectIdRef = useRef(projectId)
+  const prevNodeCount = useRef(nodes.length)
+  useEffect(() => {
+    if (projectIdRef.current !== projectId) {
+      projectIdRef.current = projectId
+      prevNodeCount.current = nodes.length
+      return
+    }
+    if (nodes.length > prevNodeCount.current && nodes.length > 0) {
+      void fitView({ padding: 0.2, duration: 300 })
+    }
+    prevNodeCount.current = nodes.length
+  }, [nodes.length, projectId, fitView])
 
   const handleNodesChange = (changes: NodeChange<FlowNode>[]) => applyNodesChange(changes)
 
@@ -85,7 +102,6 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
           colorMode="dark"
           defaultEdgeOptions={{ type: 'smoothstep', animated: true }}
           edges={edges}
-          fitView
           maxZoom={2.5}
           minZoom={0.15}
           nodeTypes={canvasNodeTypes}
@@ -97,6 +113,7 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
           onNodeDragStop={handleNodeDragStop}
           onNodesChange={handleNodesChange}
           onSelectionChange={handleSelectionChange}
+          onlyRenderVisibleElements
           proOptions={{ hideAttribution: true }}
           selectionOnDrag
           snapToGrid

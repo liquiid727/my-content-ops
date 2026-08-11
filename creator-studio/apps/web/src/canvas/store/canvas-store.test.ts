@@ -82,6 +82,7 @@ function resetStore() {
     viewport: { x: 0, y: 0, zoom: 1 },
     loading: false,
     error: null,
+    projectStates: {},
   })
 }
 
@@ -178,5 +179,42 @@ describe('canvas store', () => {
     const state = useCanvasStore.getState()
     expect(state.selectedNodeId).toBe(n.id)
     expect(state.nodes[0]).toBe(before) // 不重建 node 对象 → 避免 React Flow 选择反馈循环
+  })
+
+  it('caches per-project canvas state and restores viewport/selection on switch-back (Issue #12)', async () => {
+    const PROJECT_B = '01ARZ3NDEKTSV4RRFFQ69G5FDD'
+    const nodeB = node({ id: '01ARZ3NDEKTSV4RRFFQ69G5F11', artifactId: '01ARZ3NDEKTSV4RRFFQ69G5F12', projectId: PROJECT_B, x: 320, y: 200 })
+    let graphACalls = 0
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      if (url.endsWith(`/projects/${PROJECT_ID}/graph`)) {
+        graphACalls += 1
+        return json({ data: { nodes: [node()], edges: [edge()] }, meta: { requestId: REQUEST_ID } })
+      }
+      if (url.endsWith(`/projects/${PROJECT_B}/graph`)) {
+        return json({ data: { nodes: [nodeB], edges: [] }, meta: { requestId: REQUEST_ID } })
+      }
+      if (url.includes('/artifacts/')) return json({ data: artifactDetail(), meta: { requestId: REQUEST_ID } })
+      throw new Error(`Unexpected fetch ${url}`)
+    })
+
+    // A 首载 + 保存 viewport/selection
+    await useCanvasStore.getState().loadGraph(PROJECT_ID)
+    useCanvasStore.getState().setViewport({ x: 480, y: 240, zoom: 1.6 })
+    useCanvasStore.getState().selectNode(node().artifactId)
+
+    // 切到 B：画布换成 B 的节点
+    await useCanvasStore.getState().loadGraph(PROJECT_B)
+    expect(useCanvasStore.getState().projectId).toBe(PROJECT_B)
+    expect(useCanvasStore.getState().nodes[0]!.data.artifactId).toBe(nodeB.artifactId)
+    expect(useCanvasStore.getState().selectedNodeId).toBeNull()
+
+    // 切回 A：命中缓存，不再 fetch，恢复节点/viewport/selection
+    await useCanvasStore.getState().loadGraph(PROJECT_ID)
+    const state = useCanvasStore.getState()
+    expect(graphACalls).toBe(1) // 第二次 loadGraph(A) 走缓存
+    expect(state.nodes).toHaveLength(1)
+    expect(state.viewport).toEqual({ x: 480, y: 240, zoom: 1.6 })
+    expect(state.selectedNodeId).toBe(node().artifactId)
   })
 })
