@@ -10,6 +10,14 @@ export class GenerationRepository {
     return this.db.select().from(generations).where(eq(generations.taskId, taskId)).get() ?? null
   }
 
+  /** 仅插入一条已完成的 generation 记录（不触碰 task 状态）。 */
+  insertCompleted(input: { generation: typeof generations.$inferInsert }): GenerationRecord {
+    validateJsonText(input.generation.requestJson, 'generation.requestJson')
+    validateOptionalJsonText(input.generation.responseJson, 'generation.responseJson')
+    validateOptionalJsonText(input.generation.usageJson, 'generation.usageJson')
+    return this.db.insert(generations).values(input.generation).returning().get()
+  }
+
   completeTask(input: { generation: typeof generations.$inferInsert; taskId: string; outputJson: string; finishedAt: number }): { generation: GenerationRecord; task: TaskRecord } {
     validateJsonText(input.generation.requestJson, 'generation.requestJson')
     validateOptionalJsonText(input.generation.responseJson, 'generation.responseJson')

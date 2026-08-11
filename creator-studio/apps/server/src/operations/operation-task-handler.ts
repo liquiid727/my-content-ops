@@ -9,7 +9,7 @@ import { ArtifactRepository } from '../artifacts/artifact-repository.js'
 import { CanvasRepository } from '../canvas/canvas-repository.js'
 import { ProjectRepository } from '../repositories/project-repository.js'
 import { TaskRepository } from '../repositories/task-repository.js'
-import { GenerationProviderRegistry } from '../providers/generation-provider.js'
+import { ProviderService } from '../providers/index.js'
 import { OperationRegistry } from './registry.js'
 import { operationCapability } from './definitions.js'
 import { executors, OperationProviderUnavailableError, type ExecutorResult } from './executors.js'
@@ -51,7 +51,7 @@ export class OperationTaskHandler implements TaskHandler {
     private readonly runs: RunRepository,
     private readonly projects: ProjectRepository,
     private readonly tasks: TaskRepository,
-    private readonly providers: GenerationProviderRegistry,
+    private readonly providers: ProviderService,
     private readonly events: ProjectEventEmitter,
     private readonly now: () => number = Date.now,
   ) {}
@@ -71,7 +71,7 @@ export class OperationTaskHandler implements TaskHandler {
 
     const [sourceVersion, sourceArtifact, connectedInputs] = await this.loadInputs(input)
     const projectRecord = await this.projects.getByWorkspaceAndId(input.workspaceId, input.projectId)
-    const provider = this.selectProvider(input.operationId)
+    const provider = await this.selectProvider(input.workspaceId, input.operationId)
 
     const context = assembleContext({
       project: {
@@ -200,14 +200,12 @@ export class OperationTaskHandler implements TaskHandler {
     return [sourceVersion, sourceArtifact, connectedInputs]
   }
 
-  private selectProvider(operationId: string) {
+  private async selectProvider(workspaceId: string, operationId: string) {
     const capability = operationCapability[operationId]
     if (!capability) return undefined
-    try {
-      return this.providers.require(capability)
-    } catch {
-      throw new OperationProviderUnavailableError(capability)
-    }
+    const provider = await this.providers.resolve(workspaceId, capability)
+    if (!provider) throw new OperationProviderUnavailableError(capability)
+    return provider
   }
 
   private async applyResult(

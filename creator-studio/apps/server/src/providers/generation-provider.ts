@@ -1,6 +1,6 @@
 export type ProviderCapability = 'text_generation' | 'image_generation' | 'audio_generation' | 'video_generation'
 
-export interface GenerationRequest { prompt: string }
+export interface GenerationRequest { prompt: string; config?: Record<string, unknown> }
 export interface GenerationResult { model: string; text: string; usage: { inputUnits: number; outputUnits: number } }
 export interface GenerationProvider {
   readonly key: string

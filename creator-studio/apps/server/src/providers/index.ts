@@ -1,2 +1,4 @@
 export * from './generation-provider.js'
 export * from './seed-provider.js'
+export * from './openai-text-provider.js'
+export * from './provider-service.js'

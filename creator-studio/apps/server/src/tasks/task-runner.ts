@@ -25,18 +25,20 @@ export class TaskRunner {
           const input = handler.parse(JSON.parse(task.inputJson))
           const result = await handler.execute(input, controller.signal)
           const finishedAt = this.now()
+          const startedAt = task.startedAt ?? task.createdAt
+          const latencyMs = Math.max(0, finishedAt - startedAt)
+          const generation = {
+            id: ulid(finishedAt), workspaceId: task.workspaceId, projectId: task.projectId, taskId: task.id,
+            providerKey: result.providerKey, model: result.model,
+            requestJson: JSON.stringify({ ...result.requestSnapshot as object, sha256: createHash('sha256').update(task.inputJson).digest('hex') }),
+            responseJson: JSON.stringify(result.responseSnapshot), usageJson: JSON.stringify(result.usage),
+            latencyMs, status: 'completed' as const, createdAt: startedAt, finishedAt,
+          }
           if (handler.onCompleted) {
+            this.generations.insertCompleted({ generation })
             await handler.onCompleted(input, result, task, finishedAt)
           } else {
-            this.generations.completeTask({
-              generation: {
-                id: ulid(finishedAt), workspaceId: task.workspaceId, projectId: task.projectId, taskId: task.id,
-                providerKey: result.providerKey, model: result.model,
-                requestJson: JSON.stringify({ ...result.requestSnapshot as object, sha256: createHash('sha256').update(task.inputJson).digest('hex') }),
-                responseJson: JSON.stringify(result.responseSnapshot), usageJson: JSON.stringify(result.usage), status: 'completed', createdAt: task.startedAt ?? finishedAt, finishedAt,
-              },
-              taskId: task.id, outputJson: JSON.stringify(result.output), finishedAt,
-            })
+            this.generations.completeTask({ generation, taskId: task.id, outputJson: JSON.stringify(result.output), finishedAt })
           }
         } catch (error) {
           const current = await this.tasks.getByWorkspaceAndId(task.workspaceId, task.id)

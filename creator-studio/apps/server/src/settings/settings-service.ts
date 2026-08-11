@@ -24,10 +24,13 @@ export class SettingsService {
       connectors: await Promise.all(connectors.map(async (item) => ({ key: item.connectorKey, displayName: item.displayName, enabled: item.enabled, configured: await this.secrets.has(item.secretRef), config: parse(item.configJson), check: { status: item.lastCheckStatus, checkedAt: checkedAt(item.lastCheckedAt) }, availability: 'stub_only' }))),
     })
   }
-  async saveProvider(workspaceId: string, key: string, input: { displayName: string; enabled: boolean; model?: string | undefined; credential?: string | undefined }) {
+  async saveProvider(workspaceId: string, key: string, input: { displayName: string; enabled: boolean; model?: string | undefined; baseUrl?: string | undefined; credential?: string | undefined }) {
     const existing = await this.configs.getProvider(workspaceId, key); const now = this.now(); const ref = existing?.secretRef ?? (input.credential ? `provider:${workspaceId}:${key}` : null)
     if (input.credential && ref) await this.secrets.set(ref, input.credential)
-    await this.configs.saveProvider({ id: existing?.id ?? ulid(now), workspaceId, providerKey: key, displayName: input.displayName, configJson: JSON.stringify({ ...(input.model ? { model: input.model } : {}) }), secretRef: ref, enabled: input.enabled, createdAt: existing?.createdAt ?? now, updatedAt: now })
+    const config: Record<string, unknown> = {}
+    if (input.model) config.model = input.model
+    if (input.baseUrl) config.baseUrl = input.baseUrl
+    await this.configs.saveProvider({ id: existing?.id ?? ulid(now), workspaceId, providerKey: key, displayName: input.displayName, configJson: JSON.stringify(config), secretRef: ref, enabled: input.enabled, createdAt: existing?.createdAt ?? now, updatedAt: now })
   }
   async saveConnector(workspaceId: string, key: 'lark_cli' | 'obsidian', input: Record<string, unknown> & { enabled: boolean; credential?: string | undefined }) {
     const config = key === 'lark_cli' ? { command: input.command, args: input.args } : { vaultRoot: await this.validateVault(String(input.vaultRoot)) }

@@ -28,7 +28,9 @@ import { configureArtifactRoutes } from '../artifacts/artifact-routes.js'
 import { configureCanvasRoutes } from '../canvas/canvas-routes.js'
 import { configureProjectRoutes } from '../projects/project-routes.js'
 import { ProjectService } from '../projects/project-service.js'
-import { GenerationProviderRegistry, SeedGenerationProvider } from '../providers/index.js'
+import { ConfigRepository } from '../repositories/index.js'
+import { GenerationProviderRegistry, ProviderService, SeedGenerationProvider } from '../providers/index.js'
+import { SecretStore } from '../settings/secret-store.js'
 import { SeedTaskHandler, TaskHandlerRegistry } from '../tasks/index.js'
 import { TaskRunner } from '../tasks/task-runner.js'
 import { OperationRegistry } from './registry.js'
@@ -53,7 +55,7 @@ async function createHarness(run: (ctx: {
   events: ProjectEventRepository
   runs: RunRepository
 }) => Promise<void>) {
-  await withTestDatabase(async ({ db }) => {
+  await withTestDatabase(async ({ db, dataDirectory }) => {
     await new WorkspaceRepository(db).createWithProfile({
       workspace: { id: WORKSPACE_ID, name: 'Studio', slug: 'local', createdAt: 1, updatedAt: 1 },
       profile: { id: PROFILE_ID, displayName: 'Creator', createdAt: 1, updatedAt: 1 },
@@ -67,6 +69,9 @@ async function createHarness(run: (ctx: {
     const projectService = new ProjectService(projectRepository, new TaskRepository(db), new AssetRepository(db), new VersionRepository(db), () => now++)
 
     const providerRegistry = new GenerationProviderRegistry([new SeedGenerationProvider()])
+    const providerService = new ProviderService(new ConfigRepository(db), new SecretStore(dataDirectory), {
+      async post() { throw new Error('harness should not call HTTP when no provider configured') },
+    })
     const taskRepository = new TaskRepository(db)
     const operationRegistry = new OperationRegistry(operationDefinitions)
     const runRepository = new RunRepository(db)
@@ -79,7 +84,7 @@ async function createHarness(run: (ctx: {
       runRepository,
       projectRepository,
       taskRepository,
-      providerRegistry,
+      providerService,
       eventEmitter,
       () => now++,
     )

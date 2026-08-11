@@ -63,7 +63,7 @@
 - [04-runtime §2-§4 §8](./.spec/04-runtime.md) ｜ [03-api §2.3 §4 §5](./.spec/03-api.md)
 
 ## Issue #4: Provider 能力扩展与真实文本 LLM
-**Status:** pending
+**Status:** shipped
 **Type:** backend
 **Priority:** high
 **Dependencies:** #3
@@ -72,10 +72,10 @@
 扩展 `GenerationProvider` 能力集（`text_generation` / `image_generation` / `audio_generation` / `video_generation`），Registry 支持 `require(capability)`。接入真实文本 LLM Provider（经 `provider_configs` + `secret_store` 配置，模型 ID 属配置不硬编码）；Seed Provider 保留为无配置 fallback。`generations` 表记录 provider/model/usage/latency。
 
 ### Acceptance Criteria
-- [ ] 能力集与 `require(capability)` 就位；executor 经 `ProviderHandle` 调用
-- [ ] 真实文本 provider（LLM）可经配置启用；无 key 时 Seed fallback 仍可用
-- [ ] 生成记录写入 `generations`，含 provider/model/usage/latency
-- [ ] 单元测试（mock HTTP 层）+ Seed 回归；Typecheck/lint 通过
+- [x] 能力集与 `require(capability)` 就位；executor 经 `ProviderHandle` 调用
+- [x] 真实文本 provider（LLM）可经配置启用；无 key 时 Seed fallback 仍可用
+- [x] 生成记录写入 `generations`，含 provider/model/usage/latency
+- [x] 单元测试（mock HTTP 层）+ Seed 回归；Typecheck/lint 通过
 
 ### SPEC Reference
 - [04-runtime §5](./.spec/04-runtime.md)

@@ -15,6 +15,10 @@ export class SecretStore {
     await chmod(this.path, 0o600)
   }
   async has(ref: string | null): Promise<boolean> { return ref !== null && Object.hasOwn(await this.readAll(), ref) }
+  async get(ref: string | null): Promise<string | undefined> {
+    if (ref === null) return undefined
+    return (await this.readAll())[ref]
+  }
   private async readAll(): Promise<Record<string, string>> {
     try { return JSON.parse(await readFile(this.path, 'utf8')) as Record<string, string> } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return {}

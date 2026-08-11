@@ -20,7 +20,7 @@ import {
   OperationTaskHandler,
   RunRepository,
 } from './operations/index.js'
-import { GenerationProviderRegistry, SeedGenerationProvider } from './providers/index.js'
+import { fetchHttpClient, GenerationProviderRegistry, ProviderService, SeedGenerationProvider } from './providers/index.js'
 import { configureProjectRoutes, ProjectService } from './projects/index.js'
 import {
   AssetRepository,
@@ -64,6 +64,7 @@ const assetService = new AssetService(
 const versionService = new VersionService(new VersionRepository(database.db), new ProjectRepository(database.db))
 const taskRepository = new TaskRepository(database.db)
 const providerRegistry = new GenerationProviderRegistry([new SeedGenerationProvider()])
+const providerService = new ProviderService(new ConfigRepository(database.db), new SecretStore(database.dataDirectory), fetchHttpClient)
 const projectEventRepository = new ProjectEventRepository(database.db)
 const projectEventEmitter = new ProjectEventEmitter(projectEventRepository)
 const operationRegistry = new OperationRegistry(operationDefinitions)
@@ -75,7 +76,7 @@ const operationTaskHandler = new OperationTaskHandler(
   runRepository,
   new ProjectRepository(database.db),
   taskRepository,
-  providerRegistry,
+  providerService,
   projectEventEmitter,
 )
 const taskHandlers = new TaskHandlerRegistry()
