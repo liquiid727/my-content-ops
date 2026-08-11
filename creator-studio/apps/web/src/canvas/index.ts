@@ -1,0 +1,5 @@
+export { canvasApi } from './api/canvas-api'
+export { CanvasShell } from './shell/canvas-shell'
+export { useCanvasStore, type CanvasNodeData, type FlowNode } from './store/canvas-store'
+export { NodePicker } from './interactions/node-picker'
+export { canvasNodeTypes } from './nodes'

@@ -56,7 +56,7 @@ export const zhCN = {
     injectionSections: { identity: '身份', positioning: '定位', audience: '受众', voice: '声音', knowledge: '知识', memory: '记忆', rules: '规则' },
   },
   projectDetail: {
-    eyebrow: '项目 / 详情', overview: '概览', ideas: '创意', topics: '选题', scripts: '脚本', rhythm: '节奏', shots: '镜头', assets: '素材', tasks: '任务', projectSections: '项目分区',
+    eyebrow: '项目 / 详情', overview: '概览', ideas: '创意', topics: '选题', scripts: '脚本', rhythm: '节奏', shots: '镜头', assets: '素材', tasks: '任务', canvas: '画布', projectSections: '项目分区',
     overviewDescription: '项目身份、创作阶段与最近活动。', routeDescription: '项目“{{projectId}}”的路由契约。', loading: '正在打开项目案卷…', loadFailed: '项目加载失败。',
     updated: '项目已更新', conflict: '项目已在其他位置更新，最新版本已载入。请重新确认后保存。', archiveConfirm: '归档后项目会从默认列表移除，但数据仍会保留。继续吗？', archived: '项目已归档', archivedDescription: '可在项目的“已归档”筛选中查看。',
     archiveConflict: '归档前项目已被更新。已载入最新版本，请再次确认。', archiveFailed: '归档失败，请重试。', noDescription: '这个项目还没有说明，可以通过编辑补上受众与目标。', edit: '编辑', archive: '归档',
@@ -83,6 +83,14 @@ export const zhCN = {
     eyebrow: '工作区 / 设置', title: '设置', description: '外观即时保存在本地并同步 Profile；凭据只写入本地服务，浏览器只看到配置状态。', loading: '正在加载设置', loadFailed: '加载失败。', saved: '设置已保存，凭据不会再次显示。', saveFailed: '保存失败。', checkFailed: '连接检查失败。',
     appearance: '外观与语言', appearanceDescription: '选择中文或英文，以及深色、浅色或跟随系统；同步失败时保留本地选择并提示。', provider: 'Provider', configuredCredential: '已有凭据', unconfiguredCredential: '未配置凭据', providerCredential: 'Provider 凭据', secretPlaceholder: '写入后不再返回', testConnection: '测试连接', checking: '检查中…',
     larkCommand: 'Lark 命令', larkCredential: 'Lark 凭据', obsidianRoot: 'Vault 根目录', absolutePath: '绝对目录', obsidianCredential: 'Obsidian 凭据', stubOnly: '仅提供确定性 stub', connectionSuccess: '基础阶段确定性 stub 连接成功；真实调用尚未开放。',
+  },
+  canvas: {
+    toolbar: '画布工具栏', zoomIn: '放大', zoomOut: '缩小', fitView: '适应视图', resetView: '重置视图',
+    emptyTitle: '开始你的第一个创作节点', emptyDescription: '双击画布或使用「+」创建内容节点。',
+  },
+  nodePicker: {
+    title: '创建节点', description: '选择要创建的节点类型。',
+    topic: '选题', outline: '大纲', script: '口播稿', cover: '封面', voice: '配音', image: '配图', publish: '发布',
   },
   notFound: { eyebrow: '404 · 未找到页面', title: '这个页面不存在。', description: '请检查地址，或返回概览继续使用 Creator Studio。', returnDashboard: '返回概览' },
   routeError: { eyebrow: '页面不可用', title: '无法加载此页面。', description: 'Creator Studio 的其他部分仍然可用。请返回概览后重试。', returnDashboard: '返回概览' },
@@ -152,7 +160,7 @@ export const enUS = {
     injectionSections: { identity: 'Identity', positioning: 'Positioning', audience: 'Audience', voice: 'Voice', knowledge: 'Knowledge', memory: 'Memory', rules: 'Rules' },
   },
   projectDetail: {
-    eyebrow: 'Projects / Detail', overview: 'Overview', ideas: 'Ideas', topics: 'Topics', scripts: 'Scripts', rhythm: 'Rhythm', shots: 'Shots', assets: 'Assets', tasks: 'Tasks', projectSections: 'Project sections',
+    eyebrow: 'Projects / Detail', overview: 'Overview', ideas: 'Ideas', topics: 'Topics', scripts: 'Scripts', rhythm: 'Rhythm', shots: 'Shots', assets: 'Assets', tasks: 'Tasks', canvas: 'Canvas', projectSections: 'Project sections',
     overviewDescription: 'Project identity, creative stage, and recent activity.', routeDescription: 'Project route contract for “{{projectId}}”.', loading: 'Opening the project record…', loadFailed: 'Could not load the project.',
     updated: 'Project updated', conflict: 'This project changed elsewhere. The latest version has been loaded; review it before saving.', archiveConfirm: 'Archiving removes this project from the default list but keeps its data. Continue?', archived: 'Project archived', archivedDescription: 'Find it with the Archived filter on Projects.',
     archiveConflict: 'The project changed before it was archived. The latest version is loaded; confirm again.', archiveFailed: 'Could not archive the project. Try again.', noDescription: 'This project has no brief yet. Edit it to add an audience and goals.', edit: 'Edit', archive: 'Archive',
@@ -179,6 +187,14 @@ export const enUS = {
     eyebrow: 'Workspace / Settings', title: 'Settings', description: 'Appearance is saved locally and synced to your Profile. Credentials are stored only by the local service; the browser sees configuration status.', loading: 'Loading settings', loadFailed: 'Could not load settings.', saved: 'Settings saved. Credentials will not be shown again.', saveFailed: 'Could not save settings.', checkFailed: 'Connection check failed.',
     appearance: 'Appearance and language', appearanceDescription: 'Choose Chinese or English plus Dark, Light, or System. If sync fails, the local choice is kept and reported.', provider: 'Provider', configuredCredential: 'Credential configured', unconfiguredCredential: 'No credential configured', providerCredential: 'Provider credential', secretPlaceholder: 'Never returned after saving', testConnection: 'Test connection', checking: 'Checking…',
     larkCommand: 'Lark command', larkCredential: 'Lark credential', obsidianRoot: 'Vault root', absolutePath: 'Absolute directory', obsidianCredential: 'Obsidian credential', stubOnly: 'deterministic stub only', connectionSuccess: 'Foundation deterministic stub connected successfully; real calls are not available yet.',
+  },
+  canvas: {
+    toolbar: 'Canvas toolbar', zoomIn: 'Zoom in', zoomOut: 'Zoom out', fitView: 'Fit view', resetView: 'Reset view',
+    emptyTitle: 'Create your first content node', emptyDescription: 'Double-click the canvas or use “+” to create a content node.',
+  },
+  nodePicker: {
+    title: 'Create node', description: 'Choose the node type to create.',
+    topic: 'Topic', outline: 'Outline', script: 'Script', cover: 'Cover', voice: 'Voice', image: 'Illustration', publish: 'Publish',
   },
   notFound: { eyebrow: '404 · Not Found', title: 'This route does not exist.', description: 'Check the address, or return to the Dashboard to continue through Creator Studio.', returnDashboard: 'Return to Dashboard' },
   routeError: { eyebrow: 'Route unavailable', title: 'This page could not be loaded.', description: 'The rest of Creator Studio is still available. Return to the Dashboard and try again.', returnDashboard: 'Return to Dashboard' },

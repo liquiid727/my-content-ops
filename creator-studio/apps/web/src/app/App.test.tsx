@@ -155,7 +155,7 @@ describe('Creator Studio routing shell', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Ideas' })).toBeTruthy()
     expect(screen.getByText('Planned · P1')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Return to Project Overview' }).getAttribute('href')).toBe('/projects/preview/overview')
-    expect(within(screen.getByRole('navigation', { name: 'Project sections' })).getAllByRole('link')).toHaveLength(8)
+    expect(within(screen.getByRole('navigation', { name: 'Project sections' })).getAllByRole('link')).toHaveLength(9)
     expect(screen.getByRole('link', { name: 'Ideas' }).getAttribute('aria-current')).toBe('page')
   })
 

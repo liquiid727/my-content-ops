@@ -13,7 +13,7 @@ const SettingsPage = lazy(() => import('../routes/settings-page'))
 const ProjectDetailPage = lazy(() => import('../routes/project-detail-page'))
 const NotFoundPage = lazy(() => import('../routes/not-found-page'))
 
-const projectSections = ['overview', 'ideas', 'topics', 'scripts', 'rhythm', 'shots', 'assets', 'tasks'] as const
+const projectSections = ['overview', 'canvas', 'ideas', 'topics', 'scripts', 'rhythm', 'shots', 'assets', 'tasks'] as const
 
 function RoutedWorkspace() {
   const location = useLocation()

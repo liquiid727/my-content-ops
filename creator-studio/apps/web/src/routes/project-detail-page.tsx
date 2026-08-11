@@ -7,11 +7,13 @@ import { ApiClientError, ProjectForm, useProjectStore } from '../modules/project
 import { formatContentType, formatDate, getLocalizedErrorMessage, i18n as i18nInstance, normalizeLocale } from '../modules/i18n'
 import { cn } from '../shared/lib/cn'
 import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, useToastStore } from '../shared/ui'
+import { CanvasShell } from '../canvas'
 import { PlannedModule } from './planned-module'
 import { RouteHeading } from './route-heading'
 
 const sections = [
   { slug: 'overview', nameKey: 'projectDetail.overview', phase: 'Foundation FND-007', descriptionKey: '' },
+  { slug: 'canvas', nameKey: 'projectDetail.canvas', phase: 'Canvas Runtime', descriptionKey: '' },
   { slug: 'ideas', nameKey: 'projectDetail.ideas', phase: 'P1', descriptionKey: 'projectDetail.plannedDescriptions.ideas' },
   { slug: 'topics', nameKey: 'projectDetail.topics', phase: 'P1', descriptionKey: 'projectDetail.plannedDescriptions.topics' },
   { slug: 'scripts', nameKey: 'projectDetail.scripts', phase: 'P1', descriptionKey: 'projectDetail.plannedDescriptions.scripts' },
@@ -173,13 +175,17 @@ export default function ProjectDetailPage() {
       </nav>
       <div className="mt-6">
         {activeSection.slug === 'overview' ? <ProjectOverviewPanel key={projectId} projectId={projectId} /> : (
-          <PlannedModule
-            description={t(activeSection.descriptionKey)}
-            name={t(activeSection.nameKey)}
-            phase={activeSection.phase}
-            returnLabel={t('projectDetail.returnOverview')}
-            returnTo={overviewPath}
-          />
+          activeSection.slug === 'canvas' ? (
+            <CanvasShell className="h-[640px]" projectId={projectId} />
+          ) : (
+            <PlannedModule
+              description={t(activeSection.descriptionKey)}
+              name={t(activeSection.nameKey)}
+              phase={activeSection.phase}
+              returnLabel={t('projectDetail.returnOverview')}
+              returnTo={overviewPath}
+            />
+          )
         )}
       </div>
     </div>

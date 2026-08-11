@@ -99,7 +99,7 @@
 - [04-runtime §6](./.spec/04-runtime.md) ｜ `.feature-002-creator-profile/.spec §3.4 §5.1`
 
 ## Issue #6: 前端 Canvas Shell（@xyflow/react）
-**Status:** pending
+**Status:** shipped
 **Type:** frontend
 **Priority:** high
 **Dependencies:** #1, #2
@@ -108,11 +108,11 @@
 搭建 `apps/web/src/canvas/`：ReactFlowProvider + `<ReactFlow>` 壳、六个 Node Family Renderer（Text/Image/Audio/Video/Collection/Action）、LOD（zoom 分级）、Pan/Zoom/Selection/Drag/MiniMap/Toolbar、空状态。视觉用语义 token，暗色低饱和。CanvasStore 管理 viewport/positions/selection；移动结束节流写回服务端。
 
 ### Acceptance Criteria
-- [ ] 画布可 Pan/Zoom、节点可拖动/多选/选中，MiniMap 与 Toolbar 可用
-- [ ] 六个 Renderer 在 LOD 三档下正确渲染，无 layout jump
-- [ ] 空状态引导 + 双击创建 Node 入口
-- [ ] CanvasStore 与 React Flow nodes/edges 同步，移动写回服务端
-- [ ] 浏览器验证（`run` skill）：创建/拖动/缩放/空状态；Typecheck/lint 通过
+- [x] 画布可 Pan/Zoom、节点可拖动/多选/选中，MiniMap 与 Toolbar 可用
+- [x] 六个 Renderer 在 LOD 三档下正确渲染，无 layout jump
+- [x] 空状态引导 + 双击创建 Node 入口
+- [x] CanvasStore 与 React Flow nodes/edges 同步，移动写回服务端
+- [x] 浏览器验证（`run` skill）：创建/拖动/缩放/空状态；Typecheck/lint 通过
 
 ### SPEC Reference
 - [05-canvas-ui §2-§4 §6 §8](./.spec/05-canvas-ui.md)
