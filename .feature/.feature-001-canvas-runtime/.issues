@@ -228,7 +228,7 @@
 - [01-system §3](./.spec/01-system.md) ｜ [05-canvas-ui §3 §7](./.spec/05-canvas-ui.md)
 
 ## Issue #13: Hardening 与验收退出门禁
-**Status:** pending
+**Status:** shipped
 **Type:** infra
 **Priority:** medium
 **Dependencies:** #1-#12
@@ -237,10 +237,10 @@
 对照 `.prd` 的 MVP Definition of Done（来源 §59）逐条验收；补齐 loading/empty/error 三态、无障碍（对比/选中非纯色/焦点/aria-label）、键盘交互；跑全量 `test:foundation` + 新增测试 + Node LTS 门禁。
 
 ### Acceptance Criteria
-- [ ] `.prd` MVP Definition of Done 全部勾选
-- [ ] 主要状态均有 loading / empty / error
-- [ ] 无障碍与键盘交互（来源 §52-§53）满足
-- [ ] `npm --prefix creator-studio run test:foundation` 全绿；typecheck/lint 通过
+- [x] `.prd` MVP Definition of Done 全部勾选（三条链路含 Script→Voice→Video 骨架、FR-1~12、性能指标、Registry 扩展）
+- [x] 主要状态均有 loading / empty / error（Canvas 加载 spinner + 错误重试；Inspector 空态占位 + 预览错误重试；Projects/Project Detail 骨架屏；Assets/Tasks/Dashboard 已有）
+- [x] 无障碍与键盘交互（来源 §52-§53）满足（Toolbar tooltip、选中非纯色勾选标记、run 状态 icon+text、焦点可见、aria-label、F 适应视图 + React Flow 原生 Delete/Esc/Space/Wheel）
+- [x] `npm --prefix creator-studio run test:foundation` 全绿（14 e2e 含新增视频链路）；typecheck/lint 通过；新增 generate_video 运行时测试 + use-canvas-keyboard 单测 + 视频链路 e2e；Node LTS 门禁（`test:node-lts` + `.nvmrc` 22）
 
 ### SPEC Reference
 - [.prd §8](./.prd) ｜ [01-system §3](./.spec/01-system.md) ｜ [05-canvas-ui §9](./.spec/05-canvas-ui.md)

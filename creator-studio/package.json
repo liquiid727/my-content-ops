@@ -28,10 +28,11 @@
     "test:runtime:built": "node scripts/foundation-runtime-check.mjs",
     "test:performance": "pnpm run build && pnpm run test:performance:built",
     "test:performance:built": "node scripts/foundation-performance.mjs",
-    "test:canvas-performance": "npm run build && npm run test:canvas-performance:built",
+    "test:canvas-performance": "pnpm run build && pnpm run test:canvas-performance:built",
     "test:canvas-performance:built": "node scripts/canvas-performance.mjs",
     "test:boundary": "node scripts/foundation-boundary-check.mjs",
-    "test:foundation": "pnpm run typecheck && pnpm run lint && pnpm run test:unit && pnpm run test:contract && pnpm run test:integration && pnpm run test:boundary && pnpm run build && pnpm run test:e2e:built && pnpm run test:runtime:built && pnpm run test:performance:built"
+    "test:node-lts": "node scripts/check-node-lts.mjs",
+    "test:foundation": "pnpm run test:node-lts && pnpm run typecheck && pnpm run lint && pnpm run test:unit && pnpm run test:contract && pnpm run test:integration && pnpm run test:boundary && pnpm run build && pnpm run test:e2e:built && pnpm run test:runtime:built && pnpm run test:performance:built"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

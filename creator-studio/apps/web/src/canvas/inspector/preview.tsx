@@ -31,9 +31,21 @@ function MediaPreview({ detail }: { detail: ArtifactDetail }) {
 export function ArtifactPreview({ artifactId }: { artifactId: string }) {
   const { t } = useTranslation()
   const detail = useArtifactStore((state) => state.byId[artifactId])
+  const loadError = useArtifactStore((state) => state.errors[artifactId])
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState('')
   const [error, setError] = useState<string>()
+
+  if (loadError) {
+    return (
+      <div className="rounded-md border border-danger/40 bg-danger/10 p-3" role="alert">
+        <p className="text-xs text-danger">{t('inspector.previewLoadFailed')}</p>
+        <Button className="mt-2 h-7 px-2 text-xs" onClick={() => void useArtifactStore.getState().refreshArtifact(artifactId).catch(() => undefined)} variant="ghost">
+          {t('common.retry')}
+        </Button>
+      </div>
+    )
+  }
 
   if (!detail) {
     return <p className="text-xs text-muted">{t('inspector.loadingPreview')}</p>

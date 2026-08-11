@@ -122,6 +122,36 @@ test('Script → Cover (image collection) + Voice (audio) media chain', async ({
   expect(media).toEqual(['audio:voice', 'collection:cover', 'text:script'])
 })
 
+test('Script → Video chain produces a Video node with a draft asset (MVP skeleton)', async ({ page }) => {
+  await page.goto('/')
+  const projectId = await createProject(page)
+  await page.goto(`/projects/${projectId}/canvas`)
+  await expect(page.getByText('开始你的第一个创作节点')).toBeVisible({ timeout: 10_000 })
+
+  // 创建「口播稿」脚本节点 → Inspector 执行「生成视频」
+  await page.locator('.react-flow__pane').dblclick({ position: { x: 320, y: 220 } })
+  await page.getByRole('button', { name: '口播稿' }).click()
+  const nodes = page.locator('[data-testid="canvas-node"]')
+  await expect(nodes).toHaveCount(1, { timeout: 10_000 })
+  await nodes.first().click()
+  await expect(page.getByRole('button', { name: '生成视频' })).toBeVisible({ timeout: 10_000 })
+  await page.getByRole('button', { name: '生成视频' }).click()
+  await expect(nodes.filter({ hasText: 'draft' })).toBeVisible({ timeout: 15_000 })
+
+  // 服务端确认：video:draft artifact 落库且携带 MP4 asset
+  const video = await page.evaluate(async (pid) => {
+    const graphResponse = await fetch(`/api/v1/projects/${pid}/graph`)
+    const graph = await graphResponse.json() as { data: { nodes: Array<{ artifactId: string }> } }
+    const details = await Promise.all(graph.data.nodes.map(async (node) => {
+      const response = await fetch(`/api/v1/artifacts/${node.artifactId}`)
+      const body = await response.json() as { data: { kind: string; role: string } }
+      return `${body.data.kind}:${body.data.role}`
+    }))
+    return details.sort()
+  }, projectId)
+  expect(video).toEqual(['text:script', 'video:draft'])
+})
+
 test('Publish skeleton: header entry → dialog → publish run side effect', async ({ page }) => {
   await page.goto('/')
   const projectId = await createProject(page)

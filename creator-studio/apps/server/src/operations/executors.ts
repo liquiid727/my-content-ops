@@ -162,6 +162,23 @@ export const executors: Record<string, OperationExecutor> = {
       }
     },
   },
+  'operation.generate_video': {
+    async execute(ctx, signal) {
+      const generateMedia = requireMediaProvider(ctx, 'video_generation')
+      const saveMedia = requireSaveMedia(ctx)
+      const prompt = `${ctx.contextText}\n\n## 任务指令\n为脚本生成一条视频成片（MVP 骨架，产出占位视频）。`
+      const media = await generateMedia('video_generation', { prompt }, signal)
+      const assetId = await saveMedia(media, 'draft')
+      return {
+        outputBehavior: 'new_artifact',
+        kind: 'video',
+        role: 'draft',
+        contentRef: { type: 'asset', id: assetId },
+        metadata: { model: media.model, mimeType: media.mimeType, width: media.width ?? null, height: media.height ?? null, skeleton: true },
+        generation: { providerKey: ctx.provider?.key ?? 'seed-media', model: media.model, requestSnapshot: { promptLength: prompt.length }, responseSnapshot: { assetId }, usage: media.usage },
+      }
+    },
+  },
   'operation.edit': {
     async execute(ctx) {
       const text = typeof ctx.config.text === 'string' ? ctx.config.text : ''

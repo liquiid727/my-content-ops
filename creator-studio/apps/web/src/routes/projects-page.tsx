@@ -7,7 +7,7 @@ import { ulid } from 'ulid'
 
 import { ProjectForm, useProjectStore } from '../modules/projects'
 import { formatContentType, formatDateTime, normalizeLocale } from '../modules/i18n'
-import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, Select } from '../shared/ui'
+import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, Select, Skeleton } from '../shared/ui'
 import { RouteHeading } from './route-heading'
 
 export default function ProjectsPage() {
@@ -85,6 +85,19 @@ export default function ProjectsPage() {
             icon={<FolderKanban aria-hidden="true" className="h-5 w-5" />}
             title={status === 'archived' ? t('projects.noArchived') : t('projects.emptyDesk')}
           />
+        </div>
+      ) : null}
+
+      {loading && projects.length === 0 ? (
+        <div aria-label={t('projects.loading')} className="mt-6 grid gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2" role="status">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div className="bg-surface p-6" key={index}>
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="mt-8 h-7 w-3/4" />
+              <Skeleton className="mt-3 h-4 w-full" />
+              <Skeleton className="mt-6 h-4 w-32" />
+            </div>
+          ))}
         </div>
       ) : null}
 

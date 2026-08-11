@@ -181,7 +181,7 @@ export const operationDefinitions: OperationDefinition[] = [
     input: { roles: ['script', 'voice'] },
     output: { kind: 'video', role: 'draft', behavior: 'new_artifact' },
     defaultConfig: {},
-    executor: 'operation.not_implemented',
+    executor: 'operation.generate_video',
     presentation: { group: 'media', priority: 50, placement: 'secondary', danger: false },
     runtime: { expectedDuration: 'long' },
   },

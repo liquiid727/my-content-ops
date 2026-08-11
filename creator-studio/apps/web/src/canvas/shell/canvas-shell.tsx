@@ -7,14 +7,15 @@ import {
   type Edge as FlowEdge,
   type NodeChange,
 } from '@xyflow/react'
-import { Plus } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Loader2, Plus } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { EmptyState } from '../../shared/ui'
+import { Button, EmptyState } from '../../shared/ui'
 import { cn } from '../../shared/lib/cn'
 import { CustomMiniMap } from '../minimap/custom-minimap'
 import { NodePicker } from '../interactions/node-picker'
+import { useCanvasKeyboard } from '../interactions/use-canvas-keyboard'
 import { InspectorShell } from '../inspector/inspector-shell'
 import { useInspectorStore } from '../inspector/inspector-store'
 import { canvasNodeTypes } from '../nodes'
@@ -54,6 +55,11 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
     void loadGraph(projectId)
   }, [loadGraph, projectId])
 
+  // 与 Toolbar「适应视图」一致的稳定 fitView 回调（F 快捷键 / 新节点自动取景共用）。
+  const fitViewCanvas = useCallback(() => {
+    void fitView({ padding: 0.2, duration: 300 })
+  }, [fitView])
+
   // 节点数量增长（Run 产出新节点 / 初次加载）时 fitView 一次，
   // 否则新节点落在视口外会被 onlyRenderVisibleElements 剔除，用户看不到新内容。
   // 切 project 时重置计数基线，避免把「缓存恢复」误判为新内容而抢走 viewport。
@@ -66,10 +72,13 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
       return
     }
     if (nodes.length > prevNodeCount.current && nodes.length > 0) {
-      void fitView({ padding: 0.2, duration: 300 })
+      fitViewCanvas()
     }
     prevNodeCount.current = nodes.length
-  }, [nodes.length, projectId, fitView])
+  }, [nodes.length, projectId, fitViewCanvas])
+
+  // F 键适应视图；Delete/Esc/Space/Wheel 由 React Flow 原生处理。
+  useCanvasKeyboard(fitViewCanvas)
 
   const handleNodesChange = (changes: NodeChange<FlowNode>[]) => applyNodesChange(changes)
 
@@ -135,9 +144,17 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
             />
           </div>
         ) : null}
+        {loading && nodes.length === 0 ? (
+          <div className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center" role="status" aria-label={t('canvas.loading')}>
+            <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : null}
         {error ? (
-          <div className="absolute inset-x-0 top-2 z-[5] mx-auto w-fit rounded-md border border-danger/40 bg-danger/10 px-4 py-2 text-sm text-danger" role="alert">
-            {error}
+          <div className="absolute inset-x-0 top-2 z-[5] mx-auto flex w-fit max-w-[90%] items-center gap-3 rounded-md border border-danger/40 bg-danger/10 px-4 py-2 text-sm text-danger" role="alert">
+            <span className="min-w-0">{error}</span>
+            <Button className="min-h-0 shrink-0 rounded px-2 py-1 text-xs" onClick={() => void loadGraph(projectId, true)} variant="ghost">
+              {t('common.retry')}
+            </Button>
           </div>
         ) : null}
 

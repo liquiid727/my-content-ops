@@ -52,14 +52,15 @@ describe('ProviderService', () => {
     })
   })
 
-  it('falls back to Seed media provider for image/audio, keeps video unwired', async () => {
+  it('falls back to Seed media provider for image/audio/video', async () => {
     await withTestDatabase(async ({ db, dataDirectory }) => {
       const service = new ProviderService(new ConfigRepository(db), new SecretStore(dataDirectory), mockHttp(200, {}))
       const image = await service.resolve(WORKSPACE_ID, 'image_generation')
       expect(image?.key).toBe('seed-media')
       const audio = await service.resolve(WORKSPACE_ID, 'audio_generation')
       expect(audio?.key).toBe('seed-media')
-      expect(await service.resolve(WORKSPACE_ID, 'video_generation')).toBeUndefined()
+      const video = await service.resolve(WORKSPACE_ID, 'video_generation')
+      expect(video?.key).toBe('seed-media')
     })
   })
 

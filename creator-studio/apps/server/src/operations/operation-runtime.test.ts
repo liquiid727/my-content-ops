@@ -498,4 +498,31 @@ describe('Operation Registry & Run orchestration', () => {
       expect((await content.arrayBuffer()).byteLength).toBeGreaterThan(0)
     })
   })
+
+  it('generate_video produces a Video node with an MP4 asset (Issue #13 skeleton)', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      const script = await createScriptNode(app, projectId())
+      const run = createRunResponseSchema.parse(await (await app.request('/operations/generate_video/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId(), sourceArtifactId: script.artifact.id, idempotencyKey: KEY_B }),
+      })).json()).data
+      const done = await waitForRunTerminal(app, run.runId)
+      expect(done.status).toBe('completed')
+
+      const graph = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(graph.nodes).toHaveLength(2)
+      const videoArtifactId = done.outputArtifactIds![0]!
+      expect(graph.edges[0]).toMatchObject({ sourceArtifactId: script.artifact.id, targetArtifactId: videoArtifactId, inputSlot: 'draft' })
+
+      const detail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${videoArtifactId}`)).json()).data
+      expect(detail.kind).toBe('video')
+      expect(detail.role).toBe('draft')
+      expect(detail.currentVersion?.contentRef?.type).toBe('asset')
+      const asset = assetResponseSchema.parse(await (await app.request(`/assets/${(detail.currentVersion!.contentRef as { type: 'asset'; id: string }).id}`)).json()).data
+      expect(asset.type).toBe('video')
+      expect(asset.mimeType).toBe('video/mp4')
+      const content = await app.request(`/assets/${asset.id}/content`)
+      expect(content.status).toBe(200)
+      expect((await content.arrayBuffer()).byteLength).toBeGreaterThan(0)
+    })
+  })
 })

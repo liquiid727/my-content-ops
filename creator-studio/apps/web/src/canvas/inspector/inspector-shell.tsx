@@ -37,7 +37,19 @@ export function InspectorShell() {
     void useArtifactStore.getState().getArtifact(artifactId).catch(() => undefined)
   }, [artifactId])
 
-  if (!nodeId || !artifactId) return null
+  // 未选中节点：保持 Inspector 固定面板，显示空态引导而非直接消失。
+  if (!nodeId || !artifactId) {
+    return (
+      <aside
+        aria-label={t('inspector.title')}
+        className="flex w-80 shrink-0 flex-col items-center justify-center gap-2 rounded-lg border border-border bg-surface/40 px-6 text-center text-muted"
+        data-testid="inspector-shell"
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{t('inspector.title')}</p>
+        <p className="text-sm leading-5">{t('inspector.emptySelection')}</p>
+      </aside>
+    )
+  }
 
   const isCollection = node?.data.kind === 'collection'
   const tabs = isCollection ? TABS : TABS.filter((item) => item.id !== 'collection')

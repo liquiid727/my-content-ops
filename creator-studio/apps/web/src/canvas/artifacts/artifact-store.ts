@@ -10,6 +10,8 @@ interface ArtifactState {
   versions: Record<string, ArtifactVersion[]>
   /** 每个 artifact 的取数状态。 */
   loading: Record<string, boolean>
+  /** 取摘要失败的错误信息（id → message），成功后清除。 */
+  errors: Record<string, string>
   /** 取摘要（缓存命中直接返回；否则拉取并缓存）。 */
   getArtifact: (id: string) => Promise<ArtifactDetail>
   /** 强制重拉并替换缓存（失效后刷新用）。 */
@@ -29,6 +31,7 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
   byId: {},
   versions: {},
   loading: {},
+  errors: {},
 
   async getArtifact(id) {
     const cached = get().byId[id]
@@ -40,10 +43,13 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
     set((state) => ({ loading: { ...state.loading, [id]: true } }))
     try {
       const detail = await artifactApi.get(id)
-      set((state) => ({ byId: { ...state.byId, [id]: detail }, loading: { ...state.loading, [id]: false } }))
+      set((state) => ({ byId: { ...state.byId, [id]: detail }, loading: { ...state.loading, [id]: false }, errors: { ...state.errors, [id]: '' } }))
       return detail
     } catch (error) {
-      set((state) => ({ loading: { ...state.loading, [id]: false } }))
+      set((state) => ({
+        loading: { ...state.loading, [id]: false },
+        errors: { ...state.errors, [id]: error instanceof Error ? error.message : String(error) },
+      }))
       throw error
     }
   },
@@ -54,7 +60,9 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
       delete byId[id]
       const versions = { ...state.versions }
       delete versions[id]
-      return { byId, versions }
+      const errors = { ...state.errors }
+      delete errors[id]
+      return { byId, versions, errors }
     })
   },
 
@@ -63,11 +71,13 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
     set((state) => {
       const byId = { ...state.byId }
       const versions = { ...state.versions }
+      const errors = { ...state.errors }
       for (const id of ids) {
         delete byId[id]
         delete versions[id]
+        delete errors[id]
       }
-      return { byId, versions }
+      return { byId, versions, errors }
     })
   },
 
@@ -84,6 +94,6 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
   },
 
   clearProject() {
-    set({ byId: {}, versions: {}, loading: {} })
+    set({ byId: {}, versions: {}, loading: {}, errors: {} })
   },
 }))

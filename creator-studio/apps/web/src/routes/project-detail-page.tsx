@@ -6,7 +6,7 @@ import { Link, NavLink, useLocation, useNavigate, useParams } from 'react-router
 import { ApiClientError, ProjectForm, useProjectStore } from '../modules/projects'
 import { formatContentType, formatDate, getLocalizedErrorMessage, i18n as i18nInstance, normalizeLocale } from '../modules/i18n'
 import { cn } from '../shared/lib/cn'
-import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, useToastStore } from '../shared/ui'
+import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, Skeleton, useToastStore } from '../shared/ui'
 import { CanvasShell } from '../canvas'
 import { PlannedModule } from './planned-module'
 import { RouteHeading } from './route-heading'
@@ -44,7 +44,22 @@ function ProjectOverviewPanel({ projectId }: { projectId: string }) {
     return () => { active = false }
   }, [loadOverview, projectId])
 
-  if (!overview && !error) return <p className="rounded-lg border border-border bg-surface p-8 text-sm text-muted" role="status">{t('projectDetail.loading')}</p>
+  if (!overview && !error) {
+    return (
+      <div aria-label={t('projectDetail.loading')} className="space-y-6" role="status">
+        <section className="rounded-lg border border-border bg-surface p-6 shadow-panel sm:p-8">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="mt-4 h-8 w-3/5" />
+          <Skeleton className="mt-3 h-4 w-4/5" />
+          <div className="mt-6 flex gap-2"><Skeleton className="h-9 w-24" /><Skeleton className="h-9 w-24" /></div>
+        </section>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-56 rounded-lg border border-border bg-surface" />
+          <Skeleton className="h-56 rounded-lg border border-border bg-surface" />
+        </div>
+      </div>
+    )
+  }
   if (error && !overview) {
     return (
       <div className="rounded-lg border border-danger/40 bg-danger/10 p-5" role="alert">

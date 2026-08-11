@@ -1,5 +1,5 @@
 import type { NodeProps } from '@xyflow/react'
-import { Send } from 'lucide-react'
+import { CheckCircle2, Circle, Loader2, Send, XCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import type { RunSummary } from '../runtime/run-store'
@@ -18,6 +18,21 @@ function useAffectingRun(artifactId: string | undefined): RunSummary | undefined
   })
 }
 
+function StatusIcon({ run }: { run: RunSummary | undefined }) {
+  const className = 'h-3 w-3 shrink-0'
+  switch (run?.status) {
+    case 'running':
+    case 'queued':
+      return <Loader2 aria-hidden="true" className={`${className} animate-spin text-primary`} />
+    case 'completed':
+      return <CheckCircle2 aria-hidden="true" className={`${className} text-success`} />
+    case 'failed':
+      return <XCircle aria-hidden="true" className={`${className} text-danger`} />
+    default:
+      return <Circle aria-hidden="true" className={`${className} text-muted`} />
+  }
+}
+
 export function ActionNode(props: NodeProps<FlowNode>) {
   const lod = useLod()
   const { t } = useTranslation()
@@ -33,6 +48,7 @@ export function ActionNode(props: NodeProps<FlowNode>) {
       lod={lod}
       role={role}
       selected={selected}
+      statusIcon={<StatusIcon run={run} />}
       statusText={statusText}
       title={role}
     >
