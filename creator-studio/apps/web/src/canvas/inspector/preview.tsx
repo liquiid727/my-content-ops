@@ -5,12 +5,26 @@ import { Pencil, Save, X } from 'lucide-react'
 import type { ArtifactDetail } from '@creator-studio/contracts'
 import { artifactApi } from '../api/artifact-api'
 import { useArtifactStore } from '../artifacts/artifact-store'
+import { assetContentUrl, versionAssetId } from '../lib/media'
 import { Button } from '../../shared/ui'
 import { Textarea } from '../../shared/ui'
 
 function contentText(detail: ArtifactDetail | undefined): string {
   const ref = detail?.currentVersion?.contentRef
   return ref?.type === 'inline' ? ref.text : ''
+}
+
+/** 媒体 artifact 预览：image → 图片；audio → 播放器；否则回退文本。 */
+function MediaPreview({ detail }: { detail: ArtifactDetail }) {
+  const assetId = versionAssetId(detail.currentVersion)
+  if (!assetId) return null
+  if (detail.kind === 'image' || detail.kind === 'collection') {
+    return <img alt="" className="max-h-56 w-full rounded border border-border/70 object-cover" src={assetContentUrl(assetId)} />
+  }
+  if (detail.kind === 'audio') {
+    return <audio className="w-full" controls src={assetContentUrl(assetId)} />
+  }
+  return null
 }
 
 /** Artifact Preview + 手动编辑（revisionedPatch → 新 Version(source=user)）。 */
@@ -49,7 +63,7 @@ export function ArtifactPreview({ artifactId }: { artifactId: string }) {
     <div className="rounded-md border border-border bg-surface/60 p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{t('inspector.preview')}</p>
-        {!editing ? (
+        {!editing && detail.kind === 'text' ? (
           <Button className="h-7 px-2 text-xs" onClick={() => beginEdit()} variant="ghost">
             <Pencil aria-hidden="true" className="h-3 w-3" />
             {t('inspector.edit')}
@@ -72,9 +86,15 @@ export function ArtifactPreview({ artifactId }: { artifactId: string }) {
           </div>
         </div>
       ) : (
-        <div className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-background/50 p-2 text-xs leading-5 text-foreground">
-          {preview || <span className="text-muted">{t('inspector.emptyPreview')}</span>}
-        </div>
+        versionAssetId(detail.currentVersion) ? (
+          <div className="mt-2 overflow-hidden rounded bg-background/50 p-2">
+            <MediaPreview detail={detail} />
+          </div>
+        ) : (
+          <div className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-background/50 p-2 text-xs leading-5 text-foreground">
+            {preview || <span className="text-muted">{t('inspector.emptyPreview')}</span>}
+          </div>
+        )
       )}
     </div>
   )

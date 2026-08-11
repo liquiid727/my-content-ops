@@ -10,11 +10,21 @@ import { useCanvasStore } from '../store/canvas-store'
 import { useRunStore } from '../runtime/run-store'
 import { useInspectorStore } from './inspector-store'
 import { executeOperation } from './run-operation'
+import { assetContentUrl, versionAssetId } from '../lib/media'
 import { Button } from '../../shared/ui'
 
 function versionText(version: ArtifactVersion | undefined): string {
   const ref = version?.contentRef
   return ref?.type === 'inline' ? ref.text : ''
+}
+
+/** 媒体版本渲染：asset → 图片缩略图；inline → 文本。 */
+function VersionPreview({ version }: { version: ArtifactVersion }) {
+  const assetId = versionAssetId(version)
+  if (assetId) {
+    return <img alt="" className="mt-1 h-16 w-full rounded-sm border border-border/60 object-cover" loading="lazy" src={assetContentUrl(assetId)} />
+  }
+  return <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-[10px] leading-4 text-muted-foreground">{versionText(version) || '—'}</p>
 }
 
 /** Collection 节点面板：候选网格 + Select/Compare/Regenerate/Promote/Delete。 */
@@ -97,7 +107,7 @@ export function CollectionPanel({ artifactId }: { artifactId: string }) {
                 <span className="font-mono text-[10px] text-muted">v{version.versionNumber}</span>
                 {active ? <Check aria-hidden="true" className="h-3.5 w-3.5 text-primary" /> : null}
               </div>
-              <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-[10px] leading-4 text-muted-foreground">{versionText(version) || '—'}</p>
+              <VersionPreview version={version} />
               <div className="mt-2 flex gap-1">
                 <Button className="h-6 flex-1 px-1 text-[10px]" disabled={busy !== undefined} onClick={() => void select(version.id)} variant={active ? 'secondary' : 'primary'}>
                   {active ? t('inspector.promote') : t('inspector.select')}
@@ -116,7 +126,7 @@ export function CollectionPanel({ artifactId }: { artifactId: string }) {
           {compareVersions.map((version) => (
             <div key={version.id}>
               <p className="font-mono text-[10px] text-muted">v{version.versionNumber}</p>
-              <p className="mt-1 whitespace-pre-wrap text-[10px] leading-4 text-muted-foreground">{versionText(version) || '—'}</p>
+              <VersionPreview version={version} />
             </div>
           ))}
         </div>

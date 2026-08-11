@@ -1,5 +1,7 @@
 import {
   artifactDetailResponseSchema,
+  artifactVersionListResponseSchema,
+  assetResponseSchema,
   createRunResponseSchema,
   errorEnvelopeSchema,
   graphResponseSchema,
@@ -11,6 +13,8 @@ import {
 } from '@creator-studio/contracts'
 import { describe, expect, it } from 'vitest'
 
+import { join } from 'node:path'
+
 import { withTestDatabase } from '../db/test-database.js'
 import { createApiApp } from '../http/app.js'
 import {
@@ -20,6 +24,9 @@ import {
   VersionRepository,
   WorkspaceRepository,
 } from '../repositories/index.js'
+import { AssetFileStore } from '../assets/file-store.js'
+import { AssetService } from '../assets/asset-service.js'
+import { configureAssetRoutes } from '../assets/asset-routes.js'
 import { GenerationRepository } from '../repositories/generation-repository.js'
 import { ArtifactRepository, ArtifactService } from '../artifacts/index.js'
 import { CanvasRepository, CanvasService } from '../canvas/index.js'
@@ -79,6 +86,9 @@ async function createHarness(run: (ctx: {
     const taskRepository = new TaskRepository(db)
     const operationRegistry = new OperationRegistry(operationDefinitions)
     const runRepository = new RunRepository(db)
+    const assetRepository = new AssetRepository(db)
+    const assetFileStore = new AssetFileStore(join(dataDirectory, 'files'))
+    const assetService = new AssetService(assetRepository, projectRepository, assetFileStore)
     const projectEventRepository = new ProjectEventRepository(db)
     const eventEmitter = new ProjectEventEmitter(projectEventRepository, () => now++)
     const contextService = new ContextService(projectRepository, artifactRepository, new CreatorProfileRepository(db))
@@ -90,6 +100,8 @@ async function createHarness(run: (ctx: {
       runRepository,
       projectRepository,
       taskRepository,
+      assetRepository,
+      assetFileStore,
       providerService,
       eventEmitter,
       contextService,
@@ -121,6 +133,7 @@ async function createHarness(run: (ctx: {
         configureCanvasRoutes(api, canvasService)
         configureArtifactRoutes(api, artifactService)
         configureContextRoutes(api, contextService)
+        configureAssetRoutes(api, assetService)
         configureRunRoutes(api, runService)
       },
     })
@@ -151,6 +164,27 @@ async function createTopicNode(app: ReturnType<typeof createApiApp>, projectId: 
   if (!body.data?.artifact) {
     throw new Error(`createTopicNode missing artifact: ${JSON.stringify(body)}`)
   }
+  return body.data
+}
+
+async function createScriptNode(app: ReturnType<typeof createApiApp>, projectId: string) {
+  const response = await app.request(`/projects/${projectId}/nodes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind: 'text', role: 'script', x: 0, y: 0 }),
+  })
+  const body = (await response.json()) as {
+    data: { node: { id: string }; artifact: { id: string } }
+  }
+  if (response.status !== 201 || !body.data?.artifact) {
+    throw new Error(`createScriptNode failed status=${response.status} body=${JSON.stringify(body)} projectId=${projectId}`)
+  }
+  const patch = await app.request(`/artifacts/${body.data.artifact.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patch: { text: '这是一段可直接口播的脚本正文。' }, revision: 1 }),
+  })
+  if (patch.status !== 200) throw new Error(`createScriptNode patch failed status=${patch.status}`)
   return body.data
 }
 
@@ -394,6 +428,74 @@ describe('Operation Registry & Run orchestration', () => {
       })
       expect(response.status).toBe(422)
       expect(errorEnvelopeSchema.parse(await response.json()).error.code).toBe('OPERATION_NOT_AVAILABLE')
+    })
+  })
+
+  it('generate_cover produces an Image Collection with candidate assets (Issue #10)', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      const script = await createScriptNode(app, projectId())
+      const run = createRunResponseSchema.parse(await (await app.request('/operations/generate_cover/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId(), sourceArtifactId: script.artifact.id, config: { count: 3 }, idempotencyKey: KEY_B }),
+      })).json()).data
+      const done = await waitForRunTerminal(app, run.runId)
+      expect(done.status).toBe('completed')
+
+      const graph = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(graph.nodes).toHaveLength(2)
+      expect(graph.edges).toHaveLength(1)
+      const collectionArtifactId = done.outputArtifactIds![0]!
+      expect(graph.edges[0]).toMatchObject({ sourceArtifactId: script.artifact.id, targetArtifactId: collectionArtifactId, inputSlot: 'cover' })
+
+      const detail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${collectionArtifactId}`)).json()).data
+      expect(detail.kind).toBe('collection')
+      expect(detail.role).toBe('cover')
+
+      const versions = artifactVersionListResponseSchema.parse(await (await app.request(`/artifacts/${collectionArtifactId}/versions`)).json()).data
+      expect(versions).toHaveLength(3)
+      for (const version of versions) {
+        expect(version.contentRef?.type).toBe('asset')
+        const asset = assetResponseSchema.parse(await (await app.request(`/assets/${(version.contentRef as { type: 'asset'; id: string }).id}`)).json()).data
+        expect(asset.type).toBe('image')
+        expect(asset.mimeType).toBe('image/png')
+      }
+
+      // 被 artifact 版本引用的媒体 asset 不可删除（ASSET_IN_USE）
+      const firstAssetId = (versions[0]!.contentRef as { type: 'asset'; id: string }).id
+      const removal = await app.request(`/assets/${firstAssetId}`, { method: 'DELETE' })
+      expect(removal.status).toBe(409)
+      expect(errorEnvelopeSchema.parse(await removal.json()).error.code).toBe('ASSET_IN_USE')
+
+      // 内容可读取（真实文件落盘）
+      const content = await app.request(`/assets/${firstAssetId}/content`)
+      expect(content.status).toBe(200)
+      expect((await content.arrayBuffer()).byteLength).toBeGreaterThan(0)
+    })
+  })
+
+  it('generate_voice produces an Audio node with a WAV asset (Issue #10)', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      const script = await createScriptNode(app, projectId())
+      const run = createRunResponseSchema.parse(await (await app.request('/operations/generate_voice/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId(), sourceArtifactId: script.artifact.id, idempotencyKey: KEY_B }),
+      })).json()).data
+      const done = await waitForRunTerminal(app, run.runId)
+      expect(done.status).toBe('completed')
+
+      const graph = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(graph.nodes).toHaveLength(2)
+      const audioArtifactId = done.outputArtifactIds![0]!
+      expect(graph.edges[0]).toMatchObject({ sourceArtifactId: script.artifact.id, targetArtifactId: audioArtifactId, inputSlot: 'voice' })
+
+      const detail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${audioArtifactId}`)).json()).data
+      expect(detail.kind).toBe('audio')
+      expect(detail.role).toBe('voice')
+      expect(detail.currentVersion?.contentRef?.type).toBe('asset')
+      const asset = assetResponseSchema.parse(await (await app.request(`/assets/${(detail.currentVersion!.contentRef as { type: 'asset'; id: string }).id}`)).json()).data
+      expect(asset.type).toBe('audio')
+      expect(asset.mimeType).toBe('audio/wav')
+      const content = await app.request(`/assets/${asset.id}/content`)
+      expect(content.status).toBe(200)
+      expect((await content.arrayBuffer()).byteLength).toBeGreaterThan(0)
     })
   })
 })

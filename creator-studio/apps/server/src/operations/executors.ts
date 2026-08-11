@@ -1,6 +1,6 @@
 import type { ArtifactVersion, ContentRef } from '@creator-studio/contracts'
 
-import type { GenerationProvider } from '../providers/generation-provider.js'
+import type { GenerationProvider, MediaResult } from '../providers/generation-provider.js'
 
 export interface ExecutorContext {
   workspaceId: string
@@ -15,6 +15,8 @@ export interface ExecutorContext {
   config: Record<string, unknown>
   contextText: string
   provider?: GenerationProvider
+  /** 把媒体生成结果落 assets/file store，返回 assetId。 */
+  saveMedia?: (media: MediaResult, role: string) => Promise<string>
 }
 
 export interface GenerationTrace {
@@ -51,6 +53,17 @@ export class OperationProviderUnavailableError extends Error {
 function requireProvider(ctx: ExecutorContext): GenerationProvider {
   if (!ctx.provider) throw new OperationProviderUnavailableError('required capability')
   return ctx.provider
+}
+
+function requireMediaProvider(ctx: ExecutorContext, capability: 'image_generation' | 'audio_generation' | 'video_generation'): NonNullable<GenerationProvider['generateMedia']> {
+  const provider = requireProvider(ctx)
+  if (!provider.generateMedia) throw new OperationProviderUnavailableError(capability)
+  return provider.generateMedia.bind(provider)
+}
+
+function requireSaveMedia(ctx: ExecutorContext): (media: MediaResult, role: string) => Promise<string> {
+  if (!ctx.saveMedia) throw new Error('OPERATION_MEDIA_SINK_MISSING')
+  return ctx.saveMedia
 }
 
 /** 文本生成类 executor：System+上下文 → provider.generate → inline 文本结果。 */
@@ -99,29 +112,53 @@ export const executors: Record<string, OperationExecutor> = {
   'operation.generate_article': createTextExecutor('根据大纲生成一篇完整图文稿。', 'new_artifact'),
   'operation.generate_cover': {
     async execute(ctx, signal) {
-      // Issue #10 接入图片 provider；此处无图片能力时给出可读失败。
-      const provider = requireProvider(ctx)
+      const generateMedia = requireMediaProvider(ctx, 'image_generation')
+      const saveMedia = requireSaveMedia(ctx)
+      const count = typeof ctx.config.count === 'number' ? Math.max(1, Math.min(6, Math.floor(ctx.config.count))) : 3
       const prompt = `${ctx.contextText}\n\n## 任务指令\n为脚本生成封面主视觉。`
-      const result = await provider.generate({ prompt }, signal)
+      const candidates: ExecutorResult[] = []
+      for (let index = 0; index < count; index += 1) {
+        const media = await generateMedia('image_generation', { prompt, config: { index } }, signal)
+        const assetId = await saveMedia(media, 'cover')
+        candidates.push({
+          outputBehavior: 'new_collection',
+          kind: 'image',
+          role: 'cover',
+          contentRef: { type: 'asset', id: assetId },
+          metadata: { model: media.model, candidate: index, mimeType: media.mimeType, width: media.width ?? null, height: media.height ?? null },
+        })
+      }
+      const first = candidates[0]
       return {
         outputBehavior: 'new_collection',
-        contentRef: { type: 'inline', text: result.text },
-        metadata: { model: result.model, operationId: ctx.operationId },
-        generation: { providerKey: provider.key, model: result.model, requestSnapshot: { promptLength: prompt.length }, responseSnapshot: { text: result.text }, usage: result.usage },
+        kind: 'image',
+        role: 'cover',
+        candidates,
+        metadata: first?.metadata ?? {},
+        generation: {
+          providerKey: ctx.provider?.key ?? 'seed-media',
+          model: String(first?.metadata?.model ?? 'seed-image-v1'),
+          requestSnapshot: { promptLength: prompt.length, count },
+          responseSnapshot: { assetCount: candidates.length },
+          usage: { inputUnits: prompt.length, outputUnits: candidates.length },
+        },
       }
     },
   },
   'operation.generate_voice': {
     async execute(ctx, signal) {
-      // Issue #10 接入 TTS；此处无音频能力时给出可读失败。
-      const provider = requireProvider(ctx)
+      const generateMedia = requireMediaProvider(ctx, 'audio_generation')
+      const saveMedia = requireSaveMedia(ctx)
       const prompt = `${ctx.contextText}\n\n## 任务指令\n为脚本生成配音旁白文本。`
-      const result = await provider.generate({ prompt }, signal)
+      const media = await generateMedia('audio_generation', { prompt }, signal)
+      const assetId = await saveMedia(media, 'voice')
       return {
         outputBehavior: 'new_artifact',
-        contentRef: { type: 'inline', text: result.text },
-        metadata: { model: result.model, operationId: ctx.operationId },
-        generation: { providerKey: provider.key, model: result.model, requestSnapshot: { promptLength: prompt.length }, responseSnapshot: { text: result.text }, usage: result.usage },
+        kind: 'audio',
+        role: 'voice',
+        contentRef: { type: 'asset', id: assetId },
+        metadata: { model: media.model, mimeType: media.mimeType, durationMs: media.durationMs ?? null },
+        generation: { providerKey: ctx.provider?.key ?? 'seed-media', model: media.model, requestSnapshot: { promptLength: prompt.length }, responseSnapshot: { assetId }, usage: media.usage },
       }
     },
   },

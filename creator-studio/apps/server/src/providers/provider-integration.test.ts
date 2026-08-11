@@ -22,6 +22,7 @@ import { configureRunRoutes } from '../operations/run-routes.js'
 import { GenerationProviderRegistry, ProviderService, SeedGenerationProvider } from './index.js'
 import type { HttpJsonClient } from './openai-text-provider.js'
 import { ConfigRepository, AssetRepository, GenerationRepository, ProjectRepository, TaskRepository, VersionRepository, WorkspaceRepository } from '../repositories/index.js'
+import { AssetFileStore } from '../assets/file-store.js'
 import { SecretStore } from '../settings/secret-store.js'
 import { SeedTaskHandler, TaskHandlerRegistry } from '../tasks/index.js'
 import { TaskRunner } from '../tasks/task-runner.js'
@@ -69,7 +70,7 @@ describe('Provider integration', () => {
       const generationRepository = new GenerationRepository(db)
       const contextService = new ContextService(projectRepository, artifactRepository, new CreatorProfileRepository(db))
       const operationTaskHandler = new OperationTaskHandler(
-        operationRegistry, artifactRepository, canvasRepository, runRepository, projectRepository, taskRepository, providerService, eventEmitter, contextService, () => now++,
+        operationRegistry, artifactRepository, canvasRepository, runRepository, projectRepository, taskRepository, new AssetRepository(db), new AssetFileStore(dataDirectory), providerService, eventEmitter, contextService, () => now++,
       )
       const handlers = new TaskHandlerRegistry().register(new SeedTaskHandler(providerRegistry)).register(operationTaskHandler)
       const runner = new TaskRunner(taskRepository, generationRepository, handlers, () => now++)

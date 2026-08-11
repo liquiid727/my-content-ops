@@ -78,6 +78,8 @@ const operationTaskHandler = new OperationTaskHandler(
   runRepository,
   new ProjectRepository(database.db),
   taskRepository,
+  new AssetRepository(database.db),
+  new AssetFileStore(database.filesDirectory),
   providerService,
   projectEventEmitter,
   contextService,

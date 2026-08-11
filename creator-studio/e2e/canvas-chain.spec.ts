@@ -76,3 +76,48 @@ test('Topic → Outline → Script chain runs end-to-end on the Canvas', async (
   }, projectId)
   expect(roles).toEqual({ roles: ['outline', 'script', 'topic'], edges: 2 })
 })
+
+test('Script → Cover (image collection) + Voice (audio) media chain', async ({ page }) => {
+  await page.goto('/')
+  const projectId = await createProject(page)
+  await page.goto(`/projects/${projectId}/canvas`)
+  await expect(page.getByText('开始你的第一个创作节点')).toBeVisible({ timeout: 10_000 })
+
+  // 创建「口播稿」脚本节点
+  await page.locator('.react-flow__pane').dblclick({ position: { x: 320, y: 220 } })
+  await page.getByRole('button', { name: '口播稿' }).click()
+  const nodes = page.locator('[data-testid="canvas-node"]')
+  await expect(nodes).toHaveCount(1, { timeout: 10_000 })
+  await nodes.first().click()
+  await expect(page.getByRole('button', { name: '生成封面' })).toBeVisible({ timeout: 10_000 })
+
+  // generate_cover → Image Collection 节点出现，缩略图 lazy 加载（contentRef → assets）
+  await page.getByRole('button', { name: '生成封面' }).click()
+  await expect(nodes.filter({ hasText: 'cover' })).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('button', { name: '适应视图' }).click()
+  const coverImage = nodes.filter({ hasText: 'cover' }).locator('img[src*="/api/v1/assets/"]')
+  await expect(coverImage).toBeVisible({ timeout: 10_000 })
+
+  // generate_voice → Audio 节点出现，可点击播放（lazy mount）
+  await nodes.filter({ hasText: 'script' }).click()
+  await page.getByRole('button', { name: '生成配音' }).click()
+  await expect(nodes.filter({ hasText: 'voice' })).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('button', { name: '适应视图' }).click()
+  const voiceNode = nodes.filter({ hasText: 'voice' })
+  await expect(voiceNode.getByRole('button', { name: '播放配音' })).toBeVisible({ timeout: 10_000 })
+  await voiceNode.getByRole('button', { name: '播放配音' }).click()
+  await expect(voiceNode.locator('audio')).toBeVisible()
+
+  // 服务端确认：media assets 落库且类型正确
+  const media = await page.evaluate(async (pid) => {
+    const graphResponse = await fetch(`/api/v1/projects/${pid}/graph`)
+    const graph = await graphResponse.json() as { data: { nodes: Array<{ artifactId: string }> } }
+    const kinds = await Promise.all(graph.data.nodes.map(async (node) => {
+      const response = await fetch(`/api/v1/artifacts/${node.artifactId}`)
+      const body = await response.json() as { data: { kind: string; role: string } }
+      return `${body.data.kind}:${body.data.role}`
+    }))
+    return kinds.sort()
+  }, projectId)
+  expect(media).toEqual(['audio:voice', 'collection:cover', 'text:script'])
+})

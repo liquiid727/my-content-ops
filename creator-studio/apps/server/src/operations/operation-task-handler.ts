@@ -1,15 +1,19 @@
+import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { ulid } from 'ulid'
 
 import type { ArtifactVersion } from '@creator-studio/contracts'
-import type { ArtifactRecord, TaskRecord } from '../db/schema.js'
+import type { ArtifactRecord, AssetRecord, TaskRecord } from '../db/schema.js'
 import { assembleContext, ContextService } from '../context/index.js'
 import { ProjectEventEmitter } from '../events/project-event-emitter.js'
 import { ArtifactRepository } from '../artifacts/artifact-repository.js'
 import { CanvasRepository } from '../canvas/canvas-repository.js'
 import { ProjectRepository } from '../repositories/project-repository.js'
 import { TaskRepository } from '../repositories/task-repository.js'
+import { AssetFileStore } from '../assets/file-store.js'
+import { AssetRepository } from '../repositories/asset-repository.js'
 import { ProviderService } from '../providers/index.js'
+import type { MediaResult } from '../providers/generation-provider.js'
 import { OperationRegistry } from './registry.js'
 import { operationCapability } from './definitions.js'
 import { executors, OperationProviderUnavailableError, type ExecutorResult } from './executors.js'
@@ -51,6 +55,8 @@ export class OperationTaskHandler implements TaskHandler {
     private readonly runs: RunRepository,
     private readonly projects: ProjectRepository,
     private readonly tasks: TaskRepository,
+    private readonly assets: AssetRepository,
+    private readonly files: AssetFileStore,
     private readonly providers: ProviderService,
     private readonly events: ProjectEventEmitter,
     private readonly contexts: ContextService,
@@ -90,6 +96,7 @@ export class OperationTaskHandler implements TaskHandler {
       config: input.config,
     })
 
+    let mediaSerial = 0
     const result = await executor.execute(
       {
         workspaceId: input.workspaceId,
@@ -103,6 +110,7 @@ export class OperationTaskHandler implements TaskHandler {
         config: input.config,
         contextText: context.text,
         ...(provider ? { provider } : {}),
+        saveMedia: async (media, role) => this.saveMediaAsset(input.workspaceId, input.projectId, input.createdBy, media, role, now + mediaSerial++),
       },
       signal,
     )
@@ -301,8 +309,9 @@ export class OperationTaskHandler implements TaskHandler {
         outputs.outputArtifactIds.push(artifact.id)
         this.emitRunEvent(input, 'artifact.created', { runId: input.runId, artifactId: artifact.id, kind: 'collection', role })
 
-        if (result.contentRef) {
-          const { version } = this.artifacts.createVersion(this.versionInput(artifact.id, input, result, now))
+        const candidates = result.candidates && result.candidates.length > 0 ? result.candidates : (result.contentRef ? [result] : [])
+        for (let index = 0; index < candidates.length; index += 1) {
+          const { version } = this.artifacts.createVersion(this.versionInput(artifact.id, input, candidates[index]!, now + index + 1))
           outputs.outputVersionIds.push(version.id)
           this.emitRunEvent(input, 'artifact.version.created', { runId: input.runId, artifactId: artifact.id, versionId: version.id })
         }
@@ -310,7 +319,7 @@ export class OperationTaskHandler implements TaskHandler {
         const sourceNodes = input.sourceArtifactId ? await this.canvas.getNodesByArtifact(input.sourceArtifactId) : []
         const anchor = sourceNodes[0]
         const node = await this.canvas.createNode({
-          id: ulid(now + 1),
+          id: ulid(now + candidates.length + 2),
           projectId,
           artifactId: artifact.id,
           x: anchor ? anchor.x + 340 : 0,
@@ -328,7 +337,7 @@ export class OperationTaskHandler implements TaskHandler {
 
         if (input.sourceArtifactId && sourceArtifact) {
           const edge = await this.canvas.createEdge({
-            id: ulid(now + 2),
+            id: ulid(now + candidates.length + 3),
             projectId,
             sourceArtifactId: input.sourceArtifactId,
             targetArtifactId: artifact.id,
@@ -355,6 +364,41 @@ export class OperationTaskHandler implements TaskHandler {
 
   private emitRunEvent(input: OperationTaskInput, eventType: string, payload: Record<string, unknown>): void {
     this.events.emit(input.workspaceId, input.projectId, eventType, payload)
+  }
+
+  /** 把媒体生成结果写入 file store + assets 表，返回 assetId（Version.contentRef 指向它）。 */
+  private async saveMediaAsset(workspaceId: string, projectId: string, createdBy: string, media: MediaResult, role: string, now: number): Promise<string> {
+    const temporary = await this.files.writeTemporary(media.bytes)
+    let record: AssetRecord | undefined
+    try {
+      const id = ulid(now)
+      const extension = media.mimeType === 'image/png' ? 'png' : media.mimeType === 'image/jpeg' ? 'jpg' : media.mimeType === 'image/webp' ? 'webp' : media.mimeType === 'image/gif' ? 'gif' : media.mimeType === 'audio/wav' ? 'wav' : media.mimeType === 'audio/mpeg' ? 'mp3' : media.mimeType === 'video/mp4' ? 'mp4' : 'bin'
+      const displayName = `${role}-${id.slice(-6)}.${extension}`
+      const storagePath = this.files.storagePath(id, displayName)
+      const kind = (media.mimeType.startsWith('image/') ? 'image' : media.mimeType.startsWith('audio/') ? 'audio' : media.mimeType.startsWith('video/') ? 'video' : 'document') as AssetRecord['kind']
+      record = await this.assets.create({
+        id,
+        workspaceId,
+        projectId,
+        kind,
+        source: 'generated',
+        displayName,
+        mimeType: media.mimeType,
+        sizeBytes: media.bytes.byteLength,
+        storagePath,
+        sha256: createHash('sha256').update(media.bytes).digest('hex'),
+        width: media.width ?? null,
+        height: media.height ?? null,
+        durationMs: media.durationMs ?? null,
+        createdBy,
+        createdAt: now,
+        updatedAt: now,
+      })
+      try { await this.files.commit(temporary, storagePath) } catch (error) { await this.assets.hardDelete(id); throw error }
+      return record.id
+    } finally {
+      await this.files.cleanup(temporary)
+    }
   }
 
   private versionInput(artifactId: string, input: OperationTaskInput, result: ExecutorResult, now: number): Parameters<ArtifactRepository['createVersion']>[0] {

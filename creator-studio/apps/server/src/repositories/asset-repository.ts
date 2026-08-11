@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, lt, or } from 'drizzle-orm'
 
-import { assets, creatorProfiles, projects, versions, type AssetRecord } from '../db/schema.js'
+import { artifactVersions, assets, creatorProfiles, projects, versions, type AssetRecord } from '../db/schema.js'
 import { validateDefaultedJsonText } from './json.js'
 import type { DatabaseClient } from './types.js'
 
@@ -63,6 +63,8 @@ export class AssetRepository {
   async isReferenced(id: string): Promise<boolean> {
     const versionReference = this.db.select({ id: versions.id }).from(versions).where(and(eq(versions.subjectType, 'asset'), eq(versions.subjectId, id))).limit(1).get()
     if (versionReference) return true
+    const artifactVersionReference = this.db.select({ id: artifactVersions.id }).from(artifactVersions).where(and(eq(artifactVersions.contentRefType, 'asset'), eq(artifactVersions.contentRefId, id))).limit(1).get()
+    if (artifactVersionReference) return true
     const projectReference = this.db.select({ id: projects.id }).from(projects).where(eq(projects.coverAssetId, id)).limit(1).get()
     if (projectReference) return true
     return this.db.select({ id: creatorProfiles.id }).from(creatorProfiles).where(eq(creatorProfiles.avatarAssetId, id)).limit(1).get() !== undefined

@@ -173,7 +173,7 @@
 - [04-runtime §3 §4 §6](./.spec/04-runtime.md) ｜ [03-api §2.3](./.spec/03-api.md)
 
 ## Issue #10: 媒体链路 Script → Cover（图片）+ Voice（TTS）
-**Status:** pending
+**Status:** shipped
 **Type:** fullstack
 **Priority:** medium
 **Dependencies:** #9, #4（图片/TTS provider）
@@ -182,10 +182,10 @@
 接入图片生成（Script→Cover，Collection 多候选）与 TTS（Script→Voice）。Image 节点缩略图 lazy、Audio 节点波形 + 点击播放 lazy mount。媒体走 `contentRef → assets`。
 
 ### Acceptance Criteria
-- [ ] `generate_cover` 产生 Image Collection，可 Select/Promote；选中写入 current_version
-- [ ] `generate_voice` 产生 Audio 节点，点击播放 lazy 加载
-- [ ] 媒体文件落 `assets`/file store，画布不预载原图/音频
-- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+- [x] `generate_cover` 产生 Image Collection，可 Select/Promote；选中写入 current_version
+- [x] `generate_voice` 产生 Audio 节点，点击播放 lazy 加载
+- [x] 媒体文件落 `assets`/file store，画布不预载原图/音频
+- [x] 浏览器验证（`run` skill）；`test:foundation` + 新增测试通过；Typecheck/lint 通过
 
 ### SPEC Reference
 - [04-runtime §5](./.spec/04-runtime.md) ｜ [05-canvas-ui §3 §7](./.spec/05-canvas-ui.md)
