@@ -2,6 +2,7 @@ import { applyEdgeChanges, applyNodeChanges, type Edge, type Node, type NodeChan
 import { create } from 'zustand'
 
 import { canvasApi, type ArtifactDetail, type CanvasNode } from '../api/canvas-api'
+import { useArtifactStore } from '../artifacts/artifact-store'
 
 export interface CanvasNodeData {
   artifactId: string
@@ -35,6 +36,18 @@ function toFlowEdge(edge: { id: string; sourceArtifactId: string; targetArtifact
   return { id: edge.id, source: edge.sourceArtifactId, target: edge.targetArtifactId, label: edge.inputSlot }
 }
 
+/** 经 ArtifactStore 取摘要（缓存优先），返回 id → detail 映射。 */
+async function hydrateArtifacts(artifactIds: string[]): Promise<Record<string, ArtifactDetail>> {
+  const store = useArtifactStore.getState()
+  const entries = await Promise.all(
+    [...new Set(artifactIds)].map(async (id) => {
+      const detail = await store.getArtifact(id).catch(() => undefined)
+      return [id, detail] as const
+    }),
+  )
+  return Object.fromEntries(entries.filter((entry): entry is readonly [string, ArtifactDetail] => entry[1] !== undefined))
+}
+
 interface CanvasState {
   projectId: string | null
   nodes: FlowNode[]
@@ -45,7 +58,7 @@ interface CanvasState {
   loading: boolean
   error: string | null
 
-  loadGraph: (projectId: string) => Promise<void>
+  loadGraph: (projectId: string, force?: boolean) => Promise<void>
   applyNodesChange: (changes: NodeChange<FlowNode>[]) => void
   applyEdgesChange: (changes: Parameters<typeof applyEdgeChanges>[0]) => void
   selectNode: (nodeId: string | null) => void
@@ -65,16 +78,12 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   loading: false,
   error: null,
 
-  async loadGraph(projectId) {
-    if (get().projectId === projectId && get().nodes.length > 0 && !get().error) return
+  async loadGraph(projectId, force = false) {
+    if (!force && get().projectId === projectId && get().nodes.length > 0 && !get().error) return
     set({ loading: true, error: null, projectId })
     try {
       const graph = (await canvasApi.graph(projectId)).data
-      const artifacts = await Promise.all(
-        graph.nodes.map((node) => canvasApi.artifact(node.artifactId).then((envelope) => envelope.data).catch(() => undefined)),
-      )
-      const artifactMap: Record<string, ArtifactDetail> = {}
-      for (const artifact of artifacts) if (artifact) artifactMap[artifact.id] = artifact
+      const artifactMap = await hydrateArtifacts(graph.nodes.map((node) => node.artifactId))
       set({
         nodes: graph.nodes.map((node) => toFlowNode(node, artifactMap[node.artifactId])),
         edges: graph.edges.map(toFlowEdge),
@@ -116,6 +125,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     if (!projectId) return
     const created = (await canvasApi.createNode(projectId, { ...input, x: input.x ?? 120, y: input.y ?? 120 })).data
     const createdArtifact: ArtifactDetail | undefined = created.artifact ? { ...created.artifact, currentVersion: null } : undefined
+    if (createdArtifact) useArtifactStore.getState().setDetail(createdArtifact)
     set((state) => ({
       nodes: [...state.nodes, toFlowNode(created.node, createdArtifact)],
       ...(createdArtifact ? { artifacts: { ...state.artifacts, [createdArtifact.id]: createdArtifact } } : {}),

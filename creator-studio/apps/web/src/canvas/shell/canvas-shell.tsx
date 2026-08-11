@@ -12,9 +12,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { EmptyState } from '../../shared/ui'
+import { cn } from '../../shared/lib/cn'
 import { CustomMiniMap } from '../minimap/custom-minimap'
 import { NodePicker } from '../interactions/node-picker'
 import { canvasNodeTypes } from '../nodes'
+import { useProjectEvents } from '../runtime/use-project-events'
+import { useRunStore } from '../runtime/run-store'
 import { useCanvasStore, type FlowNode } from '../store/canvas-store'
 import { CanvasToolbar } from '../toolbar/canvas-toolbar'
 
@@ -39,6 +42,8 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
   const createNode = useCanvasStore((state) => state.createNode)
   const loadGraph = useCanvasStore((state) => state.loadGraph)
   const selectNode = useCanvasStore((state) => state.selectNode)
+  const eventsStatus = useProjectEvents(projectId)
+  const activeRunCount = useRunStore((state) => state.activeByProject[projectId]?.length ?? 0)
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const pickerPosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -106,6 +111,18 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
           {error}
         </div>
       ) : null}
+
+      <div className="absolute bottom-3 left-3 z-[5] flex items-center gap-2" role="status" aria-live="polite">
+        <span
+          aria-label={t('canvas.connectionStatus', { status: eventsStatus })}
+          className={cn('h-2 w-2 rounded-full', eventsStatus === 'connected' ? 'bg-status-success' : eventsStatus === 'reconnecting' || eventsStatus === 'connecting' ? 'bg-status-warning' : 'bg-status-error')}
+        />
+        {activeRunCount > 0 ? (
+          <span className="rounded-full border border-border bg-surface/90 px-2 py-0.5 text-[10px] font-semibold text-muted">
+            {t('canvas.activeRuns', { count: activeRunCount })}
+          </span>
+        ) : null}
+      </div>
 
       <NodePicker onOpenChange={setPickerOpen} onPick={(kind, role) => void createNode({ kind, role, ...pickerPosition.current }).catch(() => undefined)} open={pickerOpen} />
     </div>

@@ -15,6 +15,7 @@ export default {
         'primary-foreground': 'hsl(var(--primary-foreground) / <alpha-value>)',
         danger: 'hsl(var(--danger) / <alpha-value>)',
         success: 'hsl(var(--success) / <alpha-value>)',
+        warning: 'hsl(var(--warning) / <alpha-value>)',
       },
       fontFamily: {
         display: ['Avenir Next Condensed', 'Arial Narrow', 'sans-serif'],

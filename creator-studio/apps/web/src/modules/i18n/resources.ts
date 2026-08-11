@@ -87,6 +87,7 @@ export const zhCN = {
   canvas: {
     toolbar: '画布工具栏', zoomIn: '放大', zoomOut: '缩小', fitView: '适应视图', resetView: '重置视图',
     emptyTitle: '开始你的第一个创作节点', emptyDescription: '双击画布或使用「+」创建内容节点。',
+    connectionStatus: '连接状态：{{status}}', activeRuns: '运行中 {{count}}',
   },
   nodePicker: {
     title: '创建节点', description: '选择要创建的节点类型。',
@@ -191,6 +192,7 @@ export const enUS = {
   canvas: {
     toolbar: 'Canvas toolbar', zoomIn: 'Zoom in', zoomOut: 'Zoom out', fitView: 'Fit view', resetView: 'Reset view',
     emptyTitle: 'Create your first content node', emptyDescription: 'Double-click the canvas or use “+” to create a content node.',
+    connectionStatus: 'Connection: {{status}}', activeRuns: '{{count}} active run',
   },
   nodePicker: {
     title: 'Create node', description: 'Choose the node type to create.',

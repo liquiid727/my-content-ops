@@ -10,6 +10,7 @@
   --primary-foreground: 0 0% 100%;
   --danger: 355 88% 54%;
   --success: 160 70% 34%;
+  --warning: 38 92% 44%;
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
@@ -30,5 +31,6 @@
   --primary-foreground: 228 14% 8%;
   --danger: 355 88% 68%;
   --success: 160 70% 48%;
+  --warning: 38 96% 58%;
   --shadow-panel: 0 22px 55px rgb(0 0 0 / 0.32);
 }

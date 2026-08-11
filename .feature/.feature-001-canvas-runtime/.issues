@@ -118,7 +118,7 @@
 - [05-canvas-ui §2-§4 §6 §8](./.spec/05-canvas-ui.md)
 
 ## Issue #7: 前端 Artifact / Run Stores 与 SSE
-**Status:** pending
+**Status:** shipped
 **Type:** frontend
 **Priority:** high
 **Dependencies:** #3, #6
@@ -127,10 +127,10 @@
 实现 `artifacts/`（api client + summary cache）、`runtime/`（run-store + SSE 订阅 + 事件归并/节流）。Node Renderer 只订阅 node layout + artifact summary + active run summary + selection；Run 流式更新 Inspector，Canvas 节流刷新（500~2000ms）。切 Project 保存/恢复 viewport/selection。
 
 ### Acceptance Criteria
-- [ ] ArtifactStore 摘要/当前版本/元数据缓存与失效正确
-- [ ] RunStore 订阅 SSE，run.*/artifact.*/node.*/edge.* 事件归并、去重、节流生效
-- [ ] 文本生成不按 token 刷 Node；完成后一次刷新 Preview
-- [ ] 浏览器验证：执行 Run 后状态流转与画布更新；Typecheck/lint 通过
+- [x] ArtifactStore 摘要/当前版本/元数据缓存与失效正确
+- [x] RunStore 订阅 SSE，run.*/artifact.*/node.*/edge.* 事件归并、去重、节流生效
+- [x] 文本生成不按 token 刷 Node；完成后一次刷新 Preview
+- [x] 浏览器验证：执行 Run 后状态流转与画布更新；Typecheck/lint 通过
 
 ### SPEC Reference
 - [05-canvas-ui §6-§7](./.spec/05-canvas-ui.md) ｜ [03-api §4](./.spec/03-api.md)
