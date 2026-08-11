@@ -13,6 +13,8 @@ interface InspectorState {
   operations: OperationDefinition[] | null
   operationsLoading: boolean
   operationsError: string | null
+  /** 每次 openForNode 自增，强制 useInspectorOperations 对同一 artifact 也重新拉取。 */
+  operationsReload: number
 
   openForNode: (nodeId: string, artifactId: string) => void
   close: () => void
@@ -28,9 +30,18 @@ export const useInspectorStore = create<InspectorState>((set) => ({
   operations: null,
   operationsLoading: false,
   operationsError: null,
+  operationsReload: 0,
 
   openForNode: (nodeId, artifactId) =>
-    set({ nodeId, artifactId, tab: 'overview', operations: null, operationsError: null, operationsLoading: true }),
+    set((state) => ({
+      nodeId,
+      artifactId,
+      tab: 'overview',
+      operations: null,
+      operationsError: null,
+      operationsLoading: true,
+      operationsReload: state.operationsReload + 1,
+    })),
 
   close: () => set({ nodeId: null, artifactId: null, operations: null, operationsError: null }),
 

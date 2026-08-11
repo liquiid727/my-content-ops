@@ -110,10 +110,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   selectNode(nodeId) {
-    set((state) => ({
-      selectedNodeId: nodeId,
-      nodes: state.nodes.map((node) => (node.id === nodeId ? { ...node, selected: true } : { ...node, selected: false })),
-    }))
+    // 只记录 id；节点自身的 selected 标志由 React Flow 经 applyNodesChange 维护，
+    // 这里不能重建 node 对象，否则 onSelectionChange → selectNode 会无限循环（React #185）。
+    set({ selectedNodeId: nodeId })
   },
 
   setViewport(viewport) {
@@ -127,7 +126,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const createdArtifact: ArtifactDetail | undefined = created.artifact ? { ...created.artifact, currentVersion: null } : undefined
     if (createdArtifact) useArtifactStore.getState().setDetail(createdArtifact)
     set((state) => ({
-      nodes: [...state.nodes, toFlowNode(created.node, createdArtifact)],
+      nodes: [...state.nodes.map((node) => (node.selected ? { ...node, selected: false } : node)), { ...toFlowNode(created.node, createdArtifact), selected: true }],
       ...(createdArtifact ? { artifacts: { ...state.artifacts, [createdArtifact.id]: createdArtifact } } : {}),
       selectedNodeId: created.node.id,
     }))

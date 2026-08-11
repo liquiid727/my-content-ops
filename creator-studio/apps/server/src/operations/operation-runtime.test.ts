@@ -4,6 +4,7 @@ import {
   errorEnvelopeSchema,
   graphResponseSchema,
   operationDefinitionListResponseSchema,
+  projectContextResponseSchema,
   projectResponseSchema,
   runListResponseSchema,
   runResponseSchema,
@@ -22,8 +23,8 @@ import {
 import { GenerationRepository } from '../repositories/generation-repository.js'
 import { ArtifactRepository, ArtifactService } from '../artifacts/index.js'
 import { CanvasRepository, CanvasService } from '../canvas/index.js'
-import { ContextService } from '../context/index.js'
-import { CreatorProfileRepository } from '../creator-profile/index.js'
+import { configureContextRoutes, ContextService } from '../context/index.js'
+import { CreatorProfileRepository, CreatorProfileService } from '../creator-profile/index.js'
 import { ProjectEventRepository } from '../events/index.js'
 import { ProjectEventEmitter } from '../events/index.js'
 import { configureArtifactRoutes } from '../artifacts/artifact-routes.js'
@@ -56,6 +57,7 @@ async function createHarness(run: (ctx: {
   projectId: () => string
   events: ProjectEventRepository
   runs: RunRepository
+  profiles: CreatorProfileService
 }) => Promise<void>) {
   await withTestDatabase(async ({ db, dataDirectory }) => {
     await new WorkspaceRepository(db).createWithProfile({
@@ -80,6 +82,7 @@ async function createHarness(run: (ctx: {
     const projectEventRepository = new ProjectEventRepository(db)
     const eventEmitter = new ProjectEventEmitter(projectEventRepository, () => now++)
     const contextService = new ContextService(projectRepository, artifactRepository, new CreatorProfileRepository(db))
+    const profiles = new CreatorProfileService(new CreatorProfileRepository(db), new ConfigRepository(db), () => now++)
     const operationTaskHandler = new OperationTaskHandler(
       operationRegistry,
       artifactRepository,
@@ -117,6 +120,7 @@ async function createHarness(run: (ctx: {
         configureProjectRoutes(api, projectService)
         configureCanvasRoutes(api, canvasService)
         configureArtifactRoutes(api, artifactService)
+        configureContextRoutes(api, contextService)
         configureRunRoutes(api, runService)
       },
     })
@@ -126,7 +130,7 @@ async function createHarness(run: (ctx: {
       body: JSON.stringify({ title: 'Run project', contentType: 'short_video', brief: '测试项目' }),
     })
     projectId = projectResponseSchema.parse(await created.json()).data.id
-    await run({ app, projectId: () => projectId, events: projectEventRepository, runs: runRepository })
+    await run({ app, projectId: () => projectId, events: projectEventRepository, runs: runRepository, profiles })
     // 让 TaskRunner 的 drain 收尾（最后的 claimNext）在数据库关闭前完成。
     await new Promise((resolve) => setTimeout(resolve, 20))
   })
@@ -252,6 +256,74 @@ describe('Operation Registry & Run orchestration', () => {
       expect(publishDone.status).toBe('completed')
       expect(publishDone.outputArtifactIds).toEqual([])
       expect(publishDone.outputVersionIds).toEqual([])
+    })
+  })
+
+  it('walks the full Topic → Outline → Script chain and injects Personal Style + upstream content (Issue #9)', async () => {
+    await createHarness(async ({ app, projectId, profiles }) => {
+      // 先写一个带内容的选题（手动编辑 → source=user 版本）
+      const topic = await createTopicNode(app, projectId())
+      const topicContent = '用 AI 自动化自媒体日常工作流'
+      const patch = await app.request(`/artifacts/${topic.artifact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patch: { text: topicContent }, revision: 1 }),
+      })
+      expect(patch.status).toBe(200)
+
+      // 注入 Personal Style（voice 区块）→ 后续 context 应包含
+      await profiles.update({ workspaceId: WORKSPACE_ID, creatorProfileId: PROFILE_ID }, PROFILE_ID, 1, {
+        profile: {
+          positioning: { summary: 'AI 应用开发者', nicheTags: ['AI工具'], channels: [] },
+          voice: {
+            tone: { like: ['轻松'], avoid: ['官方腔'] },
+            writingStyle: { preferredAspects: ['短句'], sentencePatterns: [] },
+            vocabulary: { common: [], banned: [] },
+          },
+        },
+        injection: { enabled: true, sections: { voice: true } },
+      })
+
+      // Topic → generate_outline → Outline
+      const outlineRun = createRunResponseSchema.parse(await (await app.request('/operations/generate_outline/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId(), sourceArtifactId: topic.artifact.id, idempotencyKey: KEY_B }),
+      })).json()).data
+      const outlineDone = await waitForRunTerminal(app, outlineRun.runId)
+      expect(outlineDone.status).toBe('completed')
+      const outlineArtifactId = outlineDone.outputArtifactIds![0]!
+      const outlineDetail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${outlineArtifactId}`)).json()).data
+      expect(outlineDetail.role).toBe('outline')
+      expect(outlineDetail.currentVersion?.source).toBe('ai')
+      expect(outlineDetail.currentVersion?.contentRef?.type).toBe('inline')
+      expect((outlineDetail.currentVersion?.contentRef as { type: 'inline'; text: string } | undefined)?.text.length ?? 0).toBeGreaterThan(0)
+
+      let graph = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(graph.nodes).toHaveLength(2)
+      expect(graph.edges).toHaveLength(1)
+      expect(graph.edges[0]).toMatchObject({ sourceArtifactId: topic.artifact.id, targetArtifactId: outlineArtifactId })
+
+      // Outline → generate_script → Script
+      const scriptRun = createRunResponseSchema.parse(await (await app.request('/operations/generate_script/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId(), sourceArtifactId: outlineArtifactId, idempotencyKey: KEY_C }),
+      })).json()).data
+      const scriptDone = await waitForRunTerminal(app, scriptRun.runId)
+      expect(scriptDone.status).toBe('completed')
+      const scriptArtifactId = scriptDone.outputArtifactIds![0]!
+      const scriptDetail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${scriptArtifactId}`)).json()).data
+      expect(scriptDetail.role).toBe('script')
+      expect(scriptDetail.currentVersion?.source).toBe('ai')
+
+      graph = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(graph.nodes).toHaveLength(3)
+      expect(graph.edges).toHaveLength(2)
+      expect(graph.edges.some((edge) => edge.sourceArtifactId === outlineArtifactId && edge.targetArtifactId === scriptArtifactId)).toBe(true)
+
+      // GET /projects/:id/context 注入 Personal Style 与上游内容
+      const context = projectContextResponseSchema.parse(await (await app.request(`/projects/${projectId()}/context?scope=script`)).json()).data
+      const personalStyle = context.layers.find((layer) => layer.name === 'personal_style')
+      expect(personalStyle).toBeDefined()
+      expect(personalStyle!.text).toContain('轻松')
+      expect(context.text).toContain(topicContent)
     })
   })
 

@@ -57,6 +57,9 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
   const handleNodesChange = (changes: NodeChange<FlowNode>[]) => applyNodesChange(changes)
 
   const handlePaneDoubleClick = (event: React.MouseEvent) => {
+    // React Flow v12 的 dblclick 会因默认 double-click-zoom 被 d3-zoom 拦截，
+    // 这里用 wrapper 的 onDoubleClick + zoomOnDoubleClick=false 才能收到；节点双击则忽略。
+    if ((event.target as HTMLElement).closest('.react-flow__node')) return
     pickerPosition.current = screenToFlowPosition({ x: event.clientX, y: event.clientY })
     setPickerOpen(true)
   }
@@ -97,6 +100,7 @@ function CanvasInner({ projectId, className }: CanvasShellProps) {
           proOptions={{ hideAttribution: true }}
           selectionOnDrag
           snapToGrid
+          zoomOnDoubleClick={false}
         >
           <Background color="hsl(var(--border) / 0.5)" gap={20} size={1} variant={BackgroundVariant.Dots} />
           <CustomMiniMap />

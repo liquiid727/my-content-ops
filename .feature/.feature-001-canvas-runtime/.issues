@@ -155,7 +155,7 @@
 - [05-canvas-ui §5](./.spec/05-canvas-ui.md) ｜ [03-api §2.3 §3](./.spec/03-api.md)
 
 ## Issue #9: 第一条真实链路 Topic → Outline → Script
-**Status:** pending
+**Status:** shipped
 **Type:** fullstack
 **Priority:** high
 **Dependencies:** #5, #8
@@ -164,10 +164,10 @@
 打通端到端：创建 Topic Artifact → Inspector 执行 `generate_outline`（真实文本 LLM）→ 生成 Outline Artifact + CanvasNode + Edge → 执行 `generate_script` → Script。验证 Run 全状态（queued/running/completed/failed）、上下文注入（含 Personal Style）、结果落库与画布更新。
 
 ### Acceptance Criteria
-- [ ] 从空 Project 一路走到 Script 节点，链路全部可用
-- [ ] Run loading / complete / failed / retry / version 均验证通过
-- [ ] `GET /projects/:id/context` 注入包含 Personal Style 与上游内容
-- [ ] 浏览器验证全链路（`run` skill）；`test:foundation` + 新增测试通过；Typecheck/lint 通过
+- [x] 从空 Project 一路走到 Script 节点，链路全部可用
+- [x] Run loading / complete / failed / retry / version 均验证通过
+- [x] `GET /projects/:id/context` 注入包含 Personal Style 与上游内容
+- [x] 浏览器验证全链路（`run` skill）；`test:foundation` + 新增测试通过；Typecheck/lint 通过
 
 ### SPEC Reference
 - [04-runtime §3 §4 §6](./.spec/04-runtime.md) ｜ [03-api §2.3](./.spec/03-api.md)

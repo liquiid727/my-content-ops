@@ -115,12 +115,20 @@ export const useRunStore = create<RunState>((set) => ({
             ...runByArtifactPatch,
           }
         }
-        case 'run.completed':
+        case 'run.completed': {
+          const nested = data.output !== undefined && typeof data.output === 'object' && data.output !== null ? data.output as { outputArtifactIds?: unknown; outputVersionIds?: unknown } : {}
+          const outputArtifactIds = data.outputArtifactIds !== undefined
+            ? (Array.isArray(data.outputArtifactIds) ? data.outputArtifactIds.map(String) : null)
+            : (nested.outputArtifactIds !== undefined && Array.isArray(nested.outputArtifactIds) ? nested.outputArtifactIds.map(String) : base.outputArtifactIds)
+          const outputVersionIds = data.outputVersionIds !== undefined
+            ? (Array.isArray(data.outputVersionIds) ? data.outputVersionIds.map(String) : null)
+            : (nested.outputVersionIds !== undefined && Array.isArray(nested.outputVersionIds) ? nested.outputVersionIds.map(String) : base.outputVersionIds)
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, status: 'completed', progress: 100, error: null, output: data.output, outputArtifactIds: data.outputArtifactIds !== undefined ? (Array.isArray(data.outputArtifactIds) ? data.outputArtifactIds.map(String) : null) : base.outputArtifactIds, outputVersionIds: data.outputVersionIds !== undefined ? (Array.isArray(data.outputVersionIds) ? data.outputVersionIds.map(String) : null) : base.outputVersionIds, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, status: 'completed', progress: 100, error: null, output: data.output, outputArtifactIds, outputVersionIds, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'completed'),
             ...runByArtifactPatch,
           }
+        }
         case 'run.failed': {
           const error = data.error !== undefined && typeof data.error === 'object' && data.error !== null
             ? { code: String((data.error as { code?: unknown }).code ?? 'OPERATION_FAILED'), message: String((data.error as { message?: unknown }).message ?? '操作失败。') }

@@ -165,17 +165,18 @@ describe('canvas store', () => {
     expect(useCanvasStore.getState().edges).toEqual([{ id: e.id, source: e.sourceArtifactId, target: e.targetArtifactId, label: e.inputSlot }])
   })
 
-  it('selects a node and marks it in the node list', () => {
+  it('tracks selectedNodeId without rewriting node objects (React Flow owns `selected`)', () => {
     const n = node()
     useCanvasStore.setState({
       projectId: PROJECT_ID,
       nodes: [{ id: n.id, type: 'TextNode', position: { x: 0, y: 0 }, data: { artifactId: n.artifactId, kind: 'text', role: 'topic' } }],
     })
+    const before = useCanvasStore.getState().nodes[0]
 
     useCanvasStore.getState().selectNode(n.id)
 
     const state = useCanvasStore.getState()
     expect(state.selectedNodeId).toBe(n.id)
-    expect(state.nodes[0]!.selected).toBe(true)
+    expect(state.nodes[0]).toBe(before) // 不重建 node 对象 → 避免 React Flow 选择反馈循环
   })
 })
