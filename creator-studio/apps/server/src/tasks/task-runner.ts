@@ -25,18 +25,24 @@ export class TaskRunner {
           const input = handler.parse(JSON.parse(task.inputJson))
           const result = await handler.execute(input, controller.signal)
           const finishedAt = this.now()
-          this.generations.completeTask({
-            generation: {
-              id: ulid(finishedAt), workspaceId: task.workspaceId, projectId: task.projectId, taskId: task.id,
-              providerKey: result.providerKey, model: result.model,
-              requestJson: JSON.stringify({ ...result.requestSnapshot as object, sha256: createHash('sha256').update(task.inputJson).digest('hex') }),
-              responseJson: JSON.stringify(result.responseSnapshot), usageJson: JSON.stringify(result.usage), status: 'completed', createdAt: task.startedAt ?? finishedAt, finishedAt,
-            },
-            taskId: task.id, outputJson: JSON.stringify(result.output), finishedAt,
-          })
+          if (handler.onCompleted) {
+            await handler.onCompleted(input, result, task, finishedAt)
+          } else {
+            this.generations.completeTask({
+              generation: {
+                id: ulid(finishedAt), workspaceId: task.workspaceId, projectId: task.projectId, taskId: task.id,
+                providerKey: result.providerKey, model: result.model,
+                requestJson: JSON.stringify({ ...result.requestSnapshot as object, sha256: createHash('sha256').update(task.inputJson).digest('hex') }),
+                responseJson: JSON.stringify(result.responseSnapshot), usageJson: JSON.stringify(result.usage), status: 'completed', createdAt: task.startedAt ?? finishedAt, finishedAt,
+              },
+              taskId: task.id, outputJson: JSON.stringify(result.output), finishedAt,
+            })
+          }
         } catch (error) {
           const current = await this.tasks.getByWorkspaceAndId(task.workspaceId, task.id)
           if (current?.status === 'running') {
+            const handler = this.handlers.get(task.type) ?? this.handlers.require(task.type)
+            try { await handler.onFailed?.(JSON.parse(task.inputJson), current, error) } catch { /* 失败钩子不掩盖主错误 */ }
             assertTaskTransition('running', 'failed')
             const failedAt = this.now()
             try {

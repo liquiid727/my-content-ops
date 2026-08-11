@@ -9,8 +9,17 @@ import { AssetFileStore, AssetService, configureAssetRoutes } from './assets/ind
 import { BootstrapService, configurePreferenceRoutes, ensureLocalIdentity } from './bootstrap/index.js'
 import { CanvasRepository, CanvasService, configureCanvasRoutes } from './canvas/index.js'
 import { openDatabase } from './db/database.js'
+import { ProjectEventEmitter, ProjectEventRepository, configureProjectEventRoutes } from './events/index.js'
 import { consoleRequestLogger } from './http/logging.js'
 import { createLocalSecurityContext } from './http/security.js'
+import {
+  OperationRegistry,
+  RunService,
+  configureRunRoutes,
+  operationDefinitions,
+  OperationTaskHandler,
+  RunRepository,
+} from './operations/index.js'
 import { GenerationProviderRegistry, SeedGenerationProvider } from './providers/index.js'
 import { configureProjectRoutes, ProjectService } from './projects/index.js'
 import {
@@ -54,9 +63,36 @@ const assetService = new AssetService(
 )
 const versionService = new VersionService(new VersionRepository(database.db), new ProjectRepository(database.db))
 const taskRepository = new TaskRepository(database.db)
-const taskHandlers = new TaskHandlerRegistry().register(new SeedTaskHandler(new GenerationProviderRegistry([new SeedGenerationProvider()])))
+const providerRegistry = new GenerationProviderRegistry([new SeedGenerationProvider()])
+const projectEventRepository = new ProjectEventRepository(database.db)
+const projectEventEmitter = new ProjectEventEmitter(projectEventRepository)
+const operationRegistry = new OperationRegistry(operationDefinitions)
+const runRepository = new RunRepository(database.db)
+const operationTaskHandler = new OperationTaskHandler(
+  operationRegistry,
+  artifactRepository,
+  new CanvasRepository(database.db),
+  runRepository,
+  new ProjectRepository(database.db),
+  taskRepository,
+  providerRegistry,
+  projectEventEmitter,
+)
+const taskHandlers = new TaskHandlerRegistry()
+  .register(new SeedTaskHandler(providerRegistry))
+  .register(operationTaskHandler)
 const taskRunner = new TaskRunner(taskRepository, new GenerationRepository(database.db), taskHandlers)
 const taskService = new TaskService(taskRepository, new ProjectRepository(database.db), taskHandlers, taskRunner)
+const runService = new RunService(
+  runRepository,
+  operationRegistry,
+  new ProjectRepository(database.db),
+  artifactRepository,
+  new CanvasRepository(database.db),
+  taskRepository,
+  taskRunner,
+  projectEventEmitter,
+)
 await taskRepository.deleteWorkspaceEventsBefore(identity.workspace.id, Date.now() - 7 * 24 * 60 * 60 * 1_000)
 await new TaskRecovery(taskRepository, taskHandlers).recover(identity.workspace.id)
 taskRunner.schedule()
@@ -73,6 +109,8 @@ const app = createStaticApp({
     configureProjectRoutes(api, projectService)
     configureCanvasRoutes(api, canvasService)
     configureArtifactRoutes(api, artifactService)
+    configureRunRoutes(api, runService)
+    configureProjectEventRoutes(api, projectEventRepository, new ProjectRepository(database.db))
     configureAssetRoutes(api, assetService)
     configureVersionRoutes(api, versionService)
     configureTaskRoutes(api, taskService)

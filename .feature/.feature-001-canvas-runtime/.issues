@@ -43,7 +43,7 @@
 - [03-api §2.1-§2.2 §5](./.spec/03-api.md) ｜ [02-data-model §3-§7](./.spec/02-data-model.md)
 
 ## Issue #3: Operation Registry 与 Run 编排（复用 Task Runtime）
-**Status:** pending
+**Status:** shipped
 **Type:** backend
 **Priority:** high
 **Dependencies:** #1, #2
@@ -52,12 +52,12 @@
 实现 `operations/registry`（`getAvailableOperations` 按 kind/role/输入过滤）与 Run 编排：创建 Run = 建 `runs` + `tasks(type='operation.<opId>')`，executor 在 Task Runner 内执行，回写 `runs` 输出并广播 `run.*` / `artifact.*` / `node.*` / `edge.*` SSE 事件。支持幂等（idempotencyKey）、取消（abort signal）、重试（新 Run）。MVP Operation 定义：`generate_outline` / `generate_script` / `polish` / `edit` / `generate_cover` / `generate_voice` / `publish`（骨架）。
 
 ### Acceptance Criteria
-- [ ] Registry 按 artifact kind/role + 输入满足度返回 OperationDefinition，无写死分支
-- [ ] POST `/operations/:opId/runs` 创建 Run + Task，202 返回 `{runId, taskId, status}`
-- [ ] GET `/runs/:id`、POST `/runs/:id/cancel`、POST `/runs/:id/retry` 可用（retry 新建 Run 不覆盖旧 Run）
-- [ ] 幂等：同 idempotencyKey 重复创建返回同一 Run
-- [ ] SSE 事件 `run.* / artifact.* / node.* / edge.* / stream.reset` 广播正确
-- [ ] 单元/集成测试覆盖行为四类（create/transform/branch/action）与幂等/取消/重试；Typecheck/lint 通过
+- [x] Registry 按 artifact kind/role + 输入满足度返回 OperationDefinition，无写死分支
+- [x] POST `/operations/:opId/runs` 创建 Run + Task，202 返回 `{runId, taskId, status}`
+- [x] GET `/runs/:id`、POST `/runs/:id/cancel`、POST `/runs/:id/retry` 可用（retry 新建 Run 不覆盖旧 Run）
+- [x] 幂等：同 idempotencyKey 重复创建返回同一 Run
+- [x] SSE 事件 `run.* / artifact.* / node.* / edge.* / stream.reset` 广播正确
+- [x] 单元/集成测试覆盖行为四类（create/transform/branch/action）与幂等/取消/重试；Typecheck/lint 通过
 
 ### SPEC Reference
 - [04-runtime §2-§4 §8](./.spec/04-runtime.md) ｜ [03-api §2.3 §4 §5](./.spec/03-api.md)

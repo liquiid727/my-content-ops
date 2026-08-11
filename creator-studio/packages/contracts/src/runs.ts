@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { idSchema, isoDateTimeSchema } from './common.js'
-import { successEnvelopeSchema } from './envelopes.js'
+import { listEnvelopeSchema, successEnvelopeSchema } from './envelopes.js'
 
 export const runStatusSchema = z.enum(['queued', 'running', 'waiting_review', 'completed', 'failed', 'cancelled'])
 export type RunStatus = z.infer<typeof runStatusSchema>
@@ -30,5 +30,35 @@ export const runSchema = z.object({
 }).strict()
 
 export const runResponseSchema = successEnvelopeSchema(runSchema)
+export const runListResponseSchema = listEnvelopeSchema(runSchema)
+
+/** 创建 Run（async）。idempotencyKey 必须为 ULID。 */
+export const createRunSchema = z
+  .object({
+    projectId: idSchema,
+    sourceArtifactId: idSchema.nullable().optional(),
+    inputVersionIds: z.array(idSchema).default([]),
+    config: z.record(z.string(), z.unknown()).default({}),
+    idempotencyKey: idSchema,
+  })
+  .strict()
+export type CreateRun = z.infer<typeof createRunSchema>
+
+export const createRunResultSchema = z
+  .object({
+    runId: idSchema,
+    taskId: idSchema,
+    status: runStatusSchema,
+  })
+  .strict()
+export const createRunResponseSchema = successEnvelopeSchema(createRunResultSchema)
+export type CreateRunResult = z.infer<typeof createRunResultSchema>
+
+export const retryRunSchema = z
+  .object({
+    idempotencyKey: idSchema,
+  })
+  .strict()
+export type RetryRun = z.infer<typeof retryRunSchema>
 
 export type Run = z.infer<typeof runSchema>

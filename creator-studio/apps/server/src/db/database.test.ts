@@ -118,7 +118,7 @@ describe('SQLite bootstrap and migrations', () => {
       expect(database.sqlite.pragma('foreign_keys', { simple: true })).toBe(1)
       expect(database.sqlite.pragma('journal_mode', { simple: true })).toBe('wal')
       expect(database.sqlite.pragma('busy_timeout', { simple: true })).toBe(5_000)
-      expect(database.sqlite.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get()).toEqual({ count: 4 })
+      expect(database.sqlite.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get()).toEqual({ count: 5 })
     } finally {
       await database.cleanup()
     }

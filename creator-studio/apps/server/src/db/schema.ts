@@ -263,6 +263,19 @@ export const runs = sqliteTable('runs', {
   updatedAt: integer('updated_at').notNull(),
 })
 
+export const projectEvents = sqliteTable(
+  'project_events',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    workspaceId: text('workspace_id').notNull(),
+    projectId: text('project_id').notNull(),
+    eventType: text('event_type').notNull(),
+    payloadJson: text('payload_json').notNull(),
+    createdAt: integer('created_at').notNull(),
+  },
+  (table) => [index('project_events_project_id_idx').on(table.projectId, table.id)],
+)
+
 export const databaseSchema = {
   workspaces,
   creatorProfiles,
@@ -281,6 +294,7 @@ export const databaseSchema = {
   canvasNodes,
   edges,
   runs,
+  projectEvents,
 }
 
 export type WorkspaceRecord = typeof workspaces.$inferSelect
@@ -299,3 +313,4 @@ export type ArtifactVersionRecord = typeof artifactVersions.$inferSelect
 export type CanvasNodeRecord = typeof canvasNodes.$inferSelect
 export type EdgeRecord = typeof edges.$inferSelect
 export type RunRecord = typeof runs.$inferSelect
+export type ProjectEventRecord = typeof projectEvents.$inferSelect
