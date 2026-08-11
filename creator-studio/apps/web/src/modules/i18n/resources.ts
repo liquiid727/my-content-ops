@@ -89,10 +89,19 @@ export const zhCN = {
     emptyTitle: '开始你的第一个创作节点', emptyDescription: '双击画布或使用「+」创建内容节点。',
     connectionStatus: '连接状态：{{status}}', activeRuns: '运行中 {{count}}',
     loadingImage: '加载缩略图…', playVoice: '播放配音', mediaLoadFailed: '媒体加载失败',
+    actionIdle: '待发布', actionHint: '动作节点：记录发布/导出等副作用。',
   },
   nodePicker: {
     title: '创建节点', description: '选择要创建的节点类型。',
     topic: '选题', outline: '大纲', script: '口播稿', cover: '封面', voice: '配音', image: '配图', publish: '发布',
+  },
+  publish: {
+    entry: '发布', roleVideo: '视频',
+    title: '发布内容', description: '选择目标平台并执行预览或发布。当前为 MVP 骨架，不接真实平台。',
+    target: '将发布', targetNone: '画布中还没有可发布的脚本或视频节点。', loadingTarget: '正在查找可发布内容…',
+    platform: '目标平台', platformWechat: '公众号', platformXiaohongshu: '小红书', platformDouyin: '抖音', platformBilibili: 'B站',
+    preview: '预览', publish: '发布', triggerFailed: '发布请求失败，请重试。',
+    runStatus: { queued: '排队中…', running: '发布中…', completed: '发布完成', failed: '发布失败', cancelled: '已取消' },
   },
   inspector: {
     title: '检查器', close: '关闭检查器', untitled: '未命名', tabsLabel: '检查器分区',
@@ -208,10 +217,19 @@ export const enUS = {
     emptyTitle: 'Create your first content node', emptyDescription: 'Double-click the canvas or use “+” to create a content node.',
     connectionStatus: 'Connection: {{status}}', activeRuns: '{{count}} active run',
     loadingImage: 'Loading thumbnail…', playVoice: 'Play voice', mediaLoadFailed: 'Could not load media',
+    actionIdle: 'Idle', actionHint: 'Action node: records side effects such as publish/export.',
   },
   nodePicker: {
     title: 'Create node', description: 'Choose the node type to create.',
     topic: 'Topic', outline: 'Outline', script: 'Script', cover: 'Cover', voice: 'Voice', image: 'Illustration', publish: 'Publish',
+  },
+  publish: {
+    entry: 'Publish', roleVideo: 'Video',
+    title: 'Publish content', description: 'Pick a target platform and run a preview or publish. MVP skeleton — no real platform integration.',
+    target: 'Will publish', targetNone: 'No publishable script or video node on the canvas yet.', loadingTarget: 'Finding publishable content…',
+    platform: 'Target platform', platformWechat: 'WeChat', platformXiaohongshu: 'RED', platformDouyin: 'Douyin', platformBilibili: 'Bilibili',
+    preview: 'Preview', publish: 'Publish', triggerFailed: 'Publish request failed. Try again.',
+    runStatus: { queued: 'Queued…', running: 'Publishing…', completed: 'Publish complete', failed: 'Publish failed', cancelled: 'Cancelled' },
   },
   inspector: {
     title: 'Inspector', close: 'Close inspector', untitled: 'Untitled', tabsLabel: 'Inspector sections',

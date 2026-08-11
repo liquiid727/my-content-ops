@@ -191,7 +191,7 @@
 - [04-runtime §5](./.spec/04-runtime.md) ｜ [05-canvas-ui §3 §7](./.spec/05-canvas-ui.md)
 
 ## Issue #11: Action 节点与 Publish 骨架
-**Status:** pending
+**Status:** shipped
 **Type:** fullstack
 **Priority:** medium
 **Dependencies:** #9
@@ -200,10 +200,10 @@
 实现 `action/publish` Operation（骨架）：ActionNode 表现副作用与状态；Publish 全局入口固定在右上角 Header；`preview` 可看，`publish` 标记状态（MVP 不接真实平台）。
 
 ### Acceptance Criteria
-- [ ] ActionNode 渲染 + 状态展示
-- [ ] Header 右侧 Publish 入口存在并可触发 preview/骨架 publish
-- [ ] publish Run 按 `action` behavior 执行，不产出内容 Artifact
-- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+- [x] ActionNode 渲染 + 状态展示（run status 关联 + 错误信息）
+- [x] Header 右侧 Publish 入口存在并可触发 preview/骨架 publish（平台选择对话框）
+- [x] publish Run 按 `action` behavior 执行，不产出内容 Artifact
+- [x] 浏览器验证（`run` skill）；`test:foundation` + 新增测试通过；Typecheck/lint 通过
 
 ### SPEC Reference
 - [04-runtime §2 §3](./.spec/04-runtime.md) ｜ [05-canvas-ui §1 §3](./.spec/05-canvas-ui.md)

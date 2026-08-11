@@ -121,3 +121,35 @@ test('Script → Cover (image collection) + Voice (audio) media chain', async ({
   }, projectId)
   expect(media).toEqual(['audio:voice', 'collection:cover', 'text:script'])
 })
+
+test('Publish skeleton: header entry → dialog → publish run side effect', async ({ page }) => {
+  await page.goto('/')
+  const projectId = await createProject(page)
+  await page.goto(`/projects/${projectId}/canvas`)
+  await expect(page.getByText('开始你的第一个创作节点')).toBeVisible({ timeout: 10_000 })
+
+  // 创建「口播稿」脚本节点作为可发布目标
+  await page.locator('.react-flow__pane').dblclick({ position: { x: 320, y: 220 } })
+  await page.getByRole('button', { name: '口播稿' }).click()
+  const nodes = page.locator('[data-testid="canvas-node"]')
+  await expect(nodes).toHaveCount(1, { timeout: 10_000 })
+
+  // 右上角 Header Publish 入口（aria-label 发布，区别于 Inspector 的发布操作）→ 对话框显示可发布目标
+  await page.getByLabel('发布').click()
+  await expect(page.getByRole('heading', { name: '发布内容' })).toBeVisible()
+  await expect(page.getByTestId('publish-target')).toContainText('口播稿')
+
+  // 执行骨架发布 → 对话框进入运行态并完成
+  await page.getByRole('dialog').getByRole('button', { name: '发布', exact: true }).click()
+  await expect(page.getByRole('dialog').getByText('发布完成')).toBeVisible({ timeout: 15_000 })
+
+  // 服务端确认：publish Run 按 action behavior 执行，不产出内容 Artifact
+  const publishRuns = await page.evaluate(async (pid) => {
+    const response = await fetch(`/api/v1/runs?projectId=${pid}`)
+    const body = await response.json() as { data: Array<{ operationId: string; status: string; outputArtifactIds: string[] | null }> }
+    return body.data.filter((run) => run.operationId === 'publish').map((run) => ({ status: run.status, outputArtifactIds: run.outputArtifactIds }))
+  }, projectId)
+  expect(publishRuns.length).toBeGreaterThan(0)
+  expect(publishRuns.every((run) => run.status === 'completed')).toBe(true)
+  expect(publishRuns.every((run) => run.outputArtifactIds === null || run.outputArtifactIds.length === 0)).toBe(true)
+})

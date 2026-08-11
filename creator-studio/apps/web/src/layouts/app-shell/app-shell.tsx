@@ -5,6 +5,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 
 import { LanguageSwitcher } from '../../modules/i18n'
 import { ThemeSwitcher } from '../../modules/theme/theme-switcher'
+import { PublishDialog } from '../../canvas/publish/publish-dialog'
 import { cn } from '../../shared/lib/cn'
 import { Button, ToastRegion } from '../../shared/ui'
 
@@ -26,6 +27,12 @@ function getCurrentContextKey(pathname: string) {
   if (pathname.startsWith('/settings')) return 'navigation.settings'
   if (pathname === '/') return 'navigation.dashboard'
   return 'navigation.unknown'
+}
+
+/** 当前路由是项目画布时，提取 projectId（Header Publish 入口的目标）。 */
+function canvasProjectId(pathname: string): string | null {
+  const match = pathname.match(/^\/projects\/([^/]+)\/canvas$/)
+  return match ? decodeURIComponent(match[1]!) : null
 }
 
 export function AppShell({ children }: PropsWithChildren) {
@@ -150,6 +157,7 @@ export function AppShell({ children }: PropsWithChildren) {
             <p className="truncate font-utility text-[10px] uppercase tracking-[0.16em] text-muted">{t('common.currentContext')}</p>
             <p className="truncate text-sm font-semibold">{t(getCurrentContextKey(location.pathname))}</p>
           </div>
+          {canvasProjectId(location.pathname) ? <PublishDialog projectId={canvasProjectId(location.pathname)!} /> : null}
           <LanguageSwitcher />
           <ThemeSwitcher />
           <Button aria-label={t('common.notifications')} className="hidden h-9 w-9 px-0 sm:inline-flex" variant="ghost">
