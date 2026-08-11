@@ -136,7 +136,7 @@
 - [05-canvas-ui §6-§7](./.spec/05-canvas-ui.md) ｜ [03-api §4](./.spec/03-api.md)
 
 ## Issue #8: Inspector（Registry 驱动 + 流式 + 版本历史 + Collection）
-**Status:** pending
+**Status:** shipped
 **Type:** frontend
 **Priority:** high
 **Dependencies:** #6, #7
@@ -145,11 +145,11 @@
 实现 `inspector/`：固定布局（Header/Tabs/Input Context/Preview/Config/Actions/Results/Version）。操作区由 `GET /artifacts/:id/operations` 驱动（按 group/placement/priority 分组）。支持 Run 流式、失败态（重试/改参/换模型/取消）、版本历史与恢复、Collection 选择/对比/再生成/Promote。手动编辑经 revisionedPatch 产生新版本。
 
 ### Acceptance Criteria
-- [ ] 单击节点打开 Inspector，操作由 Registry 自动生成（无写死按钮）
-- [ ] 失败显示 human-readable + provider message 折叠 + 重试/取消
-- [ ] Version History 可查看与恢复（restore 不删历史链）
-- [ ] Collection 支持 Select/Compare/Regenerate/Promote/Delete
-- [ ] 浏览器验证（`run` skill）；Typecheck/lint 通过
+- [x] 单击节点打开 Inspector，操作由 Registry 自动生成（无写死按钮）
+- [x] 失败显示 human-readable + provider message 折叠 + 重试/取消
+- [x] Version History 可查看与恢复（restore 不删历史链）
+- [x] Collection 支持 Select/Compare/Regenerate/Promote/Delete
+- [x] 浏览器验证（`run` skill）；Typecheck/lint 通过
 
 ### SPEC Reference
 - [05-canvas-ui §5](./.spec/05-canvas-ui.md) ｜ [03-api §2.3 §3](./.spec/03-api.md)

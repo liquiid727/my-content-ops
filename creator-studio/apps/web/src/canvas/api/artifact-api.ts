@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import {
   artifactDetailResponseSchema,
   artifactVersionListResponseSchema,
@@ -47,5 +48,9 @@ export const artifactApi = {
   /** Registry 驱动的可用操作（按 kind/role/输入满足度过滤）。 */
   async operations(artifactId: string): Promise<OperationDefinition[]> {
     return (await apiRequest(`/artifacts/${encodeURIComponent(artifactId)}/operations`, operationDefinitionListResponseSchema)).data.operations
+  },
+  /** 显式删除 artifact（用户同时删除内容时调用）。 */
+  async deleteArtifact(artifactId: string): Promise<void> {
+    await apiRequest(`/artifacts/${encodeURIComponent(artifactId)}`, z.undefined(), { method: 'DELETE' })
   },
 }

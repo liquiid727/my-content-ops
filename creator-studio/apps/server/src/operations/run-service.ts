@@ -135,7 +135,7 @@ export class RunService {
       })
 
       if (!created.replayed) {
-        this.events.emit(identity.workspaceId, input.projectId, 'run.created', { runId: created.run.id, taskId: created.task.id, operationId })
+        this.events.emit(identity.workspaceId, input.projectId, 'run.created', { runId: created.run.id, taskId: created.task.id, operationId, sourceArtifactId: created.run.sourceArtifactId })
         this.runner.schedule()
       }
       return { run: mapRun(created.run, created.task), task: created.task }
@@ -176,7 +176,7 @@ export class RunService {
       updatedAt: now,
     })
     this.runner.cancelRunning(task.id)
-    this.events.emit(identity.workspaceId, run.projectId, 'run.cancelled', { runId: run.id, taskId: run.taskId, operationId: run.operationId })
+    this.events.emit(identity.workspaceId, run.projectId, 'run.cancelled', { runId: run.id, taskId: run.taskId, operationId: run.operationId, sourceArtifactId: run.sourceArtifactId })
     return mapRun(run, cancelled)
   }
 

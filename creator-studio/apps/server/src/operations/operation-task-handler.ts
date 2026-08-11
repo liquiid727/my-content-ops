@@ -68,7 +68,7 @@ export class OperationTaskHandler implements TaskHandler {
     const executor = executors[definition.executor]
     if (!executor) throw new Error(`OPERATION_EXECUTOR_MISSING:${definition.executor}`)
 
-    this.emitRunEvent(input, 'run.started', { runId: input.runId, operationId: input.operationId })
+    this.emitRunEvent(input, 'run.started', { runId: input.runId, operationId: input.operationId, sourceArtifactId: input.sourceArtifactId })
 
     const [sourceVersion, sourceArtifact, connectedInputs] = await this.loadInputs(input)
     const projectRecord = await this.projects.getByWorkspaceAndId(input.workspaceId, input.projectId)
@@ -139,7 +139,7 @@ export class OperationTaskHandler implements TaskHandler {
       finishedAt,
       updatedAt: finishedAt,
     })
-    this.emitRunEvent(input, 'run.completed', { runId: input.runId, operationId: input.operationId, output: result.output })
+    this.emitRunEvent(input, 'run.completed', { runId: input.runId, operationId: input.operationId, sourceArtifactId: input.sourceArtifactId, output: result.output })
   }
 
   async onFailed(raw: unknown, task: TaskRecord, error: unknown): Promise<void> {
@@ -166,6 +166,7 @@ export class OperationTaskHandler implements TaskHandler {
     this.emitRunEvent(input, 'run.failed', {
       runId: input.runId,
       operationId: input.operationId,
+      sourceArtifactId: input.sourceArtifactId,
       error: { code, message: safeError },
     })
   }

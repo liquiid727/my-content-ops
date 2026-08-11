@@ -30,7 +30,7 @@ function event(type: string, data: Record<string, unknown>) {
 }
 
 beforeEach(() => {
-  useRunStore.setState({ byId: {}, activeByProject: {} })
+  useRunStore.setState({ byId: {}, activeByProject: {}, runByArtifact: {} })
 })
 
 describe('run store', () => {
@@ -89,5 +89,19 @@ describe('run store', () => {
     event('run.created', { runId, operationId: 'generate_outline' })
     useRunStore.getState().clearProject(PROJECT_ID)
     expect(useRunStore.getState().activeByProject[PROJECT_ID]).toBeUndefined()
+  })
+
+  it('tracks the latest run per source artifact for the Inspector', () => {
+    const artifactId = '01ARZ3NDEKTSV4RRFFQ69G5F60'
+    const runA = run({ id: '01ARZ3NDEKTSV4RRFFQ69G5F61', sourceArtifactId: artifactId, status: 'completed', progress: 100 })
+    const runB = run({ id: '01ARZ3NDEKTSV4RRFFQ69G5F62', sourceArtifactId: artifactId, status: 'running' })
+
+    useRunStore.getState().hydrateRuns(PROJECT_ID, [runA, runB])
+
+    expect(useRunStore.getState().runByArtifact[artifactId]).toBe(runB.id)
+
+    const runC = run({ id: '01ARZ3NDEKTSV4RRFFQ69G5F63', sourceArtifactId: artifactId, status: 'queued' })
+    useRunStore.getState().hydrateRuns(PROJECT_ID, [runC])
+    expect(useRunStore.getState().runByArtifact[artifactId]).toBe(runC.id)
   })
 })
