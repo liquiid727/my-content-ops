@@ -255,6 +255,36 @@ describe('Operation Registry & Run orchestration', () => {
     })
   })
 
+  it('rewrites a text artifact via operation.rewrite (new_version, not NOT_IMPLEMENTED)', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      expect(operationDefinitions.find((op) => op.id === 'rewrite')?.executor).toBe('operation.rewrite')
+
+      const topic = await createTopicNode(app, projectId())
+      const patch = await app.request(`/artifacts/${topic.artifact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patch: { text: '用 AI 自动化自媒体日常工作流' }, revision: 1 }),
+      })
+      expect(patch.status).toBe(200)
+
+      const rewrite = createRunResponseSchema.parse(await (await app.request('/operations/rewrite/runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: projectId(), sourceArtifactId: topic.artifact.id, idempotencyKey: KEY_B }),
+      })).json()).data
+      const done = await waitForRunTerminal(app, rewrite.runId)
+      expect(done.status).toBe('completed')
+      expect(done.operationId).toBe('rewrite')
+      expect(done.outputVersionIds).toHaveLength(1)
+      expect(done.outputArtifactIds).toEqual([])
+
+      const detail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${topic.artifact.id}`)).json()).data
+      expect(detail.currentVersion?.source).toBe('ai')
+      const rewritten = (detail.currentVersion?.contentRef as { type: 'inline'; text: string } | undefined)?.text ?? ''
+      expect(rewritten.length).toBeGreaterThan(0)
+    })
+  })
+
   it('supports transform (polish → new_version) and action (publish → side_effect) behaviors', async () => {
     await createHarness(async ({ app, projectId }) => {
       const topic = await createTopicNode(app, projectId())

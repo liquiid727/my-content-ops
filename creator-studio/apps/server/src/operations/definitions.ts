@@ -126,7 +126,7 @@ export const operationDefinitions: OperationDefinition[] = [
     input: { kinds: ['text'], roles: ['topic', 'outline', 'script'] },
     output: { behavior: 'new_version' },
     defaultConfig: {},
-    executor: 'operation.not_implemented',
+    executor: 'operation.rewrite',
     presentation: { group: 'edit', priority: 30, placement: 'secondary', danger: false },
     runtime: { expectedDuration: 'medium' },
   },
