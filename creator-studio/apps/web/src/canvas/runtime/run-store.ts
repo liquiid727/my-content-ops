@@ -6,6 +6,8 @@ export interface RunSummary {
   operationId: string
   taskId?: string
   sourceArtifactId?: string | null
+  /** 多源生成：全部源 artifact（含主源）。 */
+  sourceArtifactIds: string[] | null
   status: RunStatus
   progress: number
   error: { code: string; message: string } | null
@@ -46,6 +48,7 @@ function summaryFromRun(run: Run): RunSummary {
     operationId: run.operationId,
     taskId: run.taskId,
     sourceArtifactId: run.sourceArtifactId,
+    sourceArtifactIds: run.sourceArtifactIds ?? [],
     status: run.status,
     progress: run.progress,
     error: run.error,
@@ -78,7 +81,9 @@ export const useRunStore = create<RunState>((set) => ({
       const active: string[] = []
       for (const run of runs) {
         byId[run.id] = summaryFromRun(run)
-        if (run.sourceArtifactId) runByArtifact[run.sourceArtifactId] = run.id
+        for (const id of [...new Set([run.sourceArtifactId ?? '', ...(run.sourceArtifactIds ?? [])])]) {
+          if (id) runByArtifact[id] = run.id
+        }
         if (ACTIVE_STATUSES.has(run.status)) active.push(run.id)
       }
       return { byId, runByArtifact, activeByProject: { ...state.activeByProject, [projectId]: active } }
@@ -91,26 +96,34 @@ export const useRunStore = create<RunState>((set) => ({
     if (!runId) return
     set((state) => {
       const existing = state.byId[runId]
-      const base = existing ?? { runId, operationId: String(data.operationId ?? ''), status: 'queued' as RunStatus, progress: 0, error: null, outputArtifactIds: null, outputVersionIds: null }
+      const base = existing ?? { runId, operationId: String(data.operationId ?? ''), status: 'queued' as RunStatus, progress: 0, error: null, sourceArtifactIds: null, outputArtifactIds: null, outputVersionIds: null }
       const sourceArtifactId = data.sourceArtifactId === undefined ? base.sourceArtifactId : data.sourceArtifactId === null ? null : String(data.sourceArtifactId)
-      const runByArtifactPatch = sourceArtifactId ? { runByArtifact: { ...state.runByArtifact, [sourceArtifactId]: runId } } : {}
+      const sourceArtifactIds = Array.isArray(data.sourceArtifactIds)
+        ? data.sourceArtifactIds.map(String)
+        : base.sourceArtifactIds
+      const mergedSourceIds = [...new Set([...(sourceArtifactId ? [sourceArtifactId] : []), ...(sourceArtifactIds ?? [])])]
+      // runByArtifact：主源 + 多源集合都指向该 run，源节点与占位输出节点都能显示进行中状态。
+      const runByArtifact = { ...state.runByArtifact }
+      for (const id of mergedSourceIds) runByArtifact[id] = runId
+      const runByArtifactPatch = mergedSourceIds.length ? { runByArtifact } : {}
+      const topOutputArtifactIds = Array.isArray(data.outputArtifactIds) ? data.outputArtifactIds.map(String) : null
       switch (type) {
         case 'run.created':
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, operationId: String(data.operationId ?? base.operationId), taskId: data.taskId !== undefined ? String(data.taskId) : base.taskId, status: 'queued', progress: 0, error: null, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, sourceArtifactIds: mergedSourceIds.length ? mergedSourceIds : null, operationId: String(data.operationId ?? base.operationId), taskId: data.taskId !== undefined ? String(data.taskId) : base.taskId, status: 'queued', progress: 0, error: null, outputArtifactIds: topOutputArtifactIds ?? base.outputArtifactIds, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'queued'),
             ...runByArtifactPatch,
           }
         case 'run.started':
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, status: 'running', progress: base.progress || 5, error: null, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, sourceArtifactIds: mergedSourceIds.length ? mergedSourceIds : base.sourceArtifactIds, status: 'running', progress: base.progress || 5, error: null, outputArtifactIds: topOutputArtifactIds ?? base.outputArtifactIds, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'running'),
             ...runByArtifactPatch,
           }
         case 'run.progress': {
           const progress = typeof data.progress === 'number' ? Math.max(0, Math.min(100, Math.round(data.progress))) : base.progress
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, progress, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, sourceArtifactIds, progress, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'running'),
             ...runByArtifactPatch,
           }
@@ -124,7 +137,7 @@ export const useRunStore = create<RunState>((set) => ({
             ? (Array.isArray(data.outputVersionIds) ? data.outputVersionIds.map(String) : null)
             : (nested.outputVersionIds !== undefined && Array.isArray(nested.outputVersionIds) ? nested.outputVersionIds.map(String) : base.outputVersionIds)
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, status: 'completed', progress: 100, error: null, output: data.output, outputArtifactIds, outputVersionIds, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, sourceArtifactIds, status: 'completed', progress: 100, error: null, output: data.output, outputArtifactIds, outputVersionIds, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'completed'),
             ...runByArtifactPatch,
           }
@@ -134,14 +147,14 @@ export const useRunStore = create<RunState>((set) => ({
             ? { code: String((data.error as { code?: unknown }).code ?? 'OPERATION_FAILED'), message: String((data.error as { message?: unknown }).message ?? '操作失败。') }
             : { code: 'OPERATION_FAILED', message: '操作失败。' }
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, status: 'failed', progress: base.progress, error, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, sourceArtifactIds, status: 'failed', progress: base.progress, error, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'failed'),
             ...runByArtifactPatch,
           }
         }
         case 'run.cancelled':
           return {
-            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, status: 'cancelled', error: base.error ?? null, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
+            byId: { ...state.byId, [runId]: { ...base, sourceArtifactId, sourceArtifactIds, status: 'cancelled', error: base.error ?? null, updatedAt: data.occurredAt !== undefined ? String(data.occurredAt) : base.updatedAt } },
             ...upsertActive(state, projectId, runId, 'cancelled'),
             ...runByArtifactPatch,
           }

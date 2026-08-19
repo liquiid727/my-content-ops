@@ -3,23 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#121318" />
+    <meta name="theme-color" content="#f5f6f8" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Creator Studio</title>
+    <title>HelloAlro Creator Studio</title>
   </head>
   <body>
     <script>
       ;(() => {
         try {
-          const selected = localStorage.getItem('creator-studio-theme') || 'dark'
+          const selected = localStorage.getItem('creator-studio-theme') || 'light'
           const dark = selected === 'dark' || (selected === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
           document.documentElement.classList.toggle('dark', dark)
           document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
           const locale = localStorage.getItem('creator-studio-locale')
           document.documentElement.lang = locale === 'en-US' ? 'en-US' : 'zh-CN'
         } catch {
-          document.documentElement.classList.add('dark')
-          document.documentElement.style.colorScheme = 'dark'
+          document.documentElement.classList.remove('dark')
+          document.documentElement.style.colorScheme = 'light'
         }
       })()
     </script>

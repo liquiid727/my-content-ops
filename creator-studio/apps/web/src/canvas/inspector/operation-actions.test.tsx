@@ -53,8 +53,9 @@ afterEach(() => {
 })
 
 describe('OperationActions', () => {
-  it('renders primary and secondary actions grouped by registry placement', () => {
+  it('renders actions grouped by registry presentation.group', () => {
     render(<OperationActions artifactId={ARTIFACT_ID} />)
+    expect(screen.getByText('继续创作')).toBeTruthy()
     expect(screen.getByRole('button', { name: '生成大纲' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '润色' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '发布' })).toBeTruthy()

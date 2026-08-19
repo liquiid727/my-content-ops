@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import type { Project, ProjectOverview } from '@creator-studio/contracts'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { App } from '../../app/App'
@@ -108,7 +108,8 @@ describe('Project lifecycle UI', () => {
     })
 
     renderApp()
-    fireEvent.click(await screen.findByRole('button', { name: '新建项目' }))
+    await screen.findByRole('heading', { name: '项目' })
+    fireEvent.click(within(screen.getByRole('main')).getByRole('button', { name: '新建项目' }))
     fireEvent.change(screen.getByLabelText('项目标题'), { target: { value: created.title } })
     fireEvent.click(screen.getByRole('combobox', { name: '内容类型' }))
     fireEvent.click(await screen.findByRole('option', { name: '短视频' }))
@@ -118,6 +119,7 @@ describe('Project lifecycle UI', () => {
 
     expect(await screen.findByRole('heading', { name: created.title })).toBeTruthy()
     expect(window.location.pathname).toBe(`/projects/${PROJECT_ID}/overview`)
+    expect((await screen.findByRole('link', { name: '进入画布' })).getAttribute('href')).toBe(`/projects/${PROJECT_ID}/canvas`)
     expect(fetchMock.mock.calls.filter(([url, init]) => String(url).endsWith('/projects') && init?.method === 'POST')).toHaveLength(1)
     expect(await screen.findByText('没有活动任务')).toBeTruthy()
     expect(screen.getByText('还没有素材')).toBeTruthy()

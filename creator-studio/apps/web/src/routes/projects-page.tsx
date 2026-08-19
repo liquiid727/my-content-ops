@@ -1,5 +1,5 @@
 import type { CreateProject, ProjectStatus } from '@creator-studio/contracts'
-import { FolderKanban, Plus, RefreshCw } from 'lucide-react'
+import { FolderKanban, Plus, RefreshCw, Waypoints } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
@@ -103,19 +103,24 @@ export default function ProjectsPage() {
 
       <div className="mt-6 grid gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2">
         {projects.map((project) => (
-          <Link
-            className="group min-h-48 bg-surface p-6 transition-colors hover:bg-elevated focus-visible:bg-elevated"
-            key={project.id}
-            to={`/projects/${project.id}/overview`}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-muted">{t(`projects.${project.status}`)}</span>
-              <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">{formatContentType(project.contentType, t)}</span>
-            </div>
-            <h2 className="mt-8 font-display text-2xl font-semibold tracking-tight transition-colors group-hover:text-primary">{project.title}</h2>
-            <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{project.brief || t('projects.missingBrief')}</p>
-            <p className="mt-6 text-xs text-muted">{t('projects.updatedAt', { date: formatDateTime(project.updatedAt, locale) })}</p>
-          </Link>
+          <div className="group relative min-h-48 bg-surface p-6 transition-colors hover:bg-elevated" key={project.id}>
+            <Link className="block focus-visible:bg-elevated" to={`/projects/${project.id}/overview`}>
+              <div className="flex items-start justify-between gap-4">
+                <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-muted">{t(`projects.${project.status}`)}</span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">{formatContentType(project.contentType, t)}</span>
+              </div>
+              <h2 className="mt-8 font-display text-2xl font-semibold tracking-tight transition-colors group-hover:text-primary">{project.title}</h2>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{project.brief || t('projects.missingBrief')}</p>
+              <p className="mt-6 pr-12 text-xs text-muted">{t('projects.updatedAt', { date: formatDateTime(project.updatedAt, locale) })}</p>
+            </Link>
+            <Link
+              aria-label={t('projects.openCanvas')}
+              className="absolute bottom-4 right-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface/95 text-muted shadow-panel transition-colors hover:bg-elevated hover:text-foreground"
+              to={`/projects/${project.id}/canvas`}
+            >
+              <Waypoints aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          </div>
         ))}
       </div>
 

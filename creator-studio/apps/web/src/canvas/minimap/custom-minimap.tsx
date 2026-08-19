@@ -9,6 +9,7 @@ export function CustomMiniMap() {
       nodeColor="hsl(var(--primary) / 0.55)"
       nodeStrokeColor="hsl(var(--border))"
       pannable
+      position="bottom-left"
       zoomable
     />
   )

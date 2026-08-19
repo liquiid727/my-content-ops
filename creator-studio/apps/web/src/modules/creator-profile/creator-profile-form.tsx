@@ -1,30 +1,30 @@
 import {
-  injectScopeSchema,
-  renderContext,
   type Audience,
   type ContentRules,
   type CreatorIdentity,
   type CreatorProfileEntity,
   type CreatorProfilePatch,
-  type InjectScope,
   type InjectionSettings,
   type Knowledge,
   type Memory,
   type PersonalStyle,
   type Positioning,
+  type SectionKey,
   type Voice,
 } from '@creator-studio/contracts'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button, Input, Select, Switch, Textarea } from '../../shared/ui'
+import { Button, Input, Switch, Textarea } from '../../shared/ui'
 
-const SCOPES = injectScopeSchema.options
+export type CreatorProfileEditorSection = 'summary' | SectionKey | 'injection'
 
 interface CreatorProfileFormProps {
   profile: CreatorProfileEntity
+  section: CreatorProfileEditorSection
   saving: boolean
-  onSave: (revision: number, patch: CreatorProfilePatch) => Promise<void>
+  onCancel: () => void
+  onSave: (revision: number, patch: CreatorProfilePatch) => Promise<boolean>
 }
 
 function splitLines(text: string): string[] {
@@ -237,16 +237,6 @@ function RulesEditor({ value, onChange }: { value: ContentRules; onChange: (valu
   )
 }
 
-function SectionCard({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
-  return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <h2 className="font-display text-lg font-semibold">{title}</h2>
-      {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
-      <div className="mt-4 space-y-4">{children}</div>
-    </section>
-  )
-}
-
 function InjectionEditor({ value, onChange }: { value: InjectionSettings; onChange: (value: InjectionSettings) => void }) {
   const { t } = useTranslation()
   const sections: Array<{ key: keyof InjectionSettings['sections']; label: string }> = [
@@ -285,7 +275,7 @@ function InjectionEditor({ value, onChange }: { value: InjectionSettings; onChan
   )
 }
 
-export function CreatorProfileForm({ profile, saving, onSave }: CreatorProfileFormProps) {
+export function CreatorProfileForm({ profile, section, saving, onCancel, onSave }: CreatorProfileFormProps) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState<Draft>({
     displayName: profile.displayName,
@@ -293,103 +283,61 @@ export function CreatorProfileForm({ profile, saving, onSave }: CreatorProfileFo
     profile: profile.profile,
     injection: profile.injection,
   })
-  const [scope, setScope] = useState<InjectScope>('project')
-
   const setProfile = <K extends keyof PersonalStyle>(key: K, value: PersonalStyle[K]) => {
     setDraft((current) => ({ ...current, profile: { ...current.profile, [key]: value } }))
   }
 
-  const previewText = useMemo(() => renderContext(draft.profile, draft.injection, scope), [draft.profile, draft.injection, scope])
-
   async function handleSave() {
-    await onSave(profile.revision, {
-      displayName: draft.displayName,
-      bio: draft.bio,
-      profile: draft.profile,
-      injection: draft.injection,
-    })
+    let patch: CreatorProfilePatch
+    if (section === 'summary') patch = { displayName: draft.displayName, bio: draft.bio }
+    else if (section === 'injection') patch = { injection: draft.injection }
+    else patch = { profile: draft.profile }
+
+    const saved = await onSave(profile.revision, patch)
+    if (saved) onCancel()
   }
 
   return (
-    <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); void handleSave() }}>
-      <SectionCard title={t('profile.summary')}>
-        <div className="flex items-start gap-4">
-          <div
-            aria-hidden="true"
-            className="flex h-14 w-14 shrink-0 select-none items-center justify-center rounded-full border border-border bg-elevated font-display text-xl font-semibold text-primary"
-          >
-            {draft.displayName.trim().charAt(0) || '?'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t('profile.fields.displayName')}>
-                <Input
-                  onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))}
-                  required
-                  value={draft.displayName}
-                />
-              </Field>
-              <Field label={t('profile.fields.bio')}>
-                <Input onChange={(event) => setDraft((current) => ({ ...current, bio: event.target.value }))} value={draft.bio} />
-              </Field>
+    <form className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => { event.preventDefault(); void handleSave() }}>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 sm:px-7">
+        {section === 'summary' ? (
+          <div className="flex items-start gap-4">
+            <div
+              aria-hidden="true"
+              className="flex h-14 w-14 shrink-0 select-none items-center justify-center rounded-full border border-primary/20 bg-primary/10 font-display text-xl font-semibold text-primary"
+            >
+              {draft.displayName.trim().charAt(0) || '?'}
             </div>
-            {draft.profile.positioning.nicheTags.length > 0 ? (
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-sm font-semibold text-muted">{t('profile.fields.nicheTags')}</span>
-                {draft.profile.positioning.nicheTags.map((tag) => (
-                  <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary" key={tag}>
-                    {tag}
-                  </span>
-                ))}
+            <div className="min-w-0 flex-1">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label={t('profile.fields.displayName')}>
+                  <Input
+                    onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))}
+                    required
+                    value={draft.displayName}
+                  />
+                </Field>
+                <Field label={t('profile.fields.bio')}>
+                  <Input onChange={(event) => setDraft((current) => ({ ...current, bio: event.target.value }))} value={draft.bio} />
+                </Field>
               </div>
-            ) : null}
-            <p className="mt-4 text-xs text-muted">{t('profile.creatorLevel', { level: 'AI Builder' })}</p>
+            </div>
           </div>
-        </div>
-      </SectionCard>
+        ) : null}
+        {section === 'identity' ? <IdentityEditor onChange={(identity) => setProfile('identity', identity)} value={draft.profile.identity} /> : null}
+        {section === 'positioning' ? <PositioningEditor onChange={(positioning) => setProfile('positioning', positioning)} value={draft.profile.positioning} /> : null}
+        {section === 'audience' ? <AudienceEditor onChange={(audience) => setProfile('audience', audience)} value={draft.profile.audience} /> : null}
+        {section === 'voice' ? <VoiceEditor onChange={(voice) => setProfile('voice', voice)} value={draft.profile.voice} /> : null}
+        {section === 'knowledge' ? <KnowledgeEditor onChange={(knowledge) => setProfile('knowledge', knowledge)} value={draft.profile.knowledge} /> : null}
+        {section === 'memory' ? <MemoryEditor onChange={(memory) => setProfile('memory', memory)} value={draft.profile.memory} /> : null}
+        {section === 'rules' ? <RulesEditor onChange={(rules) => setProfile('rules', rules)} value={draft.profile.rules} /> : null}
+        {section === 'injection' ? <InjectionEditor onChange={(injection) => setDraft((current) => ({ ...current, injection }))} value={draft.injection} /> : null}
+      </div>
 
-      <SectionCard title={t('profile.identity')}>
-        <IdentityEditor onChange={(identity) => setProfile('identity', identity)} value={draft.profile.identity} />
-      </SectionCard>
-      <SectionCard title={t('profile.positioning')}>
-        <PositioningEditor onChange={(positioning) => setProfile('positioning', positioning)} value={draft.profile.positioning} />
-      </SectionCard>
-      <SectionCard title={t('profile.audience')}>
-        <AudienceEditor onChange={(audience) => setProfile('audience', audience)} value={draft.profile.audience} />
-      </SectionCard>
-      <SectionCard title={t('profile.voice')}>
-        <VoiceEditor onChange={(voice) => setProfile('voice', voice)} value={draft.profile.voice} />
-      </SectionCard>
-      <SectionCard title={t('profile.knowledge')}>
-        <KnowledgeEditor onChange={(knowledge) => setProfile('knowledge', knowledge)} value={draft.profile.knowledge} />
-      </SectionCard>
-      <SectionCard title={t('profile.memory')}>
-        <MemoryEditor onChange={(memory) => setProfile('memory', memory)} value={draft.profile.memory} />
-      </SectionCard>
-      <SectionCard title={t('profile.rules')}>
-        <RulesEditor onChange={(rules) => setProfile('rules', rules)} value={draft.profile.rules} />
-      </SectionCard>
-
-      <SectionCard description={t('profile.injectionDescription')} title={t('profile.injection')}>
-        <InjectionEditor onChange={(injection) => setDraft((current) => ({ ...current, injection }))} value={draft.injection} />
-      </SectionCard>
-
-      <SectionCard description={t('profile.previewDescription')} title={t('profile.preview')}>
-        <div className="flex max-w-xs items-center gap-3">
-          <span className="text-sm font-semibold">{t('profile.previewScope')}</span>
-          <Select
-            aria-label={t('profile.previewScope')}
-            onValueChange={(value) => setScope(value as InjectScope)}
-            options={SCOPES.map((value) => ({ value, label: t(`profile.scope.${value}`) }))}
-            value={scope}
-          />
-        </div>
-        <pre className="mt-4 max-h-80 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-elevated p-4 text-xs leading-5 text-foreground">
-          {previewText || t('profile.previewEmpty')}
-        </pre>
-      </SectionCard>
-
-      <div className="flex justify-end gap-3 border-t border-border pt-5">
+      <div className="flex shrink-0 justify-end gap-3 border-t border-border bg-surface/95 px-6 py-4 backdrop-blur sm:px-7">
+        <Button disabled={saving} onClick={onCancel} type="button" variant="ghost">
+          {t('common.cancel')}
+        </Button>
         <Button disabled={saving} type="submit" variant="primary">
           {saving ? t('profile.saving') : t('profile.save')}
         </Button>

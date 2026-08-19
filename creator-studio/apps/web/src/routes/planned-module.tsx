@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock3 } from 'lucide-react'
+import { ArrowLeft, Clock3, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -8,14 +8,15 @@ interface PlannedModuleProps {
   description: string
   returnLabel: string
   returnTo: string
+  icon?: LucideIcon
 }
 
-export function PlannedModule({ name, phase, description, returnLabel, returnTo }: PlannedModuleProps) {
+export function PlannedModule({ name, phase, description, returnLabel, returnTo, icon: Icon = Clock3 }: PlannedModuleProps) {
   const { t } = useTranslation()
   return (
     <section className="rounded-lg border border-dashed border-border bg-surface/65 p-6 shadow-panel sm:p-8">
       <div className="flex h-11 w-11 items-center justify-center rounded-md bg-elevated text-primary">
-        <Clock3 aria-hidden="true" className="h-5 w-5" />
+        <Icon aria-hidden="true" className="h-5 w-5" />
       </div>
       <p className="mt-6 font-utility text-[11px] uppercase tracking-[0.18em] text-primary">{t('projectDetail.planned', { phase })}</p>
       <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">{name}</h2>

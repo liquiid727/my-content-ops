@@ -45,7 +45,7 @@ function mockArtifact(d: ArtifactDetail) {
 }
 
 beforeEach(() => {
-  useArtifactStore.setState({ byId: {}, versions: {}, loading: {} })
+  useArtifactStore.setState({ byId: {}, versions: {}, collectionItems: {}, loading: {}, errors: {} })
 })
 afterEach(() => {
   vi.restoreAllMocks()
@@ -105,5 +105,28 @@ describe('artifact store', () => {
     resolveFetch!(json({ data: d, meta: { requestId: REQUEST_ID } }))
     await promise
     expect(useArtifactStore.getState().loading[d.id]!).toBe(false)
+  })
+
+  it('caches collection items and writes back after select', async () => {
+    const collectionId = '01ARZ3NDEKTSV4RRFFQ69G5F08'
+    const items = [
+      { collectionArtifactId: collectionId, itemArtifactId: '01ARZ3NDEKTSV4RRFFQ69G5F09', position: 0, selected: true },
+      { collectionArtifactId: collectionId, itemArtifactId: '01ARZ3NDEKTSV4RRFFQ69G5F0A', position: 1, selected: false },
+    ]
+    const selected = items.map((item, index) => ({ ...item, selected: index === 1 }))
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      if (url.endsWith(`/artifacts/${collectionId}/collection-items`) && !init?.method) {
+        return json({ data: { items }, meta: { requestId: REQUEST_ID } })
+      }
+      if (url.endsWith(`/artifacts/${collectionId}/collection-items/select`) && init?.method === 'POST') {
+        return json({ data: { items: selected }, meta: { requestId: REQUEST_ID } })
+      }
+      throw new Error(`Unexpected fetch ${url}`)
+    })
+
+    await expect(useArtifactStore.getState().getCollectionItems(collectionId)).resolves.toEqual(items)
+    await expect(useArtifactStore.getState().selectCollectionItem(collectionId, selected[1]!.itemArtifactId)).resolves.toEqual(selected)
+    expect(useArtifactStore.getState().collectionItems[collectionId]).toEqual(selected)
   })
 })

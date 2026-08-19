@@ -1,4 +1,4 @@
-import { Eye, Loader2, Send } from 'lucide-react'
+import { CheckCircle2, Eye, Loader2, Send, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ulid } from 'ulid'
@@ -34,9 +34,9 @@ function RunStatusLine({ run }: { run: Run }) {
         {run.status === 'running' || run.status === 'queued' ? (
           <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
         ) : run.status === 'completed' ? (
-          <span className="text-success">✓</span>
+          <CheckCircle2 aria-hidden="true" className="h-4 w-4 text-success" />
         ) : failed ? (
-          <span className="text-danger">✕</span>
+          <XCircle aria-hidden="true" className="h-4 w-4 text-danger" />
         ) : null}
         {t(statusKey)}
       </p>

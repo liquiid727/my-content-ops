@@ -88,23 +88,26 @@ describe('Creator Studio routing shell', () => {
   it('renders all shell regions and the Dashboard route', async () => {
     renderApp()
 
-    expect(await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Workbench' })).toBeTruthy()
     expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toBeTruthy()
-    expect(screen.getByText('Current context')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'HelloAlro' })).toBeTruthy()
+    expect(screen.getByRole('tablist', { name: 'Open projects' })).toBeTruthy()
     expect(screen.getByRole('main')).toBeTruthy()
     expect(screen.getByTestId('notification-region')).toBeTruthy()
+    expect(screen.queryByRole('combobox', { name: 'Theme' })).toBeNull()
+    expect(screen.queryByRole('combobox', { name: 'Language' })).toBeNull()
   })
 
   it('marks the current primary route and navigates every main destination', async () => {
     renderApp()
-    await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })
+    await screen.findByRole('heading', { name: 'Workbench' })
 
     const expectations = [
       ['Projects', 'Projects'],
       ['Assets', 'Assets'],
-      ['Tasks', 'Tasks'],
+      ['Personal style', 'Creator profile'],
       ['Settings', 'Settings'],
-      ['Dashboard', 'Your studio, clearly routed.'],
+      ['HelloAlro', 'Workbench'],
     ] as const
 
     for (const [linkName, heading] of expectations) {
@@ -115,28 +118,45 @@ describe('Creator Studio routing shell', () => {
     }
   })
 
+  it('keeps sidebar collapse at the top and Settings as the bottom utility', async () => {
+    renderApp()
+    await screen.findByRole('heading', { name: 'Workbench' })
+
+    const sidebar = screen.getByLabelText('Workspace sidebar')
+    const collapse = within(sidebar).getByRole('button', { name: 'Collapse sidebar' })
+    const primaryNavigation = within(sidebar).getByRole('navigation', { name: 'Primary navigation' })
+    const settings = within(sidebar).getByRole('link', { name: 'Settings' })
+
+    expect(collapse.compareDocumentPosition(primaryNavigation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(primaryNavigation.compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    fireEvent.click(collapse)
+    expect(sidebar.classList.contains('lg:w-[4.75rem]')).toBe(true)
+    expect(settings.className).toContain('lg:justify-center')
+  })
+
   it('opens the mobile navigation, moves focus in, and restores it when closed', async () => {
     renderApp()
-    await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })
+    await screen.findByRole('heading', { name: 'Workbench' })
     const openButton = screen.getByRole('button', { name: 'Open navigation' })
     const sidebar = screen.getByLabelText('Workspace sidebar')
 
-    expect(sidebar.classList.contains('invisible')).toBe(true)
+    expect(sidebar.classList.contains('-translate-x-full')).toBe(true)
     fireEvent.click(openButton)
     const closeButton = within(sidebar).getByRole('button', { name: 'Close navigation' })
     await waitFor(() => expect(document.activeElement).toBe(closeButton))
     expect(openButton.getAttribute('aria-expanded')).toBe('true')
-    expect(sidebar.classList.contains('visible')).toBe(true)
+    expect(sidebar.classList.contains('translate-x-0')).toBe(true)
 
     fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
-    expect(document.activeElement).toBe(within(sidebar).getByRole('link', { name: 'Settings' }))
+    expect(sidebar.contains(document.activeElement)).toBe(true)
     fireEvent.keyDown(document, { key: 'Tab' })
     expect(document.activeElement).toBe(closeButton)
 
     fireEvent.keyDown(document, { key: 'Escape' })
     await waitFor(() => expect(document.activeElement).toBe(openButton))
     expect(openButton.getAttribute('aria-expanded')).toBe('false')
-    expect(sidebar.classList.contains('invisible')).toBe(true)
+    expect(sidebar.classList.contains('-translate-x-full')).toBe(true)
   })
 
   it('shows a recoverable Not Found route', async () => {
@@ -145,7 +165,7 @@ describe('Creator Studio routing shell', () => {
 
     expect(await screen.findByRole('heading', { name: 'This route does not exist.' })).toBeTruthy()
     fireEvent.click(screen.getByRole('link', { name: 'Return to Dashboard' }))
-    expect(await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Workbench' })).toBeTruthy()
   })
 
   it('exposes every Project Detail section and labels P1 placeholders honestly', async () => {
@@ -155,7 +175,7 @@ describe('Creator Studio routing shell', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Ideas' })).toBeTruthy()
     expect(screen.getByText('Planned · P1')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Return to Project Overview' }).getAttribute('href')).toBe('/projects/preview/overview')
-    expect(within(screen.getByRole('navigation', { name: 'Project sections' })).getAllByRole('link')).toHaveLength(9)
+    expect(within(screen.getByRole('navigation', { name: 'Project sections' })).getAllByRole('link')).toHaveLength(10)
     expect(screen.getByRole('link', { name: 'Ideas' }).getAttribute('aria-current')).toBe('page')
   })
 
@@ -167,9 +187,22 @@ describe('Creator Studio routing shell', () => {
     expect(window.location.pathname).toBe('/projects/preview/overview')
   })
 
-  it('uses dark as the default and supports all theme selections', async () => {
+  it('renders the canvas route inside the unified workbench chrome', async () => {
+    window.history.replaceState({}, '', '/projects/preview/canvas')
     renderApp()
-    await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })
+
+    expect(await screen.findByTestId('canvas-host')).toBeTruthy()
+    expect(screen.queryByTestId('canvas-shell')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Overview' })).toBeNull()
+    expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Notifications' })).toBeTruthy()
+  })
+
+  it('honors an existing dark profile preference and supports all theme selections', async () => {
+    window.history.replaceState({}, '', '/settings')
+    renderApp()
+    await screen.findByRole('heading', { name: 'Settings' })
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance and language' }))
     const themeSelect = screen.getByRole('combobox', { name: 'Theme' })
 
     expect(themeSelect.textContent).toContain('Dark')
@@ -184,8 +217,10 @@ describe('Creator Studio routing shell', () => {
       if (String(input).endsWith('/bootstrap')) return new Response(JSON.stringify(bootstrapEnvelope()), { status: 200 })
       return new Response(JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: '偏好保存失败。', retryable: false }, meta: { requestId: REQUEST_ID } }), { status: 500 })
     })
+    window.history.replaceState({}, '', '/settings')
     renderApp()
-    await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })
+    await screen.findByRole('heading', { name: 'Settings' })
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance and language' }))
     const themeSelect = screen.getByRole('combobox', { name: 'Theme' })
     fireEvent.click(themeSelect)
     fireEvent.click(await screen.findByRole('option', { name: 'Light' }))
@@ -195,8 +230,10 @@ describe('Creator Studio routing shell', () => {
   })
 
   it('updates the active class while following the system theme', async () => {
+    window.history.replaceState({}, '', '/settings')
     renderApp()
-    await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })
+    await screen.findByRole('heading', { name: 'Settings' })
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance and language' }))
     const themeSelect = screen.getByRole('combobox', { name: 'Theme' })
 
     fireEvent.click(themeSelect)
@@ -211,14 +248,12 @@ describe('Creator Studio routing shell', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 
-  it('publishes and dismisses a global notification from Dashboard', async () => {
+  it('opens directly on creation objects without management KPI cards', async () => {
     renderApp()
-    await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })
-    fireEvent.click(screen.getByRole('button', { name: 'Preview notification' }))
-
-    expect(screen.getByText('Workspace ready')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }))
-    expect(screen.queryByText('Workspace ready')).toBeNull()
+    await screen.findByRole('heading', { name: 'Workbench' })
+    expect(screen.getByRole('heading', { name: 'Recent projects' })).toBeTruthy()
+    expect(screen.queryByText('Current projects')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Preview notification' })).toBeNull()
   })
 
   it('defaults to Chinese and switches the full interface to English', async () => {
@@ -226,11 +261,15 @@ describe('Creator Studio routing shell', () => {
     resetLanguageStoreForTests()
     renderApp()
 
-    expect(await screen.findByRole('heading', { name: '清晰掌控你的创作工作台。' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: '创作台' })).toBeTruthy()
     expect(document.documentElement.lang).toBe('zh-CN')
+    fireEvent.click(screen.getByRole('link', { name: '设置' }))
+    await screen.findByRole('heading', { name: '设置' })
+    fireEvent.click(screen.getByRole('button', { name: '外观与语言' }))
     fireEvent.click(screen.getByRole('combobox', { name: '语言' }))
     fireEvent.click(await screen.findByRole('option', { name: 'English' }))
-    expect(await screen.findByRole('heading', { name: 'Your studio, clearly routed.' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }))
+    expect(await screen.findByRole('heading', { name: 'Settings' })).toBeTruthy()
     expect(document.documentElement.lang).toBe('en-US')
     expect(localStorage.getItem('creator-studio-locale')).toBe('en-US')
   })

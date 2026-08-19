@@ -6,6 +6,7 @@ import { CollectionNode } from './collection-node'
 import { ImageNode } from './image-node'
 import { TextNode } from './text-node'
 import { VideoNode } from './video-node'
+import { RecipeNode } from './recipe-node'
 
 export const canvasNodeTypes: NodeTypes = {
   TextNode,
@@ -14,4 +15,5 @@ export const canvasNodeTypes: NodeTypes = {
   VideoNode,
   CollectionNode,
   ActionNode,
+  RecipeNode,
 }

@@ -1,4 +1,5 @@
-import { AudioLines, FileText, Image as ImageIcon, LayoutGrid, Send } from 'lucide-react'
+import { FileText, Image as ImageIcon, Lightbulb, Sparkles } from 'lucide-react'
+import type { RecipeCapability } from '@creator-studio/contracts'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../shared/ui'
@@ -12,22 +13,23 @@ export interface NodePickerOption {
 }
 
 const OPTIONS: NodePickerOption[] = [
+  { kind: 'text', role: 'inspiration', labelKey: 'nodePicker.inspiration', icon: Lightbulb },
   { kind: 'text', role: 'topic', labelKey: 'nodePicker.topic', icon: FileText },
   { kind: 'text', role: 'outline', labelKey: 'nodePicker.outline', icon: FileText },
   { kind: 'text', role: 'script', labelKey: 'nodePicker.script', icon: FileText },
-  { kind: 'collection', role: 'cover', labelKey: 'nodePicker.cover', icon: LayoutGrid },
-  { kind: 'audio', role: 'voice', labelKey: 'nodePicker.voice', icon: AudioLines },
+  { kind: 'image', role: 'cover', labelKey: 'nodePicker.cover', icon: ImageIcon },
   { kind: 'image', role: 'illustration', labelKey: 'nodePicker.image', icon: ImageIcon },
-  { kind: 'action', role: 'publish', labelKey: 'nodePicker.publish', icon: Send },
 ]
 
 interface NodePickerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onPick: (kind: string, role: string) => void
+  capabilities?: RecipeCapability[]
+  onPickRecipe?: (capability: RecipeCapability) => void
 }
 
-export function NodePicker({ open, onOpenChange, onPick }: NodePickerProps) {
+export function NodePicker({ open, onOpenChange, onPick, capabilities = [], onPickRecipe }: NodePickerProps) {
   const { t } = useTranslation()
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -52,6 +54,12 @@ export function NodePicker({ open, onOpenChange, onPick }: NodePickerProps) {
               </Button>
             )
           })}
+          {capabilities.map((capability) => (
+            <Button className="justify-start border-warning/30 bg-warning/5 hover:border-warning/60" key={capability.id} onClick={() => { onPickRecipe?.(capability); onOpenChange(false) }} variant="secondary">
+              <Sparkles aria-hidden="true" className="h-4 w-4 text-warning" />
+              {capability.label}
+            </Button>
+          ))}
         </div>
       </DialogContent>
     </Dialog>

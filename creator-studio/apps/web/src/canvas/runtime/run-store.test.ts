@@ -12,7 +12,9 @@ function run(overrides: Partial<Run> = {}): Run {
     taskId: '01ARZ3NDEKTSV4RRFFQ69G5F02',
     operationId: 'generate_outline',
     sourceArtifactId: null,
+    sourceArtifactIds: [],
     inputVersionIds: [],
+    knowledgeSourceIds: [],
     outputVersionIds: null,
     outputArtifactIds: null,
     status: 'queued',
@@ -103,5 +105,31 @@ describe('run store', () => {
     const runC = run({ id: '01ARZ3NDEKTSV4RRFFQ69G5F63', sourceArtifactId: artifactId, status: 'queued' })
     useRunStore.getState().hydrateRuns(PROJECT_ID, [runC])
     expect(useRunStore.getState().runByArtifact[artifactId]).toBe(runC.id)
+  })
+
+  it('maps every multi-source artifact and captures placeholder outputArtifactIds on run.created', () => {
+    const topicId = '01ARZ3NDEKTSV4RRFFQ69G5F70'
+    const imageId = '01ARZ3NDEKTSV4RRFFQ69G5F71'
+    const placeholderId = '01ARZ3NDEKTSV4RRFFQ69G5F72'
+    const runId = '01ARZ3NDEKTSV4RRFFQ69G5F73'
+    event('run.created', {
+      runId,
+      operationId: 'generate_cover',
+      sourceArtifactId: topicId,
+      sourceArtifactIds: [topicId, imageId],
+      outputArtifactIds: [placeholderId],
+    })
+
+    // 多源集合内每个源 artifact、以及占位输出 artifact 都能关联到该 run（loading 转圈）。
+    expect(useRunStore.getState().runByArtifact[topicId]).toBe(runId)
+    expect(useRunStore.getState().runByArtifact[imageId]).toBe(runId)
+    const summary = useRunStore.getState().byId[runId]!
+    expect(summary.outputArtifactIds).toEqual([placeholderId])
+    expect(summary.sourceArtifactIds).toEqual([topicId, imageId])
+
+    // useNodeRun 的兜底扫描也命中多源。
+    const byScan = Object.values(useRunStore.getState().byId)
+      .filter((item) => item.sourceArtifactId === imageId || (item.sourceArtifactIds ?? []).includes(imageId))
+    expect(byScan.map((item) => item.runId)).toContain(runId)
   })
 })

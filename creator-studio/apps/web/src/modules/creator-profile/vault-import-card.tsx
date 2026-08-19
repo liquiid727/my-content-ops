@@ -8,10 +8,11 @@ import { Button, Input, Select } from '../../shared/ui'
 interface VaultImportCardProps {
   disabled?: boolean
   importing: boolean
-  onImport: (vaultPath: string, targetSection: SectionKey) => Promise<void>
+  onCancel: () => void
+  onImport: (vaultPath: string, targetSection: SectionKey) => Promise<boolean>
 }
 
-export function VaultImportCard({ disabled, importing, onImport }: VaultImportCardProps) {
+export function VaultImportCard({ disabled, importing, onCancel, onImport }: VaultImportCardProps) {
   const { t } = useTranslation()
   const [vaultPath, setVaultPath] = useState('')
   const [targetSection, setTargetSection] = useState<SectionKey>('positioning')
@@ -20,15 +21,16 @@ export function VaultImportCard({ disabled, importing, onImport }: VaultImportCa
     event.preventDefault()
     const path = vaultPath.trim()
     if (!path) return
-    await onImport(path, targetSection)
-    setVaultPath('')
+    const imported = await onImport(path, targetSection)
+    if (imported) {
+      setVaultPath('')
+      onCancel()
+    }
   }
 
   return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <h2 className="font-display text-lg font-semibold">{t('profile.importTitle')}</h2>
-      <p className="mt-1 text-sm text-muted">{t('profile.importDescription')}</p>
-      <form className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(event) => void handleSubmit(event)}>
+    <form className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => void handleSubmit(event)}>
+      <div className="grid gap-5 px-6 py-6 sm:px-7">
         <label className="block min-w-0 flex-1 text-sm font-semibold">
           {t('profile.importVaultPath')}
           <div className="mt-2">
@@ -53,11 +55,16 @@ export function VaultImportCard({ disabled, importing, onImport }: VaultImportCa
             />
           </div>
         </label>
-        <Button disabled={disabled || importing} type="submit" variant="secondary">
+      </div>
+      <div className="flex justify-end gap-3 border-t border-border bg-surface/95 px-6 py-4 sm:px-7">
+        <Button disabled={importing} onClick={onCancel} type="button" variant="ghost">
+          {t('common.cancel')}
+        </Button>
+        <Button disabled={disabled || importing} type="submit" variant="primary">
           <FileUp aria-hidden="true" className="h-4 w-4" />
           {importing ? t('profile.importing') : t('profile.import')}
         </Button>
-      </form>
-    </section>
+      </div>
+    </form>
   )
 }

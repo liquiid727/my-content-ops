@@ -1,19 +1,20 @@
-import { Archive, ArrowRight, Boxes, Check, Circle, Pencil, RefreshCw, TimerReset } from 'lucide-react'
+import { Archive, ArrowRight, Boxes, Check, Circle, Pencil, RefreshCw, TimerReset, Waypoints } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ApiClientError, ProjectForm, useProjectStore } from '../modules/projects'
+import { ProjectSourcesPanel } from '../modules/knowledge'
 import { formatContentType, formatDate, getLocalizedErrorMessage, i18n as i18nInstance, normalizeLocale } from '../modules/i18n'
 import { cn } from '../shared/lib/cn'
 import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, Skeleton, useToastStore } from '../shared/ui'
-import { CanvasShell } from '../canvas'
 import { PlannedModule } from './planned-module'
 import { RouteHeading } from './route-heading'
 
 const sections = [
   { slug: 'overview', nameKey: 'projectDetail.overview', phase: 'Foundation FND-007', descriptionKey: '' },
   { slug: 'canvas', nameKey: 'projectDetail.canvas', phase: 'Canvas Runtime', descriptionKey: '' },
+  { slug: 'sources', nameKey: 'projectDetail.sources', phase: 'Knowledge', descriptionKey: '' },
   { slug: 'ideas', nameKey: 'projectDetail.ideas', phase: 'P1', descriptionKey: 'projectDetail.plannedDescriptions.ideas' },
   { slug: 'topics', nameKey: 'projectDetail.topics', phase: 'P1', descriptionKey: 'projectDetail.plannedDescriptions.topics' },
   { slug: 'scripts', nameKey: 'projectDetail.scripts', phase: 'P1', descriptionKey: 'projectDetail.plannedDescriptions.scripts' },
@@ -116,7 +117,14 @@ function ProjectOverviewPanel({ projectId }: { projectId: string }) {
             <h2 className="mt-5 max-w-3xl font-display text-3xl font-semibold tracking-tight sm:text-4xl">{project.title}</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{project.brief || t('projectDetail.noDescription')}</p>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Link
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              to={`/projects/${projectId}/canvas`}
+            >
+              <Waypoints aria-hidden="true" className="h-4 w-4" />
+              {t('projectDetail.openCanvas')}
+            </Link>
             <Button onClick={() => setEditOpen(true)}><Pencil aria-hidden="true" className="h-4 w-4" />{t('projectDetail.edit')}</Button>
             <Button onClick={() => void handleArchive()} variant="danger"><Archive aria-hidden="true" className="h-4 w-4" />{t('projectDetail.archive')}</Button>
           </div>
@@ -189,18 +197,18 @@ export default function ProjectDetailPage() {
         ))}
       </nav>
       <div className="mt-6">
-        {activeSection.slug === 'overview' ? <ProjectOverviewPanel key={projectId} projectId={projectId} /> : (
-          activeSection.slug === 'canvas' ? (
-            <CanvasShell className="h-[640px]" projectId={projectId} />
-          ) : (
-            <PlannedModule
-              description={t(activeSection.descriptionKey)}
-              name={t(activeSection.nameKey)}
-              phase={activeSection.phase}
-              returnLabel={t('projectDetail.returnOverview')}
-              returnTo={overviewPath}
-            />
-          )
+        {activeSection.slug === 'overview' ? (
+          <ProjectOverviewPanel key={projectId} projectId={projectId} />
+        ) : activeSection.slug === 'sources' ? (
+          <ProjectSourcesPanel projectId={projectId} />
+        ) : (
+          <PlannedModule
+            description={t(activeSection.descriptionKey)}
+            name={t(activeSection.nameKey)}
+            phase={activeSection.phase}
+            returnLabel={t('projectDetail.returnOverview')}
+            returnTo={overviewPath}
+          />
         )}
       </div>
     </div>

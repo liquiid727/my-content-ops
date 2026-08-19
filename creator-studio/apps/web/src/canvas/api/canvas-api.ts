@@ -43,6 +43,9 @@ export const canvasApi = {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
     })
   },
+  async deleteEdge(edgeId: string): Promise<void> {
+    await apiRequest(`/edges/${encodeURIComponent(edgeId)}`, z.undefined(), { method: 'DELETE' })
+  },
   async artifact(artifactId: string): Promise<ArtifactDetailEnvelope> {
     return apiRequest(`/artifacts/${encodeURIComponent(artifactId)}`, artifactDetailResponseSchema)
   },

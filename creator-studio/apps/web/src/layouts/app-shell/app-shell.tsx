@@ -1,47 +1,110 @@
-import { Bell, FolderKanban, Images, LayoutDashboard, ListTodo, Menu, Settings, Sparkles, UserRound, X } from 'lucide-react'
-import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  Bell,
+  Clock3,
+  FolderKanban,
+  History,
+  LibraryBig,
+  Images,
+  LayoutTemplate,
+  Lightbulb,
+  Menu,
+  PanelLeftClose,
+  PenTool,
+  Search,
+  Send,
+  Settings,
+  Share2,
+  UserRound,
+  Workflow,
+  X,
+} from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
-import { LanguageSwitcher } from '../../modules/i18n'
-import { ThemeSwitcher } from '../../modules/theme/theme-switcher'
 import { PublishDialog } from '../../canvas/publish/publish-dialog'
+import { useProjectStore } from '../../modules/projects'
+import { useTaskStore } from '../../modules/tasks'
+import { useWorkspaceTabsStore } from '../../modules/workspace'
+import { RouteErrorBoundary } from '../../routes/route-boundary'
 import { cn } from '../../shared/lib/cn'
-import { Button, ToastRegion } from '../../shared/ui'
+import { Button, IconButton, ToastRegion, useToastStore } from '../../shared/ui'
+import { AmbientField } from './ambient-field'
+import { CommandPalette } from './command-palette'
+import { WorkspaceTabs } from './workspace-tabs'
 
 const navigation = [
-  { labelKey: 'navigation.dashboard', icon: LayoutDashboard, to: '/', end: true },
   { labelKey: 'navigation.projects', icon: FolderKanban, to: '/projects' },
-  { labelKey: 'navigation.profile', icon: UserRound, to: '/profile' },
+  { labelKey: 'navigation.nodes', icon: Workflow, to: '/nodes' },
   { labelKey: 'navigation.assets', icon: Images, to: '/assets' },
-  { labelKey: 'navigation.tasks', icon: ListTodo, to: '/tasks' },
-  { labelKey: 'navigation.settings', icon: Settings, to: '/settings' },
-]
+  { labelKey: 'navigation.inspiration', icon: Lightbulb, to: '/inspiration' },
+  { labelKey: 'navigation.knowledge', icon: LibraryBig, to: '/knowledge' },
+  { labelKey: 'navigation.profile', icon: UserRound, to: '/profile' },
+  { labelKey: 'navigation.templates', icon: LayoutTemplate, to: '/templates' },
+  { labelKey: 'navigation.publish', icon: Send, to: '/publish' },
+  { labelKey: 'navigation.history', icon: History, to: '/history' },
+] as const
 
-function getCurrentContextKey(pathname: string) {
-  if (pathname.startsWith('/projects/')) return 'navigation.projectWorkspace'
-  if (pathname.startsWith('/projects')) return 'navigation.projects'
-  if (pathname.startsWith('/profile')) return 'navigation.profile'
-  if (pathname.startsWith('/assets')) return 'navigation.assets'
-  if (pathname.startsWith('/tasks')) return 'navigation.tasks'
-  if (pathname.startsWith('/settings')) return 'navigation.settings'
-  if (pathname === '/') return 'navigation.dashboard'
-  return 'navigation.unknown'
+function projectIdFromPath(pathname: string): string | undefined {
+  const match = pathname.match(/^\/projects\/([^/]+)(?:\/|$)/)
+  return match?.[1] ? decodeURIComponent(match[1]) : undefined
 }
 
-/** 当前路由是项目画布时，提取 projectId（Header Publish 入口的目标）。 */
-function canvasProjectId(pathname: string): string | null {
-  const match = pathname.match(/^\/projects\/([^/]+)\/canvas$/)
-  return match ? decodeURIComponent(match[1]!) : null
-}
-
-export function AppShell({ children }: PropsWithChildren) {
+export function AppShell() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [navigationOpen, setNavigationOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [commandOpen, setCommandOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
-  const location = useLocation()
+  const projects = useProjectStore((state) => state.projects)
+  const projectsHaveMore = useProjectStore((state) => state.hasMore)
+  const loadProjects = useProjectStore((state) => state.loadProjects)
+  const tasks = useTaskStore((state) => state.tasks)
+  const startTasks = useTaskStore((state) => state.start)
+  const stopTasks = useTaskStore((state) => state.stop)
+  const openProject = useWorkspaceTabsStore((state) => state.openProject)
+  const reconcileProjects = useWorkspaceTabsStore((state) => state.reconcileProjects)
+  const notify = useToastStore((state) => state.notify)
+  const currentProjectId = projectIdFromPath(location.pathname)
+  const activeTasks = tasks.filter((task) => ['queued', 'running', 'waiting_review'].includes(task.status))
+  const isCanvas = location.pathname.endsWith('/canvas')
+
+  useEffect(() => {
+    if (projects.length) {
+      if (!projectsHaveMore) reconcileProjects(projects.map((project) => project.id))
+      return
+    }
+    void loadProjects().then(() => {
+      const current = useProjectStore.getState()
+      if (!current.error && !current.hasMore) reconcileProjects(current.projects.map((project) => project.id))
+    })
+  }, [loadProjects, projects, projectsHaveMore, reconcileProjects])
+
+  useEffect(() => {
+    void startTasks()
+    return stopTasks
+  }, [startTasks, stopTasks])
+
+  useEffect(() => {
+    if (currentProjectId) openProject(currentProjectId, location.pathname)
+  }, [currentProjectId, location.pathname, openProject])
+
+  useEffect(() => {
+    const openCommand = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setCommandOpen(true)
+      }
+    }
+    window.addEventListener('keydown', openCommand)
+    return () => window.removeEventListener('keydown', openCommand)
+  }, [])
 
   const closeNavigation = useCallback(() => {
     setNavigationOpen(false)
@@ -54,20 +117,17 @@ export function AppShell({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!navigationOpen) return
-
-    const handleNavigationKeyDown = (event: KeyboardEvent) => {
+    const trapFocus = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
         closeNavigation()
         return
       }
-
       if (event.key !== 'Tab') return
       const focusable = sidebarRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')
       if (!focusable?.length) return
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
-
       if (event.shiftKey && (document.activeElement === first || !sidebarRef.current?.contains(document.activeElement))) {
         event.preventDefault()
         last?.focus()
@@ -76,98 +136,143 @@ export function AppShell({ children }: PropsWithChildren) {
         first?.focus()
       }
     }
-
-    document.addEventListener('keydown', handleNavigationKeyDown)
-    return () => document.removeEventListener('keydown', handleNavigationKeyDown)
+    document.addEventListener('keydown', trapFocus)
+    return () => document.removeEventListener('keydown', trapFocus)
   }, [closeNavigation, navigationOpen])
 
-  const openNavigation = () => {
-    setNavigationOpen(true)
+  const shareCurrentView = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      notify({ title: t('shell.linkCopied'), description: t('shell.linkCopiedDescription') })
+    } catch {
+      notify({ title: t('shell.copyFailed'), description: t('shell.copyFailedDescription') })
+    }
   }
 
   return (
-    <div className="flex min-h-screen min-w-0 bg-background text-foreground">
-      {navigationOpen ? <button aria-label={t('common.closeNavigation')} className="fixed inset-0 z-30 bg-black/55 md:hidden" onClick={closeNavigation} /> : null}
+    <div className="relative flex h-screen min-w-0 overflow-hidden bg-background text-foreground">
+      <AmbientField />
+      {navigationOpen ? <button aria-label={t('common.closeNavigation')} className="fixed inset-0 z-30 bg-foreground/30 backdrop-blur-sm lg:hidden" onClick={closeNavigation} type="button" /> : null}
+
       <aside
         aria-label={t('common.workspaceSidebar')}
-        className={`fixed inset-y-0 left-0 z-40 flex w-[17rem] flex-col border-r border-border bg-surface p-4 transition-transform duration-normal md:visible md:static md:translate-x-0 ${navigationOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 flex w-[13rem] flex-col border-r border-border/70 bg-surface/80 p-3 backdrop-blur-2xl transition-[width,transform] duration-normal lg:static lg:translate-x-0',
+          navigationOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          sidebarCollapsed && 'lg:w-[4.75rem]',
+        )}
         id="workspace-navigation"
         ref={sidebarRef}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-to-br from-fuchsia-500 via-primary to-orange-500 text-white shadow-panel">
-              <Sparkles aria-hidden="true" className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="font-display text-lg font-semibold tracking-tight">{t('common.brand')}</p>
-              <p className="font-utility text-[10px] uppercase tracking-[0.18em] text-muted">{t('common.localWorkspace')}</p>
-            </div>
-          </div>
-          <button aria-label={t('common.closeNavigation')} className="rounded-md p-2 text-muted hover:bg-elevated hover:text-foreground md:hidden" onClick={closeNavigation} ref={closeButtonRef}>
-            <X aria-hidden="true" className="h-5 w-5" />
-          </button>
+        <div className={cn('flex h-12 items-center gap-2 px-1', sidebarCollapsed ? 'lg:justify-center' : 'justify-between')}>
+          <NavLink aria-label="HelloAlro" className={cn('flex min-w-0 items-center gap-2.5', sidebarCollapsed && 'lg:hidden')} to="/">
+            <motion.span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[0.7rem] bg-foreground text-background shadow-float" whileHover={{ rotate: -6, scale: 1.05 }}>
+              <span className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,hsl(var(--ambient-primary)/.8),transparent_44%)]" />
+              <PenTool aria-hidden="true" className="relative h-4 w-4" />
+            </motion.span>
+            {!sidebarCollapsed ? <span className="min-w-0"><span className="block truncate font-display text-base font-bold tracking-[-0.02em]">HelloAlro</span><span className="block truncate font-utility text-[9px] uppercase tracking-[0.16em] text-muted">{t('shell.creatorWorkbench')}</span></span> : null}
+          </NavLink>
+          <IconButton
+            aria-label={t('shell.collapseSidebar')}
+            className="hidden lg:inline-flex"
+            onClick={() => setSidebarCollapsed((value) => !value)}
+            title={t('shell.collapseSidebar')}
+          >
+            <PanelLeftClose aria-hidden="true" className={cn('h-4 w-4 transition-transform', sidebarCollapsed && 'rotate-180')} />
+          </IconButton>
+          <IconButton aria-label={t('common.closeNavigation')} className="lg:hidden" onClick={closeNavigation} ref={closeButtonRef}><X aria-hidden="true" className="h-4 w-4" /></IconButton>
         </div>
 
-        <nav aria-label={t('common.primaryNavigation')} className="mt-8 space-y-1">
+        <nav aria-label={t('common.primaryNavigation')} className="mt-5 space-y-1">
           {navigation.map((item) => {
             const Icon = item.icon
             return (
               <NavLink
                 className={({ isActive }) => cn(
-                  'flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition-colors',
-                  isActive ? 'bg-primary/15 text-primary' : 'text-muted hover:bg-elevated hover:text-foreground',
+                  'group relative flex min-h-10 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-elevated/75 hover:text-foreground',
+                  isActive && 'bg-elevated text-foreground shadow-[0_1px_0_hsl(var(--border)/.8)]',
+                  sidebarCollapsed && 'lg:justify-center lg:px-0',
                 )}
-                end={item.end ?? false}
-                key={item.labelKey}
-                onClick={() => {
-                  if (navigationOpen) closeNavigation()
-                }}
+                key={item.to}
+                onClick={() => { if (navigationOpen) closeNavigation() }}
+                title={sidebarCollapsed ? t(item.labelKey) : undefined}
                 to={item.to}
               >
-                <Icon aria-hidden="true" className="h-4 w-4" />
-                {t(item.labelKey)}
+                {({ isActive }) => (
+                  <>
+                    {isActive ? <motion.span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" layoutId="sidebar-active" /> : null}
+                    <Icon aria-hidden="true" className={cn('h-4 w-4 shrink-0 transition-transform group-hover:scale-110', isActive && 'text-primary')} />
+                    {!sidebarCollapsed ? <span>{t(item.labelKey)}</span> : null}
+                  </>
+                )}
               </NavLink>
             )
           })}
         </nav>
 
-        <div className="mt-auto rounded-md border border-border bg-elevated p-3">
-          <p className="font-utility text-[10px] uppercase tracking-[0.16em] text-muted">{t('common.foundation')}</p>
-          <p className="mt-2 text-sm font-medium">{t('common.interfaceOnline')}</p>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border">
-            <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-primary to-orange-500" />
-          </div>
-        </div>
+        <NavLink
+          aria-label={t('navigation.settings')}
+          className={({ isActive }) => cn(
+            'group relative mt-auto flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-elevated/75 hover:text-foreground',
+            isActive && 'bg-elevated text-foreground',
+            sidebarCollapsed && 'lg:justify-center lg:px-0',
+          )}
+          title={sidebarCollapsed ? t('navigation.settings') : undefined}
+          to="/settings"
+        >
+          {({ isActive }) => (
+            <>
+              {isActive ? <motion.span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" layoutId="sidebar-active" /> : null}
+              <Settings aria-hidden="true" className={cn('h-4 w-4 shrink-0 transition-transform group-hover:rotate-12', isActive && 'text-primary')} />
+              {!sidebarCollapsed ? <span>{t('navigation.settings')}</span> : null}
+            </>
+          )}
+        </NavLink>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl sm:px-6">
-          <button
-            aria-controls="workspace-navigation"
-            aria-expanded={navigationOpen}
-            aria-label={t('common.openNavigation')}
-            className="rounded-md p-2 text-muted hover:bg-elevated hover:text-foreground md:hidden"
-            onClick={openNavigation}
-            ref={menuButtonRef}
-          >
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+        <header className="relative z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border/70 bg-background/72 px-2 backdrop-blur-2xl sm:px-3">
+          <IconButton aria-controls="workspace-navigation" aria-expanded={navigationOpen} aria-label={t('common.openNavigation')} className="lg:hidden" onClick={() => setNavigationOpen(true)} ref={menuButtonRef}>
             <Menu aria-hidden="true" className="h-5 w-5" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-utility text-[10px] uppercase tracking-[0.16em] text-muted">{t('common.currentContext')}</p>
-            <p className="truncate text-sm font-semibold">{t(getCurrentContextKey(location.pathname))}</p>
+          </IconButton>
+          <WorkspaceTabs />
+          <div className="ml-auto flex shrink-0 items-center gap-1 border-l border-border/70 pl-2">
+            <IconButton aria-label={t('shell.search')} onClick={() => setCommandOpen(true)} title={`${t('shell.search')} · ⌘K`}><Search aria-hidden="true" className="h-4 w-4" /></IconButton>
+            <div className="relative">
+              <IconButton aria-expanded={notificationsOpen} aria-label={t('common.notifications')} onClick={() => setNotificationsOpen((value) => !value)}>
+                <Bell aria-hidden="true" className="h-4 w-4" />
+                {activeTasks.length ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-background bg-danger" /> : null}
+              </IconButton>
+              {notificationsOpen ? (
+                <div className="studio-glass absolute right-0 top-11 w-80 overflow-hidden rounded-xl p-2">
+                  <p className="px-3 py-2 font-utility text-[10px] uppercase tracking-[0.16em] text-muted">{t('shell.activeTasks', { count: activeTasks.length })}</p>
+                  {activeTasks.length ? activeTasks.slice(0, 5).map((task) => <div className="rounded-lg px-3 py-2 hover:bg-elevated/70" key={task.id}><div className="flex items-center justify-between gap-3 text-xs"><span className="truncate font-medium">{task.type}</span><span className="font-utility text-[10px] text-muted">{task.progress}%</span></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-border"><span className="block h-full rounded-full bg-primary" style={{ width: `${task.progress}%` }} /></div></div>) : <p className="px-3 pb-3 text-xs text-muted">{t('shell.noActiveTasks')}</p>}
+                  <Button className="mt-1 w-full text-xs" onClick={() => { setNotificationsOpen(false); navigate('/tasks') }} variant="ghost"><Clock3 aria-hidden="true" className="h-3.5 w-3.5" />{t('shell.viewTasks')}</Button>
+                </div>
+              ) : null}
+            </div>
+            <IconButton aria-label={t('shell.share')} className="hidden sm:inline-flex" onClick={() => void shareCurrentView()}><Share2 aria-hidden="true" className="h-4 w-4" /></IconButton>
+            {currentProjectId ? <PublishDialog projectId={currentProjectId} /> : null}
           </div>
-          {canvasProjectId(location.pathname) ? <PublishDialog projectId={canvasProjectId(location.pathname)!} /> : null}
-          <LanguageSwitcher />
-          <ThemeSwitcher />
-          <Button aria-label={t('common.notifications')} className="hidden h-9 w-9 px-0 sm:inline-flex" variant="ghost">
-            <Bell aria-hidden="true" className="h-4 w-4" />
-          </Button>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">{children}</main>
+        <AnimatePresence initial={false} mode="wait">
+          <motion.main
+            animate={{ opacity: 1, y: 0 }}
+            className={cn('studio-scrollbar min-h-0 min-w-0 flex-1', isCanvas ? 'overflow-hidden p-0' : 'overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8')}
+            initial={{ opacity: 0, y: 8 }}
+            key={location.pathname}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <RouteErrorBoundary key={location.pathname}>
+              <Outlet />
+            </RouteErrorBoundary>
+          </motion.main>
+        </AnimatePresence>
         <ToastRegion />
       </div>
+
+      <CommandPalette onOpenChange={setCommandOpen} open={commandOpen} />
     </div>
   )
 }

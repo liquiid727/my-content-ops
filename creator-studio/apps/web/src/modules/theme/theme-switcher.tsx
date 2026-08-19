@@ -17,13 +17,13 @@ const themeIcons = {
 
 export function ThemeSwitcher() {
   const { t } = useTranslation()
-  const { theme = 'dark', setTheme } = useTheme()
+  const { theme = 'light', setTheme } = useTheme()
   const creatorProfile = useSessionStore(sessionSelectors.creatorProfile)
   const syncPreference = useThemeStore((state) => state.syncPreference)
   const saving = useThemeStore((state) => state.saving)
   const notify = useToastStore((state) => state.notify)
   const initialized = useRef(false)
-  const selectedTheme = theme in themeIcons ? theme : 'dark'
+  const selectedTheme = theme in themeIcons ? theme : 'light'
   const Icon = themeIcons[selectedTheme as keyof typeof themeIcons]
 
   useEffect(() => {

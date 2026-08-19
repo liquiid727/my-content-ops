@@ -1,7 +1,7 @@
 import type { OperationDefinition } from '@creator-studio/contracts'
 import { create } from 'zustand'
 
-export type InspectorTab = 'overview' | 'versions' | 'collection'
+export type InspectorTab = 'overview' | 'comments' | 'versions' | 'collection'
 
 interface InspectorState {
   /** 当前选中的 CanvasNode id（打开状态由 nodeId 非空表达）。 */

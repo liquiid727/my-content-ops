@@ -1,42 +1,30 @@
 import type { NodeProps } from '@xyflow/react'
-import { FileText } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import type { FlowNode } from '../store/canvas-store'
-import { NodeFrame, useLod, type Lod } from './node-frame'
-
-function contentText(artifact: FlowNode['data']['artifact']): string {
-  const ref = artifact?.currentVersion?.contentRef
-  return ref?.type === 'inline' ? ref.text : ''
-}
-
-function Preview({ lod, artifact }: { lod: Lod; artifact: FlowNode['data']['artifact'] }) {
-  const text = contentText(artifact)
-  if (lod === 'compact') return null
-  if (!text) {
-    return <p className="px-3 py-2 text-[11px] text-muted">暂无内容</p>
-  }
-  const snippet = lod === 'medium' ? text.split('\n')[0]?.slice(0, 40) : text.split('\n').slice(0, 4).join('\n').slice(0, 120)
-  return (
-    <div className="max-h-24 overflow-hidden px-3 py-2">
-      <p className="whitespace-pre-wrap text-[11px] leading-4 text-muted-foreground">{snippet}</p>
-    </div>
-  )
-}
+import { NodeFrame, useLod } from './node-frame'
+import { cardStatus, displayTitle, inlineText, nodeIconElement, nodeTone, roleLabelKey } from './node-role'
+import { useNodeRun } from './use-node-run'
 
 export function TextNode(props: NodeProps<FlowNode>) {
+  const { t } = useTranslation()
   const lod = useLod()
-  const { data, selected } = props
+  const { data, id, selected } = props
   const role = data.role || 'text'
+  const icon = nodeIconElement(role, data.kind)
+  const run = useNodeRun(data.artifactId)
+  const fallback = t(roleLabelKey(role), { defaultValue: role })
+  const title = displayTitle(data.artifact, role, fallback)
+  const text = inlineText(data.artifact)
+  const snippet = lod === 'medium' ? text.split('\n')[0]?.slice(0, 48) : text.split('\n').slice(0, 4).join('\n').slice(0, 140)
+
   return (
-    <NodeFrame
-      icon={FileText}
-      lod={lod}
-      role={role}
-      selected={selected}
-      statusText={data.artifact?.currentVersion ? `v${data.artifact.currentVersion.versionNumber}` : undefined}
-      title={role}
-    >
-      <Preview artifact={data.artifact} lod={lod} />
+    <NodeFrame icon={icon}
+      artifactId={data.artifactId}
+      lod={lod} nodeId={id} selected={selected} status={cardStatus(data.artifact, run)} title={title} tone={nodeTone(role, data.kind)}>
+      <div className="min-h-[4.5rem] px-3 pb-1">
+        <p className="whitespace-pre-wrap text-[11px] leading-4 text-muted-foreground">{snippet || t('inspector.emptyPreview')}</p>
+      </div>
     </NodeFrame>
   )
 }

@@ -46,22 +46,26 @@ afterEach(() => {
 })
 
 describe('CreatorProfilePage', () => {
-  it('loads the profile, shows a client-side injection preview, and saves via revisioned patch', async () => {
+  it('shows a concise profile overview and edits basics on demand', async () => {
     get.mockResolvedValue({ data: PROFILE, meta: { requestId: REQUEST_ID } })
     update.mockResolvedValue({ data: { ...PROFILE, displayName: '新名字', revision: 2 }, meta: { requestId: REQUEST_ID } })
 
     render(<CreatorProfilePage />)
 
-    const displayName = await screen.findByDisplayValue('阿篓的AI篓子')
-    expect(displayName).toBeTruthy()
+    expect(await screen.findByText('阿篓的AI篓子')).toBeTruthy()
+    expect(screen.queryByDisplayValue('阿篓的AI篓子')).toBeNull()
 
+    fireEvent.click(screen.getByRole('button', { name: '渲染预览' }))
     const preview = screen.getByText(/以下是创作者的风格与背景，请遵循/)
     expect(preview.textContent).toContain('阿篓')
+    fireEvent.click(screen.getByRole('button', { name: '关闭对话框' }))
 
+    fireEvent.click(screen.getByRole('button', { name: '编辑基本资料' }))
+    const displayName = screen.getByDisplayValue('阿篓的AI篓子')
     fireEvent.change(displayName, { target: { value: '新名字' } })
     fireEvent.click(screen.getByRole('button', { name: '保存画像' }))
 
-    expect(update).toHaveBeenCalledWith(PROFILE_ID, 1, expect.objectContaining({ displayName: '新名字', bio: 'AI 应用创作者' }))
+    expect(update).toHaveBeenCalledWith(PROFILE_ID, 1, { displayName: '新名字', bio: 'AI 应用创作者' })
   })
 
   it('imports a vault note into the selected section', async () => {
@@ -69,8 +73,9 @@ describe('CreatorProfilePage', () => {
     importVault.mockResolvedValue({ data: { profile: { ...PROFILE, revision: 2 }, imported: ['positioning'] }, meta: { requestId: REQUEST_ID } })
 
     render(<CreatorProfilePage />)
-    await screen.findByDisplayValue('阿篓的AI篓子')
+    await screen.findByText('阿篓的AI篓子')
 
+    fireEvent.click(screen.getByRole('button', { name: '导入 Vault 笔记' }))
     fireEvent.change(screen.getByPlaceholderText('50_Channels/账号/00-定位.md'), { target: { value: '50_Channels/阿篓的AI篓子/00-账号定位.md' } })
     fireEvent.click(screen.getByRole('button', { name: '导入' }))
 

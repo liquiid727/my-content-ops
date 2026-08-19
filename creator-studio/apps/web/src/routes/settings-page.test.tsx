@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import SettingsPage from './settings-page'
@@ -23,7 +23,7 @@ afterEach(() => {
 })
 
 describe('SettingsPage', () => {
-  it('restores saved connector fields after loading settings', async () => {
+  it('uses the unified external-connections entry after loading legacy settings', async () => {
     loadSettings.mockResolvedValue({
       data: {
         providers: [],
@@ -37,7 +37,10 @@ describe('SettingsPage', () => {
 
     render(<SettingsPage />)
 
-    expect((await screen.findByRole('textbox', { name: 'Lark 命令' }) as HTMLInputElement).value).toBe('/opt/bin/lark')
-    expect((screen.getByRole('textbox', { name: 'Vault 根目录' }) as HTMLInputElement).value).toBe('/vault/content')
+    await screen.findByRole('button', { name: '外部资料连接' })
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Lark CLI' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '外部资料连接' }))
+    expect(await screen.findByRole('heading', { name: '添加连接' })).toBeTruthy()
   })
 })

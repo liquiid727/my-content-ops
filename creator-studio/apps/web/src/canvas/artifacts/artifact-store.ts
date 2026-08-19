@@ -1,4 +1,4 @@
-import type { ArtifactDetail, ArtifactVersion } from '@creator-studio/contracts'
+import type { ArtifactDetail, ArtifactVersion, CollectionItem } from '@creator-studio/contracts'
 import { create } from 'zustand'
 
 import { artifactApi } from '../api/artifact-api'
@@ -8,6 +8,7 @@ interface ArtifactState {
   byId: Record<string, ArtifactDetail>
   /** 版本历史缓存（artifactId → versions，最新在前）。 */
   versions: Record<string, ArtifactVersion[]>
+  collectionItems: Record<string, CollectionItem[]>
   /** 每个 artifact 的取数状态。 */
   loading: Record<string, boolean>
   /** 取摘要失败的错误信息（id → message），成功后清除。 */
@@ -21,6 +22,8 @@ interface ArtifactState {
   invalidateMany: (ids: string[]) => void
   /** 取版本历史（缓存命中直接返回）。 */
   getVersions: (artifactId: string) => Promise<ArtifactVersion[]>
+  getCollectionItems: (artifactId: string) => Promise<CollectionItem[]>
+  selectCollectionItem: (artifactId: string, itemArtifactId: string) => Promise<CollectionItem[]>
   /** 直接写入一份 detail（用于本地新建/更新后同步）。 */
   setDetail: (detail: ArtifactDetail) => void
   /** 切换 project 时清空缓存。 */
@@ -30,6 +33,7 @@ interface ArtifactState {
 export const useArtifactStore = create<ArtifactState>((set, get) => ({
   byId: {},
   versions: {},
+  collectionItems: {},
   loading: {},
   errors: {},
 
@@ -60,9 +64,11 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
       delete byId[id]
       const versions = { ...state.versions }
       delete versions[id]
+      const collectionItems = { ...state.collectionItems }
+      delete collectionItems[id]
       const errors = { ...state.errors }
       delete errors[id]
-      return { byId, versions, errors }
+      return { byId, versions, collectionItems, errors }
     })
   },
 
@@ -71,13 +77,15 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
     set((state) => {
       const byId = { ...state.byId }
       const versions = { ...state.versions }
+      const collectionItems = { ...state.collectionItems }
       const errors = { ...state.errors }
       for (const id of ids) {
         delete byId[id]
         delete versions[id]
+        delete collectionItems[id]
         delete errors[id]
       }
-      return { byId, versions, errors }
+      return { byId, versions, collectionItems, errors }
     })
   },
 
@@ -89,11 +97,25 @@ export const useArtifactStore = create<ArtifactState>((set, get) => ({
     return versions
   },
 
+  async getCollectionItems(artifactId) {
+    const cached = get().collectionItems[artifactId]
+    if (cached) return cached
+    const items = await artifactApi.collectionItems(artifactId)
+    set((state) => ({ collectionItems: { ...state.collectionItems, [artifactId]: items } }))
+    return items
+  },
+
+  async selectCollectionItem(artifactId, itemArtifactId) {
+    const items = await artifactApi.selectCollectionItem(artifactId, itemArtifactId)
+    set((state) => ({ collectionItems: { ...state.collectionItems, [artifactId]: items } }))
+    return items
+  },
+
   setDetail(detail) {
     set((state) => ({ byId: { ...state.byId, [detail.id]: detail } }))
   },
 
   clearProject() {
-    set({ byId: {}, versions: {}, loading: {}, errors: {} })
+    set({ byId: {}, versions: {}, collectionItems: {}, loading: {}, errors: {} })
   },
 }))

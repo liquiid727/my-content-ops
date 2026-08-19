@@ -1,4 +1,8 @@
 @import './tokens.css';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/noto-sans-sc';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
 
 @tailwind base;
 @tailwind components;
@@ -18,10 +22,62 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Noto Sans SC Variable', ui-sans-serif, system-ui, sans-serif;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
   text-rendering: optimizeLegibility;
+}
+
+body::selection {
+  color: hsl(var(--foreground));
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.studio-glass {
+  border: 1px solid hsl(var(--glass-border) / 0.88);
+  background: hsl(var(--glass) / 0.78);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(22px) saturate(1.24);
+}
+
+.studio-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+}
+
+.studio-scrollbar {
+  scrollbar-color: hsl(var(--border)) transparent;
+  scrollbar-width: thin;
+}
+
+.studio-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.studio-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: hsl(var(--border));
+}
+
+@keyframes ambient-breathe {
+  0%, 100% { opacity: 0.52; transform: scale(0.98); }
+  50% { opacity: 0.74; transform: scale(1.04); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--success) / 0); }
+  50% { box-shadow: 0 0 0 5px hsl(var(--success) / 0.12); }
+}
+
+.studio-ambient-breathe {
+  animation: ambient-breathe 9s ease-in-out infinite;
+}
+
+.studio-status-pulse {
+  animation: status-pulse 2.8s ease-in-out infinite;
 }
 
 button,
@@ -71,5 +127,10 @@ textarea {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .studio-ambient-breathe,
+  .studio-status-pulse {
+    animation: none !important;
   }
 }

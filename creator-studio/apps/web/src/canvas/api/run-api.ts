@@ -10,7 +10,10 @@ import { apiRequest } from '../../shared/api/api-client'
 export interface CreateRunInput {
   projectId: string
   sourceArtifactId?: string
+  /** 画布多选的全部源 artifact（多源生成）。 */
+  sourceArtifactIds?: string[]
   inputVersionIds?: string[]
+  knowledgeSourceIds?: string[]
   config?: Record<string, unknown>
   idempotencyKey: string
 }
@@ -29,7 +32,9 @@ export const runApi = {
       projectId: input.projectId,
       idempotencyKey: input.idempotencyKey,
       ...(input.sourceArtifactId ? { sourceArtifactId: input.sourceArtifactId } : {}),
+      ...(input.sourceArtifactIds && input.sourceArtifactIds.length > 0 ? { sourceArtifactIds: input.sourceArtifactIds } : {}),
       ...(input.inputVersionIds && input.inputVersionIds.length > 0 ? { inputVersionIds: input.inputVersionIds } : {}),
+      ...(input.knowledgeSourceIds && input.knowledgeSourceIds.length > 0 ? { knowledgeSourceIds: input.knowledgeSourceIds } : {}),
       ...(input.config && Object.keys(input.config).length > 0 ? { config: input.config } : {}),
     }
     return (await apiRequest(`/operations/${encodeURIComponent(operationId)}/runs`, createRunResponseSchema, {

@@ -3,9 +3,11 @@ import {
   artifactDetailResponseSchema,
   artifactVersionListResponseSchema,
   artifactVersionResponseSchema,
+  collectionItemListResponseSchema,
   operationDefinitionListResponseSchema,
   type ArtifactDetail,
   type ArtifactVersion,
+  type CollectionItem,
   type OperationDefinition,
 } from '@creator-studio/contracts'
 import { apiRequest } from '../../shared/api/api-client'
@@ -48,6 +50,24 @@ export const artifactApi = {
   /** Registry 驱动的可用操作（按 kind/role/输入满足度过滤）。 */
   async operations(artifactId: string): Promise<OperationDefinition[]> {
     return (await apiRequest(`/artifacts/${encodeURIComponent(artifactId)}/operations`, operationDefinitionListResponseSchema)).data.operations
+  },
+  /** 画布多选集合的可用操作（任一选中 artifact 满足 kinds/roles 即可用）。 */
+  async operationsForSet(projectId: string, artifactIds: string[]): Promise<OperationDefinition[]> {
+    return (await apiRequest('/operations/available', operationDefinitionListResponseSchema, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId, artifactIds }),
+    })).data.operations
+  },
+  async collectionItems(artifactId: string): Promise<CollectionItem[]> {
+    return (await apiRequest(`/artifacts/${encodeURIComponent(artifactId)}/collection-items`, collectionItemListResponseSchema)).data.items
+  },
+  async selectCollectionItem(artifactId: string, itemArtifactId: string): Promise<CollectionItem[]> {
+    return (await apiRequest(`/artifacts/${encodeURIComponent(artifactId)}/collection-items/select`, collectionItemListResponseSchema, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemArtifactId }),
+    })).data.items
   },
   /** 显式删除 artifact（用户同时删除内容时调用）。 */
   async deleteArtifact(artifactId: string): Promise<void> {

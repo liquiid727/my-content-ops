@@ -16,11 +16,21 @@ export default {
         danger: 'hsl(var(--danger) / <alpha-value>)',
         success: 'hsl(var(--success) / <alpha-value>)',
         warning: 'hsl(var(--warning) / <alpha-value>)',
+        glass: 'hsl(var(--glass) / <alpha-value>)',
+        'glass-border': 'hsl(var(--glass-border) / <alpha-value>)',
+        'node-inspiration': 'hsl(var(--node-inspiration) / <alpha-value>)',
+        'node-topic': 'hsl(var(--node-topic) / <alpha-value>)',
+        'node-structure': 'hsl(var(--node-structure) / <alpha-value>)',
+        'node-script': 'hsl(var(--node-script) / <alpha-value>)',
+        'node-image': 'hsl(var(--node-image) / <alpha-value>)',
+        'node-audio': 'hsl(var(--node-audio) / <alpha-value>)',
+        'node-video': 'hsl(var(--node-video) / <alpha-value>)',
+        'node-action': 'hsl(var(--node-action) / <alpha-value>)',
       },
       fontFamily: {
-        display: ['Avenir Next Condensed', 'Arial Narrow', 'sans-serif'],
-        body: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        utility: ['SFMono-Regular', 'Consolas', 'monospace'],
+        display: ['Bricolage Grotesque Variable', 'Noto Sans SC Variable', 'sans-serif'],
+        body: ['Noto Sans SC Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        utility: ['IBM Plex Mono', 'SFMono-Regular', 'Consolas', 'monospace'],
       },
       borderRadius: {
         sm: 'var(--radius-sm)',
@@ -29,6 +39,7 @@ export default {
       },
       boxShadow: {
         panel: 'var(--shadow-panel)',
+        float: 'var(--shadow-float)',
         focus: '0 0 0 3px hsl(var(--primary) / 0.28)',
       },
       transitionDuration: {

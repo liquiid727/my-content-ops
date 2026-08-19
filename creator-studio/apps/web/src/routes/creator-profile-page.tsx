@@ -1,14 +1,26 @@
-import type { CreatorProfilePatch, SectionKey } from '@creator-studio/contracts'
+import { injectScopeSchema, renderContext, type CreatorProfilePatch, type InjectScope, type SectionKey } from '@creator-studio/contracts'
 import { RefreshCw, UserRound } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { CreatorProfileForm, useCreatorProfileStore, VaultImportCard } from '../modules/creator-profile'
-import { Button, EmptyState, Skeleton, useToastStore } from '../shared/ui'
+import {
+  CreatorProfileForm,
+  CreatorProfileOverview,
+  type CreatorProfileEditorSection,
+  useCreatorProfileStore,
+  VaultImportCard,
+} from '../modules/creator-profile'
+import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, EmptyState, Select, Skeleton, useToastStore } from '../shared/ui'
 import { RouteHeading } from './route-heading'
+
+const SCOPES = injectScopeSchema.options
 
 export default function CreatorProfilePage() {
   const { t } = useTranslation()
+  const [editor, setEditor] = useState<CreatorProfileEditorSection | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewScope, setPreviewScope] = useState<InjectScope>('project')
   const profile = useCreatorProfileStore((state) => state.profile)
   const loading = useCreatorProfileStore((state) => state.loading)
   const saving = useCreatorProfileStore((state) => state.saving)
@@ -25,19 +37,26 @@ export default function CreatorProfilePage() {
     void load()
   }, [load])
 
-  async function handleSave(revision: number, patch: CreatorProfilePatch) {
-    if (!profile) return
+  const previewText = useMemo(
+    () => profile ? renderContext(profile.profile, profile.injection, previewScope) : '',
+    [profile, previewScope],
+  )
+
+  async function handleSave(revision: number, patch: CreatorProfilePatch): Promise<boolean> {
+    if (!profile) return false
     const saved = await save(profile.id, revision, patch)
     if (saved) notify({ title: t('profile.saved') })
+    return Boolean(saved)
   }
 
-  async function handleImport(vaultPath: string, targetSection: SectionKey) {
+  async function handleImport(vaultPath: string, targetSection: SectionKey): Promise<boolean> {
     const imported = await importVault(vaultPath, targetSection)
     if (imported) notify({ title: t('profile.importSuccess', { section: t(`profile.injectionSections.${imported[0]}`) }) })
+    return Boolean(imported)
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-6xl">
       <RouteHeading
         description={t('profile.description')}
         eyebrow={t('profile.eyebrow')}
@@ -78,9 +97,65 @@ export default function CreatorProfilePage() {
       ) : null}
 
       {!loading && profile ? (
-        <div className="mt-8 space-y-6">
-          <VaultImportCard importing={importing} onImport={(path, section) => handleImport(path, section)} />
-          <CreatorProfileForm key={profile.revision} profile={profile} onSave={handleSave} saving={saving} />
+        <div className="mt-8">
+          <CreatorProfileOverview
+            onEdit={setEditor}
+            onOpenImport={() => setImportOpen(true)}
+            onOpenPreview={() => setPreviewOpen(true)}
+            profile={profile}
+          />
+
+          <Dialog open={editor !== null} onOpenChange={(open) => { if (!open) setEditor(null) }}>
+            {editor ? (
+              <DialogContent className="flex max-h-[86vh] max-w-3xl flex-col overflow-hidden p-0">
+                <div className="shrink-0 border-b border-border px-6 py-5 pr-14 sm:px-7">
+                  <DialogTitle>{t('profile.editTitle', { section: t(`profile.${editor}`) })}</DialogTitle>
+                  <DialogDescription>{t(`profile.editorDescriptions.${editor}`)}</DialogDescription>
+                </div>
+                <CreatorProfileForm
+                  key={`${profile.revision}-${editor}`}
+                  onCancel={() => setEditor(null)}
+                  onSave={handleSave}
+                  profile={profile}
+                  saving={saving}
+                  section={editor}
+                />
+              </DialogContent>
+            ) : null}
+          </Dialog>
+
+          <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+            <DialogContent className="max-w-3xl">
+              <DialogTitle>{t('profile.preview')}</DialogTitle>
+              <DialogDescription>{t('profile.previewDescription')}</DialogDescription>
+              <div className="mt-5 flex max-w-xs items-center gap-3">
+                <span className="text-sm font-semibold">{t('profile.previewScope')}</span>
+                <Select
+                  aria-label={t('profile.previewScope')}
+                  onValueChange={(value) => setPreviewScope(value as InjectScope)}
+                  options={SCOPES.map((value) => ({ value, label: t(`profile.scope.${value}`) }))}
+                  value={previewScope}
+                />
+              </div>
+              <pre className="mt-4 max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-elevated p-4 text-xs leading-5 text-foreground">
+                {previewText || t('profile.previewEmpty')}
+              </pre>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={importOpen} onOpenChange={setImportOpen}>
+            <DialogContent className="flex max-w-2xl flex-col overflow-hidden p-0">
+              <div className="border-b border-border px-6 py-5 pr-14 sm:px-7">
+                <DialogTitle>{t('profile.importTitle')}</DialogTitle>
+                <DialogDescription>{t('profile.importDescription')}</DialogDescription>
+              </div>
+              <VaultImportCard
+                importing={importing}
+                onCancel={() => setImportOpen(false)}
+                onImport={handleImport}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       ) : null}
     </div>
