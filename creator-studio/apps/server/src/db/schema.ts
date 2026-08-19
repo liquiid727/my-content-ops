@@ -154,6 +154,63 @@ export const connectorConfigs = sqliteTable('connector_configs', {
   updatedAt: integer('updated_at').notNull(),
 })
 
+export const resourceConnections = sqliteTable('resource_connections', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  type: text('type', { enum: ['obsidian', 'folder', 'lark'] }).notNull(),
+  name: text('name').notNull(),
+  configJson: text('config_json').notNull().default('{}'),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  status: text('status', { enum: ['not_configured', 'installing', 'auth_required', 'ready', 'error'] }).notNull().default('not_configured'),
+  lastCheckedAt: integer('last_checked_at'),
+  lastError: text('last_error'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [index('resource_connections_workspace_idx').on(table.workspaceId, table.updatedAt)])
+
+export const knowledgeSources = sqliteTable('knowledge_sources', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  connectionId: text('connection_id').notNull(),
+  remoteRef: text('remote_ref').notNull(),
+  title: text('title').notNull(),
+  kind: text('kind', { enum: ['document', 'spreadsheet', 'image', 'audio', 'video', 'other'] }).notNull(),
+  mimeType: text('mime_type'),
+  excerpt: text('excerpt').notNull().default(''),
+  sourceUrl: text('source_url'),
+  sourceVersion: text('source_version'),
+  modifiedAt: integer('modified_at'),
+  readAt: integer('read_at'),
+  indexedAt: integer('indexed_at'),
+  metadataJson: text('metadata_json').notNull().default('{}'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [
+  index('knowledge_sources_workspace_idx').on(table.workspaceId, table.updatedAt),
+  index('knowledge_sources_connection_idx').on(table.connectionId, table.remoteRef),
+])
+
+export const projectSources = sqliteTable('project_sources', {
+  projectId: text('project_id').notNull(),
+  sourceId: text('source_id').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [index('project_sources_source_idx').on(table.sourceId, table.projectId)])
+
+export const knowledgeCache = sqliteTable('knowledge_cache', {
+  sourceId: text('source_id').primaryKey(),
+  text: text('text').notNull(),
+  sourceVersion: text('source_version'),
+  expiresAt: integer('expires_at').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+export const knowledgeChunks = sqliteTable('knowledge_chunks', {
+  sourceId: text('source_id').notNull(),
+  chunkIndex: integer('chunk_index').notNull(),
+  text: text('text').notNull(),
+})
+
 export const syncRecords = sqliteTable('sync_records', {
   id: text('id').primaryKey(),
   workspaceId: text('workspace_id').notNull(),
@@ -255,7 +312,9 @@ export const runs = sqliteTable('runs', {
   taskId: text('task_id').notNull().unique(),
   operationId: text('operation_id').notNull(),
   sourceArtifactId: text('source_artifact_id'),
+  sourceArtifactIdsJson: text('source_artifact_ids_json').notNull().default('[]'),
   inputVersionIdsJson: text('input_version_ids_json').notNull().default('[]'),
+  knowledgeSourceIdsJson: text('knowledge_source_ids_json').notNull().default('[]'),
   outputVersionIdsJson: text('output_version_ids_json'),
   outputArtifactIdsJson: text('output_artifact_ids_json'),
   configJson: text('config_json').notNull().default('{}'),
@@ -276,6 +335,86 @@ export const projectEvents = sqliteTable(
   (table) => [index('project_events_project_id_idx').on(table.projectId, table.id)],
 )
 
+export const workflowGraphs = sqliteTable('workflow_graphs', {
+  projectId: text('project_id').primaryKey(),
+  revision: integer('revision').notNull().default(1),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+export const recipes = sqliteTable('recipes', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  projectId: text('project_id').notNull(),
+  capabilityId: text('capability_id').notNull(),
+  title: text('title').notNull(),
+  configJson: text('config_json').notNull().default('{}'),
+  revision: integer('revision').notNull().default(1),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [index('recipes_project_id_idx').on(table.projectId)])
+
+export const workflowNodes = sqliteTable('workflow_nodes', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  subjectType: text('subject_type', { enum: ['artifact', 'recipe'] }).notNull(),
+  subjectId: text('subject_id').notNull(),
+  x: real('x').notNull(),
+  y: real('y').notNull(),
+  width: real('width'),
+  height: real('height'),
+  collapsed: integer('collapsed', { mode: 'boolean' }).notNull().default(false),
+  zIndex: integer('z_index').notNull().default(0),
+  renderer: text('renderer').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [index('workflow_nodes_project_id_idx').on(table.projectId)])
+
+export const workflowConnections = sqliteTable('workflow_connections', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  sourceNodeId: text('source_node_id').notNull(),
+  sourcePort: text('source_port').notNull(),
+  targetNodeId: text('target_node_id').notNull(),
+  targetPort: text('target_port').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, (table) => [index('workflow_connections_project_id_idx').on(table.projectId)])
+
+export const collectionItems = sqliteTable('collection_items', {
+  collectionArtifactId: text('collection_artifact_id').notNull(),
+  itemArtifactId: text('item_artifact_id').notNull(),
+  position: integer('position').notNull(),
+  selected: integer('selected', { mode: 'boolean' }).notNull().default(false),
+}, (table) => [index('collection_items_collection_idx').on(table.collectionArtifactId, table.position)])
+
+export const executionPlans = sqliteTable('execution_plans', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  projectId: text('project_id').notNull(),
+  graphRevision: integer('graph_revision').notNull(),
+  stepsJson: text('steps_json').notNull(),
+  status: text('status', { enum: ['draft', 'queued', 'running', 'completed', 'failed', 'cancelled'] }).notNull(),
+  errorJson: text('error_json'),
+  createdBy: text('created_by').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [index('execution_plans_project_id_idx').on(table.projectId, table.createdAt)])
+
+export const changeSets = sqliteTable('change_sets', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  projectId: text('project_id').notNull(),
+  baseRevision: integer('base_revision').notNull(),
+  summary: text('summary').notNull(),
+  proposerJson: text('proposer_json').notNull(),
+  commandsJson: text('commands_json').notNull(),
+  validationJson: text('validation_json').notNull(),
+  status: text('status', { enum: ['proposed', 'approved', 'rejected', 'applied', 'failed'] }).notNull(),
+  resultingRevision: integer('resulting_revision'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (table) => [index('change_sets_project_id_idx').on(table.projectId, table.createdAt)])
+
 export const databaseSchema = {
   workspaces,
   creatorProfiles,
@@ -287,6 +426,11 @@ export const databaseSchema = {
   generations,
   providerConfigs,
   connectorConfigs,
+  resourceConnections,
+  knowledgeSources,
+  projectSources,
+  knowledgeCache,
+  knowledgeChunks,
   syncRecords,
   idempotencyRecords,
   artifacts,
@@ -295,6 +439,13 @@ export const databaseSchema = {
   edges,
   runs,
   projectEvents,
+  workflowGraphs,
+  recipes,
+  workflowNodes,
+  workflowConnections,
+  collectionItems,
+  executionPlans,
+  changeSets,
 }
 
 export type WorkspaceRecord = typeof workspaces.$inferSelect
@@ -307,6 +458,10 @@ export type TaskEventRecord = typeof taskEvents.$inferSelect
 export type GenerationRecord = typeof generations.$inferSelect
 export type ProviderConfigRecord = typeof providerConfigs.$inferSelect
 export type ConnectorConfigRecord = typeof connectorConfigs.$inferSelect
+export type ResourceConnectionRecord = typeof resourceConnections.$inferSelect
+export type KnowledgeSourceRecord = typeof knowledgeSources.$inferSelect
+export type ProjectSourceRecord = typeof projectSources.$inferSelect
+export type KnowledgeCacheRecord = typeof knowledgeCache.$inferSelect
 export type IdempotencyRecord = typeof idempotencyRecords.$inferSelect
 export type ArtifactRecord = typeof artifacts.$inferSelect
 export type ArtifactVersionRecord = typeof artifactVersions.$inferSelect
@@ -314,3 +469,10 @@ export type CanvasNodeRecord = typeof canvasNodes.$inferSelect
 export type EdgeRecord = typeof edges.$inferSelect
 export type RunRecord = typeof runs.$inferSelect
 export type ProjectEventRecord = typeof projectEvents.$inferSelect
+export type WorkflowGraphRecord = typeof workflowGraphs.$inferSelect
+export type RecipeRecord = typeof recipes.$inferSelect
+export type WorkflowNodeRecord = typeof workflowNodes.$inferSelect
+export type WorkflowConnectionRecord = typeof workflowConnections.$inferSelect
+export type CollectionItemRecord = typeof collectionItems.$inferSelect
+export type ExecutionPlanRecord = typeof executionPlans.$inferSelect
+export type ChangeSetRecord = typeof changeSets.$inferSelect

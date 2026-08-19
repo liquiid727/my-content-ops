@@ -14,6 +14,17 @@ import { ProjectEventEmitter, ProjectEventRepository, configureProjectEventRoute
 import { consoleRequestLogger } from './http/logging.js'
 import { createLocalSecurityContext } from './http/security.js'
 import {
+  configureConnectionRoutes,
+  configureKnowledgeRoutes,
+  ConnectionService,
+  KnowledgeRepository,
+  KnowledgeService,
+  KnowledgeTaskHandler,
+  LarkResourceAdapter,
+  LocalResourceAdapter,
+  ResourceAdapterRegistry,
+} from './knowledge/index.js'
+import {
   OperationRegistry,
   RunService,
   configureRunRoutes,
@@ -35,8 +46,10 @@ import {
 import { configureTaskEventRoutes, configureTaskRoutes, SeedTaskHandler, TaskHandlerRegistry, TaskRecovery, TaskRunner, TaskService } from './tasks/index.js'
 import { configureSettingsRoutes, SecretStore, SettingsService } from './settings/index.js'
 import { configureVersionRoutes, VersionService } from './versions/index.js'
+import { configureWorkflowMcpRoutes, configureWorkflowRoutes, WorkflowService } from './workflow/index.js'
 
 const port = Number(process.env.CREATOR_STUDIO_PORT ?? 4310)
+const webPort = process.env.CREATOR_STUDIO_WEB_PORT ? Number(process.env.CREATOR_STUDIO_WEB_PORT) : undefined
 const webRoot = process.env.CREATOR_STUDIO_WEB_DIST ?? fileURLToPath(new URL('../../web/dist/', import.meta.url))
 const database = await openDatabase()
 const identity = await ensureLocalIdentity(new WorkspaceRepository(database.db))
@@ -70,7 +83,15 @@ const projectEventRepository = new ProjectEventRepository(database.db)
 const projectEventEmitter = new ProjectEventEmitter(projectEventRepository)
 const operationRegistry = new OperationRegistry(operationDefinitions)
 const runRepository = new RunRepository(database.db)
-const contextService = new ContextService(new ProjectRepository(database.db), artifactRepository, new CreatorProfileRepository(database.db))
+const knowledgeRepository = new KnowledgeRepository(database.sqlite)
+const resourceAdapters = new ResourceAdapterRegistry([
+  new LocalResourceAdapter('obsidian'),
+  new LocalResourceAdapter('folder'),
+  new LarkResourceAdapter(),
+])
+const connectionService = new ConnectionService(knowledgeRepository, resourceAdapters, database.dataDirectory)
+const knowledgeService = new KnowledgeService(knowledgeRepository, connectionService, resourceAdapters)
+const contextService = new ContextService(new ProjectRepository(database.db), artifactRepository, new CreatorProfileRepository(database.db), knowledgeService)
 const operationTaskHandler = new OperationTaskHandler(
   operationRegistry,
   artifactRepository,
@@ -87,6 +108,7 @@ const operationTaskHandler = new OperationTaskHandler(
 const taskHandlers = new TaskHandlerRegistry()
   .register(new SeedTaskHandler(providerRegistry))
   .register(operationTaskHandler)
+  .register(new KnowledgeTaskHandler(connectionService, knowledgeService))
 const taskRunner = new TaskRunner(taskRepository, new GenerationRepository(database.db), taskHandlers)
 const taskService = new TaskService(taskRepository, new ProjectRepository(database.db), taskHandlers, taskRunner)
 const runService = new RunService(
@@ -103,12 +125,13 @@ await taskRepository.deleteWorkspaceEventsBefore(identity.workspace.id, Date.now
 await new TaskRecovery(taskRepository, taskHandlers).recover(identity.workspace.id)
 taskRunner.schedule()
 const settingsService = new SettingsService(new ConfigRepository(database.db), new SecretStore(database.dataDirectory))
+const workflowService = new WorkflowService(database.sqlite, new ProjectRepository(database.db), runService)
 const app = createStaticApp({
   webRoot,
   healthCheck: async () => ({ database: 'ready', migrations: 'ready' }),
   loadBootstrap: () => bootstrapService.load(),
   requestLogger: consoleRequestLogger,
-  security: createLocalSecurityContext({ port, identity }),
+  security: createLocalSecurityContext({ port, identity, ...(webPort !== undefined ? { webPort } : {}) }),
   configure: (api) => {
     configurePreferenceRoutes(api, workspaceRepository)
     configureCreatorProfileRoutes(api, creatorProfileService)
@@ -123,6 +146,10 @@ const app = createStaticApp({
     configureTaskRoutes(api, taskService)
     configureTaskEventRoutes(api, taskRepository)
     configureSettingsRoutes(api, settingsService)
+    configureConnectionRoutes(api, connectionService, taskService)
+    configureKnowledgeRoutes(api, knowledgeService, taskService)
+    configureWorkflowRoutes(api, workflowService)
+    configureWorkflowMcpRoutes(api, workflowService)
   },
 })
 

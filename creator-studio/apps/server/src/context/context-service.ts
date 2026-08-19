@@ -19,6 +19,13 @@ export interface ContextIdentity {
   creatorProfileId: string
 }
 
+export interface KnowledgeContextPort {
+  projectContext(workspaceId: string, projectId: string, sourceIds?: string[], maxCharacters?: number): Promise<{
+    text: string
+    citations: Array<{ sourceId: string; ref: string; sourceVersion: string | null; readAt: string }>
+  }>
+}
+
 /** Operation → Personal Style 注入 scope（renderContext 用）。 */
 const OPERATION_INJECT_SCOPE: Record<string, InjectScope> = {
   generate_outline: 'outline',
@@ -47,6 +54,7 @@ export class ContextService {
     private readonly projects: ProjectRepository,
     private readonly artifacts: ArtifactRepository,
     private readonly profiles: CreatorProfileRepository,
+    private readonly knowledge?: KnowledgeContextPort,
   ) {}
 
   async assembleProject(identity: ContextIdentity, projectId: string, scope: InjectScope = 'project'): Promise<{ layers: ContextLayer[]; text: string }> {
@@ -56,6 +64,7 @@ export class ContextService {
     const personalStyleText = await this.resolvePersonalStyle(identity.workspaceId, project.personalStyleId ?? identity.creatorProfileId, scope)
     const connectedInputs = await this.collectConnectedInputs(projectId)
 
+    const externalKnowledge = this.knowledge ? await this.knowledge.projectContext(identity.workspaceId, projectId) : { text: '', citations: [] }
     return assembleContext({
       project: {
         title: project.title,
@@ -65,8 +74,15 @@ export class ContextService {
       },
       scope,
       connectedInputs,
+      externalKnowledgeText: externalKnowledge.text,
       personalStyleText,
     })
+  }
+
+  async resolveOperationKnowledge(workspaceId: string, projectId: string, sourceIds: string[]) {
+    return this.knowledge
+      ? this.knowledge.projectContext(workspaceId, projectId, sourceIds.length ? sourceIds : undefined)
+      : { text: '', citations: [] }
   }
 
   /** 供 Operation executor 使用：按 operationId 注入 Personal Style 文本。 */

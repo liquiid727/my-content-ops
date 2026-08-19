@@ -21,15 +21,25 @@ export interface CreateLocalSecurityOptions {
   port: number
   identity: LocalIdentity
   sessionToken?: string
+  /** 前端 dev 端口（Vite 代理场景），其来源同样允许发起写请求。 */
+  webPort?: number
 }
 
-export function createLocalSecurityContext({ port, identity, sessionToken = randomBytes(32).toString('base64url') }: CreateLocalSecurityOptions): LocalSecurityContext {
+function originVariants(port: number): string[] {
+  return [`http://127.0.0.1:${port}`, `http://localhost:${port}`, `http://[::1]:${port}`]
+}
+
+export function createLocalSecurityContext({ port, identity, sessionToken = randomBytes(32).toString('base64url'), webPort }: CreateLocalSecurityOptions): LocalSecurityContext {
+  const allowedOrigins = new Set(originVariants(port))
+  if (webPort !== undefined) {
+    for (const origin of originVariants(webPort)) allowedOrigins.add(origin)
+  }
   return {
     sessionToken,
     workspaceId: identity.workspace.id,
     creatorProfileId: identity.creatorProfile.id,
     allowedHosts: new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]),
-    allowedOrigins: new Set([`http://127.0.0.1:${port}`, `http://localhost:${port}`, `http://[::1]:${port}`]),
+    allowedOrigins,
   }
 }
 

@@ -54,6 +54,8 @@ export class RunRepository {
 
   createIdempotent(input: IdempotentRunCreate): { run: RunRecord; task: TaskRecord; replayed: boolean } {
     validateJsonText(input.run.inputVersionIdsJson ?? '[]', 'run.inputVersionIdsJson')
+    validateJsonText(input.run.sourceArtifactIdsJson ?? '[]', 'run.sourceArtifactIdsJson')
+    validateJsonText(input.run.knowledgeSourceIdsJson ?? '[]', 'run.knowledgeSourceIdsJson')
     validateJsonText(input.run.configJson ?? '{}', 'run.configJson')
     validateJsonText(input.task.inputJson ?? '{}', 'task.inputJson')
 

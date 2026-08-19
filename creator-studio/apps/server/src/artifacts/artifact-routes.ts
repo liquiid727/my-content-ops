@@ -5,6 +5,8 @@ import {
   idSchema,
   restoreArtifactVersionSchema,
   updateArtifactSchema,
+  collectionItemListResponseSchema,
+  selectCollectionItemSchema,
 } from '@creator-studio/contracts'
 import type { Hono } from 'hono'
 
@@ -68,5 +70,18 @@ export function configureArtifactRoutes(app: Hono<HttpBindings>, service: Artifa
     const artifactId = parseWithSchema(idSchema, context.req.param('artifactId'))
     await service.remove(identity(context), artifactId)
     return context.body(null, 204)
+  })
+
+  app.get('/artifacts/:artifactId/collection-items', async (context) => {
+    const artifactId = parseWithSchema(idSchema, context.req.param('artifactId'))
+    const items = await service.listCollectionItems(identity(context), artifactId)
+    return context.json(collectionItemListResponseSchema.parse({ data: { items }, meta: { requestId: context.get('requestId') } }))
+  })
+
+  app.post('/artifacts/:artifactId/collection-items/select', async (context) => {
+    const artifactId = parseWithSchema(idSchema, context.req.param('artifactId'))
+    const input = parseWithSchema(selectCollectionItemSchema, await readJson(context))
+    const items = await service.selectCollectionItem(identity(context), artifactId, input.itemArtifactId)
+    return context.json(collectionItemListResponseSchema.parse({ data: { items }, meta: { requestId: context.get('requestId') } }))
   })
 }

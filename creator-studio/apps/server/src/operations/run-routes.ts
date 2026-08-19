@@ -1,4 +1,5 @@
 import {
+  availableOperationsRequestSchema,
   createRunResponseSchema,
   createRunSchema,
   idSchema,
@@ -36,18 +37,29 @@ export function configureRunRoutes(app: Hono<HttpBindings>, service: RunService)
     }))
   })
 
+  app.post('/operations/available', async (context) => {
+    const input = parseWithSchema(availableOperationsRequestSchema, await readJson(context))
+    const operations = await service.getAvailableOperationsForSet(identity(context), input.projectId, input.artifactIds)
+    return context.json(operationDefinitionListResponseSchema.parse({
+      data: { operations },
+      meta: { requestId: context.get('requestId') },
+    }))
+  })
+
   app.post('/operations/:operationId/runs', async (context) => {
     const operationId = context.req.param('operationId')
     const input = parseWithSchema(createRunSchema, await readJson(context))
     const { run } = await service.create(identity(context), operationId, {
       projectId: input.projectId,
       sourceArtifactId: input.sourceArtifactId ?? null,
+      ...(input.sourceArtifactIds ? { sourceArtifactIds: input.sourceArtifactIds } : {}),
       inputVersionIds: input.inputVersionIds,
+      knowledgeSourceIds: input.knowledgeSourceIds,
       config: input.config,
       idempotencyKey: input.idempotencyKey,
     })
     return context.json(createRunResponseSchema.parse({
-      data: { runId: run.id, taskId: run.taskId, status: run.status },
+      data: { runId: run.id, taskId: run.taskId, status: run.status, outputArtifactIds: run.outputArtifactIds ?? [] },
       meta: { requestId: context.get('requestId') },
     }), 202)
   })

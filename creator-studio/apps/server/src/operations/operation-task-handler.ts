@@ -27,7 +27,10 @@ export const operationTaskInputSchema = z.object({
   operationId: z.string().min(1),
   createdBy: z.string().min(1),
   sourceArtifactId: z.string().min(1).nullable().optional(),
+  /** 画布多选的全部源 artifact（多源生成）；sourceArtifactId 为主源。 */
+  sourceArtifactIds: z.array(z.string().min(1)).default([]),
   inputVersionIds: z.array(z.string()).default([]),
+  knowledgeSourceIds: z.array(z.string()).default([]),
   config: z.record(z.string(), z.unknown()).default({}),
 }).strict()
 export type OperationTaskInput = z.infer<typeof operationTaskInputSchema>
@@ -40,7 +43,7 @@ interface AppliedOutputs {
   sideEffect?: { kind: string; detail: string }
 }
 
-const rendererByKind: Record<string, string> = {
+export const rendererByKind: Record<string, string> = {
   text: 'TextNode', image: 'ImageNode', audio: 'AudioNode', video: 'VideoNode', collection: 'CollectionNode', action: 'ActionNode',
 }
 
@@ -76,10 +79,11 @@ export class OperationTaskHandler implements TaskHandler {
 
     this.emitRunEvent(input, 'run.started', { runId: input.runId, operationId: input.operationId, sourceArtifactId: input.sourceArtifactId })
 
-    const [sourceVersion, sourceArtifact, connectedInputs] = await this.loadInputs(input)
+    const [sourceVersion, sourceArtifact, connectedInputs, sourceArtifacts] = await this.loadInputs(input)
     const projectRecord = await this.projects.getByWorkspaceAndId(input.workspaceId, input.projectId)
     const provider = await this.selectProvider(input.workspaceId, input.operationId)
     const personalStyleText = await this.contexts.resolveOperationStyle(input.workspaceId, projectRecord ?? undefined, input.createdBy, input.operationId)
+    const externalKnowledge = await this.contexts.resolveOperationKnowledge(input.workspaceId, input.projectId, input.knowledgeSourceIds)
 
     const context = assembleContext({
       project: {
@@ -93,8 +97,25 @@ export class OperationTaskHandler implements TaskHandler {
       personalStyleText,
       ...(sourceVersion ? { sourceVersion } : {}),
       connectedInputs,
+      externalKnowledgeText: externalKnowledge.text,
       config: input.config,
     })
+
+    // 多选集合中的图片素材 → 参考图（image-to-image）；主源图片走 hydrateImageConfig 的 sourceVersion 路径。
+    const userReferenceIds = Array.isArray(input.config.referenceAssetIds) ? input.config.referenceAssetIds.filter((id): id is string => typeof id === 'string') : []
+    const collectedReferenceIds: string[] = []
+    for (const artifact of sourceArtifacts) {
+      if (artifact.id === sourceArtifact?.id) continue
+      if (artifact.kind !== 'image' && artifact.kind !== 'collection') continue
+      const version = artifact.currentVersionId ? await this.artifacts.getVersionById(artifact.currentVersionId) : undefined
+      if (version?.contentRefType === 'asset' && version.contentRefId) collectedReferenceIds.push(version.contentRefId)
+    }
+    const referenceAssetIds = [...userReferenceIds, ...collectedReferenceIds.filter((id) => !userReferenceIds.includes(id))].slice(0, 8)
+    const executorConfig = await this.hydrateImageConfig(
+      input.workspaceId,
+      referenceAssetIds.length > 0 ? { ...input.config, referenceAssetIds } : input.config,
+      sourceVersion,
+    )
 
     let mediaSerial = 0
     const result = await executor.execute(
@@ -107,7 +128,7 @@ export class OperationTaskHandler implements TaskHandler {
         ...(sourceVersion ? { sourceArtifact: sourceVersion } : {}),
         ...(sourceArtifact ? { sourceKind: sourceArtifact.kind, sourceRole: sourceArtifact.role } : {}),
         connectedInputs,
-        config: input.config,
+        config: executorConfig,
         contextText: context.text,
         ...(provider ? { provider } : {}),
         saveMedia: async (media, role) => this.saveMediaAsset(input.workspaceId, input.projectId, input.createdBy, media, role, now + mediaSerial++),
@@ -120,7 +141,7 @@ export class OperationTaskHandler implements TaskHandler {
     return {
       providerKey: result.generation?.providerKey ?? 'manual',
       model: result.generation?.model ?? 'none',
-      requestSnapshot: result.generation?.requestSnapshot ?? {},
+      requestSnapshot: { ...((result.generation?.requestSnapshot as Record<string, unknown> | undefined) ?? {}), knowledgeCitations: externalKnowledge.citations, referenceAssetIds },
       responseSnapshot: result.generation?.responseSnapshot ?? { outputBehavior: result.outputBehavior },
       usage: result.generation?.usage ?? {},
       output: {
@@ -129,6 +150,7 @@ export class OperationTaskHandler implements TaskHandler {
         outputBehavior: result.outputBehavior,
         outputArtifactIds: applied.outputArtifactIds,
         outputVersionIds: applied.outputVersionIds,
+        knowledgeCitations: externalKnowledge.citations,
         ...(applied.sideEffect ? { sideEffect: applied.sideEffect } : {}),
       },
     }
@@ -179,37 +201,53 @@ export class OperationTaskHandler implements TaskHandler {
     })
   }
 
-  private async loadInputs(input: OperationTaskInput): Promise<[ArtifactVersion | undefined, ArtifactRecord | undefined, ArtifactVersion[]]> {
-    let sourceVersion: ArtifactVersion | undefined
-    let sourceArtifact: ArtifactRecord | undefined
-    if (input.sourceArtifactId) {
-      const artifact = await this.artifacts.getById(input.sourceArtifactId)
-      if (artifact) {
-        sourceArtifact = artifact
-        if (artifact.currentVersionId) {
-          const version = await this.artifacts.getVersionById(artifact.currentVersionId)
-          if (version) sourceVersion = mapVersionRecord(version)
-        }
-      }
+  private async loadInputs(input: OperationTaskInput): Promise<[ArtifactVersion | undefined, ArtifactRecord | undefined, ArtifactVersion[], ArtifactRecord[]]> {
+    // 全部源 artifact（多选集合），主源在前；旧 run 只有 sourceArtifactId。
+    const orderedIds: string[] = []
+    for (const id of [input.sourceArtifactId ?? null, ...input.sourceArtifactIds]) {
+      if (id && !orderedIds.includes(id)) orderedIds.push(id)
     }
+    const sourceArtifacts: ArtifactRecord[] = []
+    for (const id of orderedIds) {
+      const artifact = await this.artifacts.getById(id)
+      if (artifact && artifact.deletedAt === null) sourceArtifacts.push(artifact)
+    }
+    const primary = sourceArtifacts.find((artifact) => artifact.id === input.sourceArtifactId) ?? sourceArtifacts[0]
+
+    let sourceVersion: ArtifactVersion | undefined
+    if (primary?.currentVersionId) {
+      const version = await this.artifacts.getVersionById(primary.currentVersionId)
+      if (version) sourceVersion = mapVersionRecord(version)
+    }
+
+    // 上下文输入 = 主源的上游连线 + 多选集合中的其余源（去重，按 artifactId）。
     const connectedInputs: ArtifactVersion[] = []
-    if (sourceArtifact) {
-      const edges = await this.canvas.listEdgesByProject(sourceArtifact.projectId)
-      const incoming = edges.filter((edge) => edge.targetArtifactId === input.sourceArtifactId)
-      for (const edge of incoming) {
-        const upArtifact = await this.artifacts.getById(edge.sourceArtifactId)
-        if (upArtifact?.currentVersionId) {
-          const version = await this.artifacts.getVersionById(upArtifact.currentVersionId)
-          if (version) connectedInputs.push(mapVersionRecord(version))
-        }
-      }
-    } else if (input.inputVersionIds.length > 0) {
+    const seenArtifactIds = new Set<string>()
+    const pushVersion = async (artifactId: string) => {
+      if (seenArtifactIds.has(artifactId)) return
+      seenArtifactIds.add(artifactId)
+      const artifact = await this.artifacts.getById(artifactId)
+      if (!artifact?.currentVersionId) return
+      const version = await this.artifacts.getVersionById(artifact.currentVersionId)
+      if (version) connectedInputs.push(mapVersionRecord(version))
+    }
+    if (primary) {
+      seenArtifactIds.add(primary.id)
+      const edges = await this.canvas.listEdgesByProject(primary.projectId)
+      const incoming = edges.filter((edge) => edge.targetArtifactId === primary.id)
+      for (const edge of incoming) await pushVersion(edge.sourceArtifactId)
+    }
+    for (const artifact of sourceArtifacts) {
+      if (artifact.id === primary?.id) continue
+      await pushVersion(artifact.id)
+    }
+    if (!primary && connectedInputs.length === 0 && input.inputVersionIds.length > 0) {
       for (const versionId of input.inputVersionIds) {
         const version = await this.artifacts.getVersionById(versionId)
         if (version) connectedInputs.push(mapVersionRecord(version))
       }
     }
-    return [sourceVersion, sourceArtifact, connectedInputs]
+    return [sourceVersion, primary, connectedInputs, sourceArtifacts]
   }
 
   private async selectProvider(workspaceId: string, operationId: string) {
@@ -230,11 +268,16 @@ export class OperationTaskHandler implements TaskHandler {
     const outputs: AppliedOutputs = { outputArtifactIds: [], outputVersionIds: [], nodeIds: [], edgeIds: [] }
     const projectId = input.projectId
     const kind = (result.kind ?? definition.output?.kind ?? sourceArtifact?.kind ?? 'text') as ArtifactRecord['kind']
+    // Run 创建时已落地的占位 artifact（loading 节点）：直接复用，跳过重复的 artifact/node/edge 创建。
+    const runRecord = await this.runs.getById(input.runId)
+    const placeholderArtifactId = runRecord?.outputArtifactIdsJson ? (JSON.parse(runRecord.outputArtifactIdsJson) as string[])[0] : undefined
+    const placeholder = placeholderArtifactId ? await this.artifacts.getById(placeholderArtifactId) : undefined
+    const reuse = placeholder && placeholder.projectId === input.projectId ? placeholder : undefined
 
     switch (result.outputBehavior) {
       case 'new_artifact': {
         const role = result.role ?? definition.output?.role ?? 'draft'
-        const artifact = await this.artifacts.create({
+        const artifact = reuse ?? await this.artifacts.create({
           id: ulid(now),
           workspaceId: input.workspaceId,
           projectId,
@@ -246,43 +289,45 @@ export class OperationTaskHandler implements TaskHandler {
           updatedAt: now,
         })
         outputs.outputArtifactIds.push(artifact.id)
-        this.emitRunEvent(input, 'artifact.created', { runId: input.runId, artifactId: artifact.id, kind, role })
+        if (!reuse) this.emitRunEvent(input, 'artifact.created', { runId: input.runId, artifactId: artifact.id, kind, role })
         if (result.contentRef) {
           const { version } = this.artifacts.createVersion(this.versionInput(artifact.id, input, result, now))
           outputs.outputVersionIds.push(version.id)
           this.emitRunEvent(input, 'artifact.version.created', { runId: input.runId, artifactId: artifact.id, versionId: version.id })
         }
 
-        const sourceNodes = input.sourceArtifactId ? await this.canvas.getNodesByArtifact(input.sourceArtifactId) : []
-        const anchor = sourceNodes[0]
-        const node = await this.canvas.createNode({
-          id: ulid(now + 1),
-          projectId,
-          artifactId: artifact.id,
-          x: anchor ? anchor.x + 340 : 0,
-          y: anchor ? anchor.y : 0,
-          width: null,
-          height: null,
-          collapsed: false,
-          zIndex: 0,
-          renderer: rendererByKind[kind] ?? 'TextNode',
-          createdAt: now,
-          updatedAt: now,
-        })
-        outputs.nodeIds.push(node.id)
-        this.emitRunEvent(input, 'node.created', { runId: input.runId, artifactId: artifact.id, nodeId: node.id })
-
-        if (input.sourceArtifactId && sourceArtifact) {
-          const edge = await this.canvas.createEdge({
-            id: ulid(now + 2),
+        if (!reuse) {
+          const sourceNodes = input.sourceArtifactId ? await this.canvas.getNodesByArtifact(input.sourceArtifactId) : []
+          const anchor = sourceNodes[0]
+          const node = await this.canvas.createNode({
+            id: ulid(now + 1),
             projectId,
-            sourceArtifactId: input.sourceArtifactId,
-            targetArtifactId: artifact.id,
-            inputSlot: role,
+            artifactId: artifact.id,
+            x: anchor ? anchor.x + 340 : 0,
+            y: anchor ? anchor.y : 0,
+            width: null,
+            height: null,
+            collapsed: false,
+            zIndex: 0,
+            renderer: rendererByKind[kind] ?? 'TextNode',
             createdAt: now,
+            updatedAt: now,
           })
-          outputs.edgeIds.push(edge.id)
-          this.emitRunEvent(input, 'edge.created', { runId: input.runId, sourceArtifactId: input.sourceArtifactId, targetArtifactId: artifact.id, edgeId: edge.id })
+          outputs.nodeIds.push(node.id)
+          this.emitRunEvent(input, 'node.created', { runId: input.runId, artifactId: artifact.id, nodeId: node.id })
+
+          if (input.sourceArtifactId && sourceArtifact) {
+            const edge = await this.canvas.createEdge({
+              id: ulid(now + 2),
+              projectId,
+              sourceArtifactId: input.sourceArtifactId,
+              targetArtifactId: artifact.id,
+              inputSlot: role,
+              createdAt: now,
+            })
+            outputs.edgeIds.push(edge.id)
+            this.emitRunEvent(input, 'edge.created', { runId: input.runId, sourceArtifactId: input.sourceArtifactId, targetArtifactId: artifact.id, edgeId: edge.id })
+          }
         }
         break
       }
@@ -295,7 +340,7 @@ export class OperationTaskHandler implements TaskHandler {
       }
       case 'new_collection': {
         const role = result.role ?? definition.output?.role ?? 'cover'
-        const artifact = await this.artifacts.create({
+        const artifact = reuse ?? await this.artifacts.create({
           id: ulid(now),
           workspaceId: input.workspaceId,
           projectId,
@@ -307,45 +352,63 @@ export class OperationTaskHandler implements TaskHandler {
           updatedAt: now,
         })
         outputs.outputArtifactIds.push(artifact.id)
-        this.emitRunEvent(input, 'artifact.created', { runId: input.runId, artifactId: artifact.id, kind: 'collection', role })
+        if (!reuse) this.emitRunEvent(input, 'artifact.created', { runId: input.runId, artifactId: artifact.id, kind: 'collection', role })
 
         const candidates = result.candidates && result.candidates.length > 0 ? result.candidates : (result.contentRef ? [result] : [])
         for (let index = 0; index < candidates.length; index += 1) {
-          const { version } = this.artifacts.createVersion(this.versionInput(artifact.id, input, candidates[index]!, now + index + 1))
+          const candidate = candidates[index]!
+          const candidateArtifact = await this.artifacts.create({
+            id: ulid(now + index + 1),
+            workspaceId: input.workspaceId,
+            projectId,
+            kind: 'image',
+            role: candidate.role ?? role,
+            currentVersionId: null,
+            createdBy: input.createdBy,
+            createdAt: now + index + 1,
+            updatedAt: now + index + 1,
+          })
+          const { version } = this.artifacts.createVersion(this.versionInput(candidateArtifact.id, input, candidate, now + candidates.length + index + 10))
+          // Compatibility projection: legacy Collection readers still see candidate versions
+          // while V1 stores each candidate as its own durable image Artifact.
+          this.artifacts.createVersion(this.versionInput(artifact.id, input, candidate, now + candidates.length * 2 + index + 20))
+          this.artifacts.addCollectionItem(artifact.id, candidateArtifact.id, index, index === 0)
           outputs.outputVersionIds.push(version.id)
-          this.emitRunEvent(input, 'artifact.version.created', { runId: input.runId, artifactId: artifact.id, versionId: version.id })
+          this.emitRunEvent(input, 'artifact.version.created', { runId: input.runId, artifactId: candidateArtifact.id, collectionArtifactId: artifact.id, versionId: version.id })
         }
 
-        const sourceNodes = input.sourceArtifactId ? await this.canvas.getNodesByArtifact(input.sourceArtifactId) : []
-        const anchor = sourceNodes[0]
-        const node = await this.canvas.createNode({
-          id: ulid(now + candidates.length + 2),
-          projectId,
-          artifactId: artifact.id,
-          x: anchor ? anchor.x + 340 : 0,
-          y: anchor ? anchor.y : 0,
-          width: null,
-          height: null,
-          collapsed: false,
-          zIndex: 0,
-          renderer: 'CollectionNode',
-          createdAt: now,
-          updatedAt: now,
-        })
-        outputs.nodeIds.push(node.id)
-        this.emitRunEvent(input, 'node.created', { runId: input.runId, artifactId: artifact.id, nodeId: node.id })
-
-        if (input.sourceArtifactId && sourceArtifact) {
-          const edge = await this.canvas.createEdge({
-            id: ulid(now + candidates.length + 3),
+        if (!reuse) {
+          const sourceNodes = input.sourceArtifactId ? await this.canvas.getNodesByArtifact(input.sourceArtifactId) : []
+          const anchor = sourceNodes[0]
+          const node = await this.canvas.createNode({
+            id: ulid(now + candidates.length + 2),
             projectId,
-            sourceArtifactId: input.sourceArtifactId,
-            targetArtifactId: artifact.id,
-            inputSlot: role,
+            artifactId: artifact.id,
+            x: anchor ? anchor.x + 340 : 0,
+            y: anchor ? anchor.y : 0,
+            width: null,
+            height: null,
+            collapsed: false,
+            zIndex: 0,
+            renderer: 'CollectionNode',
             createdAt: now,
+            updatedAt: now,
           })
-          outputs.edgeIds.push(edge.id)
-          this.emitRunEvent(input, 'edge.created', { runId: input.runId, sourceArtifactId: input.sourceArtifactId, targetArtifactId: artifact.id, edgeId: edge.id })
+          outputs.nodeIds.push(node.id)
+          this.emitRunEvent(input, 'node.created', { runId: input.runId, artifactId: artifact.id, nodeId: node.id })
+
+          if (input.sourceArtifactId && sourceArtifact) {
+            const edge = await this.canvas.createEdge({
+              id: ulid(now + candidates.length + 3),
+              projectId,
+              sourceArtifactId: input.sourceArtifactId,
+              targetArtifactId: artifact.id,
+              inputSlot: role,
+              createdAt: now,
+            })
+            outputs.edgeIds.push(edge.id)
+            this.emitRunEvent(input, 'edge.created', { runId: input.runId, sourceArtifactId: input.sourceArtifactId, targetArtifactId: artifact.id, edgeId: edge.id })
+          }
         }
         break
       }
@@ -360,6 +423,28 @@ export class OperationTaskHandler implements TaskHandler {
       outputVersionIds: outputs.outputVersionIds,
     }, now)
     return outputs
+  }
+
+  private async hydrateImageConfig(workspaceId: string, config: Record<string, unknown>, sourceVersion: ArtifactVersion | undefined): Promise<Record<string, unknown>> {
+    const referenceIds = Array.isArray(config.referenceAssetIds) ? config.referenceAssetIds.filter((id): id is string => typeof id === 'string').slice(0, 8) : []
+    const sourceAssetId = typeof config.overrideSourceAssetId === 'string' ? config.overrideSourceAssetId : sourceVersion?.contentRef?.type === 'asset' ? sourceVersion.contentRef.id : undefined
+    const ids = [...(sourceAssetId ? [sourceAssetId] : []), ...referenceIds]
+    const inputImages: Array<{ bytes: Uint8Array; mimeType: string; name: string }> = []
+    for (const id of ids) {
+      const asset = await this.assets.getByWorkspaceAndId(workspaceId, id)
+      if (!asset || asset.kind !== 'image') continue
+      inputImages.push({ bytes: await this.files.read(asset.storagePath), mimeType: asset.mimeType, name: asset.displayName })
+    }
+    let mask: Array<{ bytes: Uint8Array; mimeType: string; name: string }> = []
+    if (typeof config.maskAssetId === 'string') {
+      const asset = await this.assets.getByWorkspaceAndId(workspaceId, config.maskAssetId)
+      if (asset?.kind === 'image') mask = [{ bytes: await this.files.read(asset.storagePath), mimeType: asset.mimeType, name: asset.displayName }]
+    }
+    const safe = { ...config }
+    delete safe.referenceAssetIds
+    delete safe.maskAssetId
+    delete safe.overrideSourceAssetId
+    return { ...safe, ...(inputImages.length ? { inputImages } : {}), ...(mask.length ? { mask } : {}) }
   }
 
   private emitRunEvent(input: OperationTaskInput, eventType: string, payload: Record<string, unknown>): void {

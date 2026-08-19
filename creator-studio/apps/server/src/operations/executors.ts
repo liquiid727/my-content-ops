@@ -115,17 +115,20 @@ export const executors: Record<string, OperationExecutor> = {
       const generateMedia = requireMediaProvider(ctx, 'image_generation')
       const saveMedia = requireSaveMedia(ctx)
       const count = typeof ctx.config.count === 'number' ? Math.max(1, Math.min(6, Math.floor(ctx.config.count))) : 3
-      const prompt = `${ctx.contextText}\n\n## 任务指令\n为脚本生成封面主视觉。`
+      const hasReferences = Array.isArray(ctx.config.inputImages) && ctx.config.inputImages.length > 0
+      const referenceInstruction = hasReferences ? '优先参考用户提供的素材图（保持其主体/风格基调），结合当前内容生成封面主视觉。' : '根据当前内容生成封面主视觉。'
+      const prompt = `${ctx.contextText}\n\n## 任务指令\n${referenceInstruction}`
       const candidates: ExecutorResult[] = []
       for (let index = 0; index < count; index += 1) {
-        const media = await generateMedia('image_generation', { prompt, config: { index } }, signal)
+        // 展开整个 config 使 inputImages（参考图）进入 provider 的 image-to-image 编辑路径。
+        const media = await generateMedia('image_generation', { prompt, config: { ...ctx.config, index } }, signal)
         const assetId = await saveMedia(media, 'cover')
         candidates.push({
           outputBehavior: 'new_collection',
           kind: 'image',
           role: 'cover',
           contentRef: { type: 'asset', id: assetId },
-          metadata: { model: media.model, candidate: index, mimeType: media.mimeType, width: media.width ?? null, height: media.height ?? null },
+          metadata: { model: media.model, candidate: index, mimeType: media.mimeType, width: media.width ?? null, height: media.height ?? null, demo: ctx.provider?.key === 'seed-media' },
         })
       }
       const first = candidates[0]
@@ -138,18 +141,34 @@ export const executors: Record<string, OperationExecutor> = {
         generation: {
           providerKey: ctx.provider?.key ?? 'seed-media',
           model: String(first?.metadata?.model ?? 'seed-image-v1'),
-          requestSnapshot: { promptLength: prompt.length, count },
+          requestSnapshot: { promptLength: prompt.length, count, hasReferences },
           responseSnapshot: { assetCount: candidates.length },
           usage: { inputUnits: prompt.length, outputUnits: candidates.length },
         },
       }
     },
   },
+  'operation.image_candidates': {
+    async execute(ctx, signal) {
+      const generateMedia = requireMediaProvider(ctx, 'image_generation')
+      const saveMedia = requireSaveMedia(ctx)
+      const count = typeof ctx.config.count === 'number' ? Math.max(1, Math.min(8, Math.floor(ctx.config.count))) : 4
+      const instruction = typeof ctx.config.prompt === 'string' && ctx.config.prompt.trim() ? ctx.config.prompt.trim() : '创作一张构图完整、细节清晰的图片。'
+      const prompt = `${ctx.contextText}\n\n## 图片指令\n${instruction}`
+      const candidates: ExecutorResult[] = []
+      for (let index = 0; index < count; index += 1) {
+        const media = await generateMedia('image_generation', { prompt, config: { ...ctx.config, n: 1, candidateIndex: index } }, signal)
+        const assetId = await saveMedia(media, String(ctx.config.role ?? 'illustration'))
+        candidates.push({ outputBehavior: 'new_collection', kind: 'image', role: String(ctx.config.role ?? 'illustration'), contentRef: { type: 'asset', id: assetId }, metadata: { model: media.model, candidate: index, mimeType: media.mimeType, width: media.width ?? null, height: media.height ?? null, demo: ctx.provider?.key === 'seed-media' } })
+      }
+      return { outputBehavior: 'new_collection', kind: 'image', role: String(ctx.config.role ?? 'illustration'), candidates, metadata: { count }, generation: { providerKey: ctx.provider?.key ?? 'unconfigured', model: String(candidates[0]?.metadata?.model ?? 'unknown'), requestSnapshot: { promptLength: prompt.length, count, hasReferences: Array.isArray(ctx.config.inputImages), hasMask: Array.isArray(ctx.config.mask) }, responseSnapshot: { assetCount: candidates.length }, usage: { inputUnits: prompt.length, outputUnits: candidates.length } } }
+    },
+  },
   'operation.generate_voice': {
     async execute(ctx, signal) {
       const generateMedia = requireMediaProvider(ctx, 'audio_generation')
       const saveMedia = requireSaveMedia(ctx)
-      const prompt = `${ctx.contextText}\n\n## 任务指令\n为脚本生成配音旁白文本。`
+      const prompt = `${ctx.contextText}\n\n## 任务指令\n根据当前内容生成配音旁白。`
       const media = await generateMedia('audio_generation', { prompt }, signal)
       const assetId = await saveMedia(media, 'voice')
       return {
@@ -166,7 +185,7 @@ export const executors: Record<string, OperationExecutor> = {
     async execute(ctx, signal) {
       const generateMedia = requireMediaProvider(ctx, 'video_generation')
       const saveMedia = requireSaveMedia(ctx)
-      const prompt = `${ctx.contextText}\n\n## 任务指令\n为脚本生成一条视频成片（MVP 骨架，产出占位视频）。`
+      const prompt = `${ctx.contextText}\n\n## 任务指令\n根据当前内容生成一条视频成片（MVP 骨架，产出占位视频）。`
       const media = await generateMedia('video_generation', { prompt }, signal)
       const assetId = await saveMedia(media, 'draft')
       return {

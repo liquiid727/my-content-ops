@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull, lt, max, or } from 'drizzle-orm'
 import { ulid } from 'ulid'
 
-import { artifacts, artifactVersions, type ArtifactRecord, type ArtifactVersionRecord } from '../db/schema.js'
+import { artifacts, artifactVersions, collectionItems, type ArtifactRecord, type ArtifactVersionRecord } from '../db/schema.js'
 import type { DatabaseClient } from '../repositories/types.js'
 
 export interface ArtifactContentRef {
@@ -256,6 +256,21 @@ export class ArtifactRepository {
       .orderBy(desc(artifactVersions.versionNumber))
       .limit(limit)
       .all()
+  }
+
+  addCollectionItem(collectionArtifactId: string, itemArtifactId: string, position: number, selected = false): void {
+    this.db.insert(collectionItems).values({ collectionArtifactId, itemArtifactId, position, selected }).run()
+  }
+
+  listCollectionItems(collectionArtifactId: string) {
+    return this.db.select().from(collectionItems).where(eq(collectionItems.collectionArtifactId, collectionArtifactId)).orderBy(collectionItems.position).all()
+  }
+
+  selectCollectionItem(collectionArtifactId: string, itemArtifactId: string): void {
+    this.db.transaction((transaction) => {
+      transaction.update(collectionItems).set({ selected: false }).where(eq(collectionItems.collectionArtifactId, collectionArtifactId)).run()
+      transaction.update(collectionItems).set({ selected: true }).where(and(eq(collectionItems.collectionArtifactId, collectionArtifactId), eq(collectionItems.itemArtifactId, itemArtifactId))).run()
+    })
   }
 
   async listVersionsByArtifactCursor(artifactId: string, cursor?: { versionNumber: number; id: string }, limit = 30) {

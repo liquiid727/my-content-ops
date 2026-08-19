@@ -18,9 +18,9 @@ export interface TaskHandler {
 export class TaskHandlerRegistry {
   private readonly handlers = new Map<string, TaskHandler>()
   register(handler: TaskHandler): this { if (this.handlers.has(handler.type)) throw new Error(`Task handler already registered: ${handler.type}`); this.handlers.set(handler.type, handler); return this }
-  get(type: string): TaskHandler | undefined { return this.handlers.get(type) }
+  get(type: string): TaskHandler | undefined { return this.handlers.get(type) ?? this.matchPrefix(type) }
   require(type: string): TaskHandler {
-    const handler = this.get(type) ?? this.matchPrefix(type)
+    const handler = this.get(type)
     if (!handler) throw new Error(`TASK_TYPE_UNSUPPORTED:${type}`)
     return handler
   }

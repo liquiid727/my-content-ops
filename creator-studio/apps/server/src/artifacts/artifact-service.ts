@@ -6,6 +6,7 @@ import {
   type ArtifactDetail,
   type ArtifactVersion,
   type UpdateArtifact,
+  type CollectionItem,
 } from '@creator-studio/contracts'
 import { ulid } from 'ulid'
 
@@ -138,6 +139,20 @@ export class ArtifactService {
   async remove(identity: ArtifactServiceIdentity, id: string): Promise<void> {
     await this.requireArtifact(identity.workspaceId, id)
     await this.artifacts.softDelete(id, this.now())
+  }
+
+  async listCollectionItems(identity: ArtifactServiceIdentity, id: string): Promise<CollectionItem[]> {
+    const artifact = await this.requireArtifact(identity.workspaceId, id)
+    if (artifact.kind !== 'collection') throw new HttpError({ status: 422, code: 'ARTIFACT_NOT_COLLECTION', message: '该内容不是候选集。' })
+    return this.artifacts.listCollectionItems(id).map((item) => ({ collectionArtifactId: item.collectionArtifactId, itemArtifactId: item.itemArtifactId, position: item.position, selected: item.selected }))
+  }
+
+  async selectCollectionItem(identity: ArtifactServiceIdentity, id: string, itemArtifactId: string): Promise<CollectionItem[]> {
+    await this.listCollectionItems(identity, id)
+    const items = this.artifacts.listCollectionItems(id)
+    if (!items.some((item) => item.itemArtifactId === itemArtifactId)) throw new HttpError({ status: 404, code: 'COLLECTION_ITEM_NOT_FOUND', message: '候选图片不存在。' })
+    this.artifacts.selectCollectionItem(id, itemArtifactId)
+    return this.listCollectionItems(identity, id)
   }
 
   /** 供 canvas 模块调用：删除 Node 后若 artifact 无引用则标记 orphan。 */

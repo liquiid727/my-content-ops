@@ -24,11 +24,12 @@ export class SettingsService {
       connectors: await Promise.all(connectors.map(async (item) => ({ key: item.connectorKey, displayName: item.displayName, enabled: item.enabled, configured: await this.secrets.has(item.secretRef), config: parse(item.configJson), check: { status: item.lastCheckStatus, checkedAt: checkedAt(item.lastCheckedAt) }, availability: 'stub_only' }))),
     })
   }
-  async saveProvider(workspaceId: string, key: string, input: { displayName: string; enabled: boolean; model?: string | undefined; baseUrl?: string | undefined; credential?: string | undefined }) {
+  async saveProvider(workspaceId: string, key: string, input: { displayName: string; enabled: boolean; model?: string | undefined; imageModel?: string | undefined; baseUrl?: string | undefined; credential?: string | undefined }) {
     const existing = await this.configs.getProvider(workspaceId, key); const now = this.now(); const ref = existing?.secretRef ?? (input.credential ? `provider:${workspaceId}:${key}` : null)
     if (input.credential && ref) await this.secrets.set(ref, input.credential)
     const config: Record<string, unknown> = {}
     if (input.model) config.model = input.model
+    if (input.imageModel) config.imageModel = input.imageModel
     if (input.baseUrl) config.baseUrl = input.baseUrl
     await this.configs.saveProvider({ id: existing?.id ?? ulid(now), workspaceId, providerKey: key, displayName: input.displayName, configJson: JSON.stringify(config), secretRef: ref, enabled: input.enabled, createdAt: existing?.createdAt ?? now, updatedAt: now })
   }

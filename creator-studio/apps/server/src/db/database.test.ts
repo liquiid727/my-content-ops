@@ -26,6 +26,7 @@ describe('SQLite bootstrap and migrations', () => {
         'schema_migrations', 'workspaces', 'creator_profiles', 'projects', 'assets', 'versions', 'tasks',
         'task_events', 'generations', 'provider_configs', 'connector_configs', 'sync_records', 'idempotency_records',
         'artifacts', 'artifact_versions', 'canvas_nodes', 'edges', 'runs',
+        'workflow_graphs', 'recipes', 'workflow_nodes', 'workflow_connections', 'collection_items', 'execution_plans', 'change_sets',
       ]))
       expect(indexes).toEqual(expect.arrayContaining([
         'projects_workspace_updated_idx', 'assets_project_kind_created_idx', 'versions_current_subject_idx',
@@ -118,7 +119,7 @@ describe('SQLite bootstrap and migrations', () => {
       expect(database.sqlite.pragma('foreign_keys', { simple: true })).toBe(1)
       expect(database.sqlite.pragma('journal_mode', { simple: true })).toBe('wal')
       expect(database.sqlite.pragma('busy_timeout', { simple: true })).toBe(5_000)
-      expect(database.sqlite.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get()).toEqual({ count: 5 })
+      expect(database.sqlite.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get()).toEqual({ count: 8 })
     } finally {
       await database.cleanup()
     }

@@ -33,7 +33,7 @@ export async function ensureLocalIdentity(repository: WorkspaceRepository, now =
         id: ulid(now + 1),
         displayName: ALAOS_DISPLAY_NAME,
         bio: ALAOS_BIO,
-        preferencesJson: JSON.stringify({ theme: 'dark', locale: 'zh-CN' }),
+        preferencesJson: JSON.stringify({ theme: 'light', locale: 'zh-CN' }),
         profileJson: JSON.stringify(ALAOS_PROFILE),
         injectionJson: JSON.stringify(ALAOS_INJECTION),
         createdAt: now,

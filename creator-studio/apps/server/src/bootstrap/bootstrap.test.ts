@@ -86,7 +86,7 @@ describe('local identity and bootstrap security boundary', () => {
       expect(JSON.stringify(body)).not.toContain('secret://openai')
       expect(body.data).toMatchObject({
         workspace: { id: identity.workspace.id },
-        creatorProfile: { id: identity.creatorProfile.id, preferences: { theme: 'dark' } },
+        creatorProfile: { id: identity.creatorProfile.id, preferences: { theme: 'light' } },
         capabilities: { providers: true, connectors: false },
         settings: { providers: [{ key: 'openai', configured: true, enabled: true }] },
       })
@@ -143,6 +143,40 @@ describe('local identity and bootstrap security boundary', () => {
         workspaceId: identity.workspace.id,
         creatorProfileId: identity.creatorProfile.id,
       })
+    })
+  })
+
+  it('allows write requests from the configured web dev origin', async () => {
+    await withTestDatabase(async ({ db }) => {
+      const identity = await ensureLocalIdentity(new WorkspaceRepository(db))
+      const bootstrap = new BootstrapService(identity, new TaskRepository(db), new ConfigRepository(db))
+      const app = createStaticApp({
+        webRoot: '/tmp',
+        healthCheck: async () => ({ database: 'ready', migrations: 'ready' }),
+        loadBootstrap: () => bootstrap.load(),
+        security: createLocalSecurityContext({ port: TEST_PORT, identity, sessionToken: 'test-session-token', webPort: 5173 }),
+        configure(api) {
+          api.post('/context', async (context) => {
+            await context.req.json()
+            return context.json({
+              workspaceId: context.get('workspaceId'),
+              creatorProfileId: context.get('creatorProfileId'),
+            })
+          })
+        },
+      })
+
+      const cookie = cookieFrom(await app.request(`${BASE_URL}/api/v1/bootstrap`))
+      const post = (origin: string) =>
+        app.request(`${BASE_URL}/api/v1/context`, {
+          method: 'POST',
+          headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workspaceId: 'attacker-workspace' }),
+        })
+
+      expect((await post('http://localhost:5173')).status).toBe(200)
+      expect((await post('http://127.0.0.1:5173')).status).toBe(200)
+      expect((await post('http://localhost:5174')).status).toBe(403)
     })
   })
 

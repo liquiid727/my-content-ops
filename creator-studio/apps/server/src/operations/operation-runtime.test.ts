@@ -58,6 +58,7 @@ const KEY_C = '01ARZ3NDEKTSV4RRFFQ69G5FAX'
 const KEY_D = '01ARZ3NDEKTSV4RRFFQ69G5FAY'
 const KEY_E = '01ARZ3NDEKTSV4RRFFQ69G5FAZ'
 const KEY_F = '01ARZ3NDEKTSV4RRFFQ69G5FB0'
+const KEY_G = '01ARZ3NDEKTSV4RRFFQ69G5FB1'
 
 async function createHarness(run: (ctx: {
   app: ReturnType<typeof createApiApp>
@@ -167,6 +168,21 @@ async function createTopicNode(app: ReturnType<typeof createApiApp>, projectId: 
   return body.data
 }
 
+async function createImageNode(app: ReturnType<typeof createApiApp>, projectId: string) {
+  const response = await app.request(`/projects/${projectId}/nodes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind: 'image', role: 'illustration', x: 100, y: 0 }),
+  })
+  const body = (await response.json()) as {
+    data: { node: { id: string }; artifact: { id: string } }
+  }
+  if (response.status !== 201 || !body.data?.artifact) {
+    throw new Error(`createImageNode failed status=${response.status} body=${JSON.stringify(body)}`)
+  }
+  return body.data
+}
+
 async function createScriptNode(app: ReturnType<typeof createApiApp>, projectId: string) {
   const response = await app.request(`/projects/${projectId}/nodes`, {
     method: 'POST',
@@ -204,7 +220,10 @@ describe('Operation Registry & Run orchestration', () => {
       const operations = operationDefinitionListResponseSchema.parse(await (await app.request(`/artifacts/${topic.artifact.id}/operations`)).json()).data
       expect(operations.operations.map((op) => op.id)).toContain('generate_outline')
       expect(operations.operations.map((op) => op.id)).not.toContain('generate_script')
-      expect(operations.operations.map((op) => op.id)).not.toContain('generate_cover')
+      expect(operations.operations.map((op) => op.id)).toContain('generate_cover')
+      expect(operations.operations.map((op) => op.id)).toContain('generate_images')
+      expect(operations.operations.map((op) => op.id)).toContain('generate_voice')
+      expect(operations.operations.map((op) => op.id)).toContain('generate_video')
       expect(operations.operations.map((op) => op.id)).toContain('edit')
       expect(operations.operations.map((op) => op.id)).toContain('branch')
     })
@@ -235,7 +254,8 @@ describe('Operation Registry & Run orchestration', () => {
       expect(graph.edges[0]).toMatchObject({ sourceArtifactId: topic.artifact.id, targetArtifactId: outlineArtifactId, inputSlot: 'outline' })
 
       const eventTypes = events.listAfter(WORKSPACE_ID, projectId(), 0).map((event) => event.eventType)
-      expect(eventTypes).toEqual(['run.created', 'run.started', 'artifact.created', 'artifact.version.created', 'node.created', 'edge.created', 'run.completed'])
+      // 多源/占位链路：create 类操作在 Run 创建时即落地占位（artifact/node/edge 先于 run.created），生成完成后回填 version。
+      expect(eventTypes).toEqual(['artifact.created', 'node.created', 'edge.created', 'run.created', 'run.started', 'artifact.version.created', 'run.completed'])
     })
   })
 
@@ -461,6 +481,24 @@ describe('Operation Registry & Run orchestration', () => {
     })
   })
 
+  it('generate_cover from a topic produces a linked Image Collection', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      const topic = await createTopicNode(app, projectId())
+      const run = createRunResponseSchema.parse(await (await app.request('/operations/generate_cover/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId(), sourceArtifactId: topic.artifact.id, config: { count: 2 }, idempotencyKey: KEY_G }),
+      })).json()).data
+      const done = await waitForRunTerminal(app, run.runId)
+      expect(done.status).toBe('completed')
+      const collectionArtifactId = done.outputArtifactIds![0]!
+      const graph = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(graph.edges).toEqual(expect.arrayContaining([
+        expect.objectContaining({ sourceArtifactId: topic.artifact.id, targetArtifactId: collectionArtifactId, inputSlot: 'cover' }),
+      ]))
+      const detail = artifactDetailResponseSchema.parse(await (await app.request(`/artifacts/${collectionArtifactId}`)).json()).data
+      expect(detail).toMatchObject({ kind: 'collection', role: 'cover' })
+    })
+  })
+
   it('generate_cover produces an Image Collection with candidate assets (Issue #10)', async () => {
     await createHarness(async ({ app, projectId }) => {
       const script = await createScriptNode(app, projectId())
@@ -553,6 +591,68 @@ describe('Operation Registry & Run orchestration', () => {
       const content = await app.request(`/assets/${asset.id}/content`)
       expect(content.status).toBe(200)
       expect((await content.arrayBuffer()).byteLength).toBeGreaterThan(0)
+    })
+  })
+
+  it('multi-source generate_cover lands a loading placeholder with edges from every source, then fills it in place', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      const topic = await createTopicNode(app, projectId())
+      const material = await createImageNode(app, projectId())
+      const created = createRunResponseSchema.parse(await (await app.request('/operations/generate_cover/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: projectId(),
+          sourceArtifactId: topic.artifact.id,
+          sourceArtifactIds: [topic.artifact.id, material.artifact.id],
+          config: { count: 2 },
+          idempotencyKey: KEY_B,
+        }),
+      })).json()).data
+      expect(created.outputArtifactIds).toHaveLength(1)
+
+      // Run 创建即落地占位：collection 节点 + 两条源边已在图上（生成尚未完成）。
+      const placeholderId = created.outputArtifactIds![0]!
+      const before = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(before.nodes).toHaveLength(3)
+      expect(before.edges).toHaveLength(2)
+      expect(before.edges).toEqual(expect.arrayContaining([
+        expect.objectContaining({ sourceArtifactId: topic.artifact.id, targetArtifactId: placeholderId, inputSlot: 'cover' }),
+        expect.objectContaining({ sourceArtifactId: material.artifact.id, targetArtifactId: placeholderId, inputSlot: 'cover' }),
+      ]))
+
+      const done = await waitForRunTerminal(app, created.runId)
+      expect(done.status).toBe('completed')
+      expect(done.sourceArtifactIds).toEqual([topic.artifact.id, material.artifact.id])
+      expect(done.outputArtifactIds![0]).toBe(placeholderId)
+
+      // 完成后原地回填候选，不重复建节点/边。
+      const after = graphResponseSchema.parse(await (await app.request(`/projects/${projectId()}/graph`)).json()).data
+      expect(after.nodes).toHaveLength(3)
+      expect(after.edges).toHaveLength(2)
+      const versions = artifactVersionListResponseSchema.parse(await (await app.request(`/artifacts/${placeholderId}/versions`)).json()).data
+      expect(versions).toHaveLength(2)
+      for (const version of versions) expect(version.contentRef?.type).toBe('asset')
+    })
+  })
+
+  it('POST /operations/available filters by selection set (multi-select entry)', async () => {
+    await createHarness(async ({ app, projectId }) => {
+      const topic = await createTopicNode(app, projectId())
+      const material = await createImageNode(app, projectId())
+      const available = operationDefinitionListResponseSchema.parse(await (await app.request('/operations/available', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: projectId(), artifactIds: [topic.artifact.id, material.artifact.id] }),
+      })).json()).data
+      // 集合内 topic 满足 roles → cover 可用（素材图作为参考图参与）。
+      expect(available.operations.map((op) => op.id)).toContain('generate_cover')
+
+      // 纯图片素材单独不满足文本类 roles。
+      const imageOnly = operationDefinitionListResponseSchema.parse(await (await app.request('/operations/available', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: projectId(), artifactIds: [material.artifact.id] }),
+      })).json()).data
+      expect(imageOnly.operations.map((op) => op.id)).not.toContain('generate_outline')
+      expect(imageOnly.operations.map((op) => op.id)).not.toContain('generate_script')
     })
   })
 })
