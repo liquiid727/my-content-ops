@@ -1,0 +1,86 @@
+# Creative Canvas V1 — PRD
+
+**Status:** Approved  
+**Owner:** Creator Studio  
+**Scope:** Text and image creation only
+
+## Problem
+
+The current canvas proves navigation and artifact lineage, but it still behaves like a graph viewer. Creators cannot compose a repeatable production workflow, run selected steps, compare image candidates, edit a long-form script, or safely accept changes proposed by an agent.
+
+## Product promise
+
+One project has one creative graph and three coordinated views:
+
+- **Canvas:** arrange source material, artifacts, and reusable tools on an infinite surface.
+- **Text Studio:** edit the selected text artifact as Markdown with autosave and revision safety.
+- **Image Studio:** generate, compare, select, mask, outpaint, enhance, and download image artifacts.
+
+The graph contains two kinds of node:
+
+- **Artifact nodes** are durable content: text, image, or image collection.
+- **Recipe nodes** are reusable tools with typed inputs, configuration, and outputs.
+
+A run is an execution record, never a canvas node.
+
+## Primary workflows
+
+1. Add a text or image artifact to the canvas.
+2. Add a recipe such as Draft, Rewrite, Generate image, Edit image, Outpaint, or Enhance.
+3. Connect compatible ports and run one recipe, or select several recipes and run the resulting topological execution plan.
+4. Open a text artifact in Text Studio and save Markdown without losing concurrent edits.
+5. Open an image or collection in Image Studio, generate multiple candidates, compare them, select one, and continue editing from that selection.
+6. Ask the internal agent or an MCP client to propose graph changes, inspect the diff, then approve or reject it in Creator Studio.
+
+## Requirements
+
+### Canvas
+
+- Smooth pan, zoom, minimap, multi-select, keyboard delete, and persisted layout.
+- Visually distinct artifact and recipe nodes.
+- Typed input/output ports and cycle prevention.
+- Node status for ready, blocked, queued, running, completed, and failed.
+- Single-step execution and selected-subgraph execution.
+- Existing Foundation canvas URLs continue working for one compatibility cycle.
+
+### Text Studio
+
+- Markdown source editing and rendered preview.
+- Debounced autosave with explicit saving/saved/conflict/error state.
+- Revision-based optimistic concurrency.
+- Return to the same canvas selection.
+
+### Image Studio
+
+- Prompt-to-image, reference images, image-to-image, masked editing, outpainting, variations, and enhancement.
+- Multiple generated candidates stored as separate image artifacts inside a collection artifact.
+- Compare and choose a candidate without deleting alternatives.
+- Download the original generated asset.
+- A real configured provider is required for production generation; demo seed output must be visibly labelled and never presented as a provider result.
+
+### Agent and MCP safety
+
+- Agents create a **ChangeSet** containing graph commands and a human-readable summary.
+- Validation is read-only and reports stale revisions, invalid ports, missing subjects, and cycles.
+- Only the Creator Studio UI can approve, reject, and execute a ChangeSet.
+- MCP exposes snapshot, validation, proposal, and proposal-status tools; it cannot approve or execute.
+
+## Non-goals
+
+- Video or audio generation/editing.
+- Timeline editing, keyframes, or compositing.
+- Collaborative multi-user cursors.
+- Arbitrary third-party node code.
+- Fully autonomous agent execution.
+
+## Success criteria
+
+- A creator can build and persist a mixed text/image workflow without using JSON or API tools.
+- A selected acyclic recipe subgraph produces an immutable execution plan and runs in dependency order.
+- Generated image candidates are durable assets with lineage and can be compared, selected, downloaded, and edited again.
+- Concurrent graph or text edits fail with a clear conflict instead of overwriting newer work.
+- An agent-proposed graph change cannot affect the project until a user approves it in the app.
+
+## Release boundary
+
+V1 ships behind the existing local Creator Studio server. OpenAI Images-compatible generation is the first adapter, with base URL and model controlled by provider configuration. Audio and video artifacts remain readable for legacy projects but receive no new creation UI.

@@ -1,0 +1,61 @@
+{
+  "name": "creator-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "predev": "pnpm --filter @creator-studio/contracts run build",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "pnpm --filter @creator-studio/web run dev",
+    "dev:server": "pnpm --filter @creator-studio/server run dev",
+    "build": "pnpm --filter @creator-studio/contracts run build && pnpm --filter @creator-studio/web run build && pnpm --filter @creator-studio/server run build",
+    "start": "pnpm --filter @creator-studio/server run start",
+    "pretypecheck": "pnpm --filter @creator-studio/contracts run build",
+    "typecheck": "pnpm --filter '@creator-studio/*' run typecheck",
+    "lint": "eslint . --max-warnings 0",
+    "pretest": "pnpm --filter @creator-studio/contracts run build",
+    "test": "vitest run",
+    "test:unit": "vitest run apps/web",
+    "test:contract": "vitest run packages/contracts",
+    "test:integration": "vitest run apps/server",
+    "test:e2e": "pnpm run build && pnpm run test:e2e:built",
+    "test:e2e:built": "playwright test",
+    "test:runtime": "pnpm run build && pnpm run test:runtime:built",
+    "test:runtime:built": "node scripts/foundation-runtime-check.mjs",
+    "test:performance": "pnpm run build && pnpm run test:performance:built",
+    "test:performance:built": "node scripts/foundation-performance.mjs",
+    "test:canvas-performance": "pnpm run build && pnpm run test:canvas-performance:built",
+    "test:canvas-performance:built": "node scripts/canvas-performance.mjs",
+    "test:boundary": "node scripts/foundation-boundary-check.mjs",
+    "test:node-lts": "node scripts/check-node-lts.mjs",
+    "test:foundation": "pnpm run test:node-lts && pnpm run typecheck && pnpm run lint && pnpm run test:unit && pnpm run test:contract && pnpm run test:integration && pnpm run test:boundary && pnpm run build && pnpm run test:e2e:built && pnpm run test:runtime:built && pnpm run test:performance:built"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^16.5.0",
+    "jsdom": "^27.2.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1",
+    "vite": "^7.2.7",
+    "vitest": "^4.0.15"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.11.2"
+  }
+}

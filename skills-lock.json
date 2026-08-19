@@ -6,6 +6,30 @@
       "sourceType": "github",
       "skillPath": "skills/web-video-presentation/SKILL.md",
       "computedHash": "c8c5077774ff6795fa8400cd2b271cc1cd1eebb2d636b19d2e45f22b9cabfd2f"
+    },
+    "prd": {
+      "source": "/Users/liquiid/.claude/skills/prd",
+      "sourceType": "local",
+      "skillPath": "skills/prd/SKILL.md",
+      "computedHash": "e6b7c4ba69d0cdc6124dd7b143cb08a9cae4fd655070a9058a23a62afa7fb79a"
+    },
+    "prd-to-spec": {
+      "source": "/Users/liquiid/.claude/skills/prd-to-spec",
+      "sourceType": "local",
+      "skillPath": "skills/prd-to-spec/SKILL.md",
+      "computedHash": "544abca7258ebcedb76d11fa2e5594fc8bde3f65b57822e9f4ae232cd5472921"
+    },
+    "to-issues": {
+      "source": "/Users/liquiid/.claude/skills/to-issues",
+      "sourceType": "local",
+      "skillPath": "skills/to-issues/SKILL.md",
+      "computedHash": "30a583217d71f719359c9294546e5f6108ce0efbaae1bf34d322981c133e1c06"
+    },
+    "loop-it-local": {
+      "source": "/Users/liquiid/.claude/skills/loop-it",
+      "sourceType": "local",
+      "skillPath": "skills/loop-it-local/SKILL.md",
+      "computedHash": "3e552865eaa1b8fe491606fe879746f88e18bde33a0283a50859eef2147178c2"
     }
   }
 }

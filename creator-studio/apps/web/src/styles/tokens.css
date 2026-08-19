@@ -1,0 +1,64 @@
+:root {
+  color-scheme: light;
+  --background: 220 18% 97%;
+  --surface: 0 0% 100%;
+  --surface-elevated: 220 16% 95%;
+  --foreground: 225 22% 9%;
+  --muted-foreground: 220 10% 46%;
+  --border: 220 16% 88%;
+  --primary: 239 72% 62%;
+  --primary-foreground: 0 0% 100%;
+  --danger: 355 88% 54%;
+  --success: 160 70% 34%;
+  --warning: 38 92% 44%;
+  --glass: 0 0% 100%;
+  --glass-border: 220 20% 86%;
+  --canvas-grid: 220 14% 75%;
+  --ambient-primary: 239 84% 67%;
+  --ambient-secondary: 187 84% 58%;
+  --node-inspiration: 152 42% 36%;
+  --node-topic: 217 72% 52%;
+  --node-structure: 258 48% 56%;
+  --node-script: 32 78% 48%;
+  --node-image: 211 78% 48%;
+  --node-audio: 271 52% 58%;
+  --node-video: 226 58% 56%;
+  --node-action: 160 48% 38%;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --shadow-panel: 0 22px 60px rgb(24 31 50 / 0.1);
+  --shadow-float: 0 14px 34px rgb(24 31 50 / 0.14), 0 1px 0 rgb(255 255 255 / 0.8) inset;
+  --motion-fast: 140ms;
+  --motion-normal: 220ms;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: 228 14% 8%;
+  --surface: 228 11% 12%;
+  --surface-elevated: 228 10% 16%;
+  --foreground: 240 8% 96%;
+  --muted-foreground: 240 6% 66%;
+  --border: 228 8% 24%;
+  --primary: 348 100% 65%;
+  --primary-foreground: 228 14% 8%;
+  --danger: 355 88% 68%;
+  --success: 160 70% 48%;
+  --warning: 38 96% 58%;
+  --glass: 228 11% 12%;
+  --glass-border: 228 8% 25%;
+  --canvas-grid: 228 8% 32%;
+  --ambient-primary: 348 100% 65%;
+  --ambient-secondary: 264 88% 69%;
+  --node-inspiration: 152 48% 52%;
+  --node-topic: 217 84% 68%;
+  --node-structure: 258 62% 72%;
+  --node-script: 32 92% 62%;
+  --node-image: 211 88% 68%;
+  --node-audio: 271 68% 74%;
+  --node-video: 226 72% 72%;
+  --node-action: 160 56% 52%;
+  --shadow-panel: 0 22px 55px rgb(0 0 0 / 0.32);
+  --shadow-float: 0 18px 50px rgb(0 0 0 / 0.42), 0 1px 0 rgb(255 255 255 / 0.04) inset;
+}

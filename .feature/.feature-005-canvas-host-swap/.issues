@@ -1,0 +1,23 @@
+# Canvas Host Swap — Issues
+
+## CHS-01 — Pin infinite-canvas into the repo
+**Status:** completed
+Vendor a pinned commit under `infinite-canvas/`, record SHA/license, keep it out of the pnpm workspace.
+
+## CHS-02 — Dev command to launch the new host
+**Status:** completed
+**Depends on:** CHS-01
+`make canvas-install` + `make dev-canvas`; `make dev` also starts the host.
+
+## CHS-03 — Point the old canvas route at the new host
+**Status:** completed
+**Depends on:** CHS-02
+Studio canvas route embeds the host in-place (`?embed=1`). No new tab.
+
+## CHS-04 — Knowledge node plugin
+**Status:** pending
+Not this cut. Vault-server stays external.
+
+## CHS-05 — Remove old canvas module
+**Status:** pending
+Not this cut.

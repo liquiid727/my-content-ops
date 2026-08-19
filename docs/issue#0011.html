@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementation Notes — Issue #0011</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FAF9F6; color: #1a1a1a; padding: 2.5rem 2rem; line-height: 1.7; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.375rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .meta { color: #8B8680; font-size: 0.8125rem; margin-bottom: 2rem; }
+    h2 { font-size: 1rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; padding-bottom: 0.375rem; border-bottom: 1px solid #E8E4DE; display: flex; align-items: center; gap: 0.5rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.design { background: #5B8A72; } .dot.deviation { background: #D97757; } .dot.tradeoff { background: #4A6FA5; } .dot.question { background: #D4A843; }
+    .item { background: #FFFFFF; border: 1px solid #E8E4DE; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .item h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.375rem; }
+    .item p { font-size: 0.8125rem; color: #4A4540; margin-bottom: 0.375rem; }
+    .label { display: inline-block; font-size: 0.6875rem; font-weight: 500; padding: 0.125rem 0.5rem; border-radius: 4px; margin-right: 0.375rem; }
+    .label-design { background: #F5F8F6; color: #5B8A72; border: 1px solid #5B8A72; } .label-deviation { background: #FFF5F0; color: #D97757; border: 1px solid #D97757; } .label-tradeoff { background: #F0F4F8; color: #4A6FA5; border: 1px solid #4A6FA5; } .label-question { background: #FDF8F0; color: #D4A843; border: 1px solid #D4A843; }
+    .none { color: #B0AAA4; font-style: italic; font-size: 0.8125rem; }
+    .footer { text-align: center; margin-top: 2.5rem; color: #B0AAA4; font-size: 0.6875rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Implementation Notes</h1>
+    <p class="meta">Issue <a href="../issues/foundation/issue-011-frontend-data-runtime.md">#0011</a> &mdash; Frontend API client and Zustand data runtime &mdash; 2026-08-09</p>
+
+    <h2><span class="dot design"></span> Design Decisions</h2>
+    <div class="item"><h3><span class="label label-design">Decision</span> One schema-aware API boundary</h3><p><strong>Choice:</strong> Project, Asset, Settings, Task, Session, and Theme requests share one client that validates success and error envelopes, preserves request IDs, and distinguishes timeout, cancellation, network, and contract failures.</p><p><strong>Rationale:</strong> Protocol behavior has one owner instead of four independent bootstrap/error implementations.</p></div>
+    <div class="item"><h3><span class="label label-design">Decision</span> Identity is gated and single-flight</h3><p><strong>Choice:</strong> SessionGate blocks identity-dependent routes until bootstrap succeeds; concurrent callers share the same request, and failure renders retry plus request diagnostics.</p><p><strong>Rationale:</strong> No page can observe a partially initialized Workspace or create duplicate session requests.</p></div>
+    <div class="item"><h3><span class="label label-design">Decision</span> Local theme wins immediately</h3><p><strong>Choice:</strong> next-themes applies the selection synchronously, while a small Theme store persists it to CreatorProfile. Sync errors retain the local theme and show a notification; stale responses cannot overwrite the latest choice.</p><p><strong>Rationale:</strong> Visual feedback is instant without sacrificing server persistence or race safety.</p></div>
+
+    <h2><span class="dot deviation"></span> Deviations</h2>
+    <div class="item"><h3><span class="label label-deviation">Interpretation</span> Added the missing preference write route</h3><p><strong>Spec gap:</strong> Foundation acceptance requires theme persistence in CreatorProfile, while the API endpoint table only documented reading preferences through bootstrap.</p><p><strong>Implementation:</strong> Added the minimal <code>PATCH /creator-profile/preferences</code> endpoint, restricted to the shared theme schema.</p><p><strong>Reason:</strong> This closes the explicit acceptance criterion without introducing general Profile editing.</p></div>
+
+    <h2><span class="dot tradeoff"></span> Tradeoffs</h2>
+    <div class="item"><h3><span class="label label-tradeoff">Tradeoff</span> Domain stores remain independent</h3><p><strong>Alternatives:</strong> A single application store would make orchestration convenient but couple identity, server snapshots, UI preferences, and event streams.</p><p><strong>Choice:</strong> Session, Theme, Project, and Task stores expose intent actions and fine-grained selectors; the shared client owns only HTTP protocol concerns.</p></div>
+    <div class="item"><h3><span class="label label-tradeoff">Tradeoff</span> No domain Local Storage cache</h3><p><strong>Choice:</strong> Only theme remains locally persisted. Project and Task snapshots are restored from REST/SSE on refresh.</p><p><strong>Cost:</strong> Refresh performs network reads, but it cannot display stale browser copies as authoritative data.</p></div>
+
+    <h2><span class="dot question"></span> Open Questions</h2>
+    <p class="none">None — the narrowly scoped preference endpoint and all current data-runtime boundaries are covered by tests.</p>
+
+    <p class="footer">Generated by goal-workflow /note-it</p>
+  </div>
+</body>
+</html>

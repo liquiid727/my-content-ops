@@ -1,0 +1,21 @@
+                        Codeg
+                          │
+                ┌─────────┴──────────┐
+                │                    │
+             Workspace          Context Engine
+                │                    │
+              ACP              ┌─────┼─────┐
+                │              │     │     │
+        ┌───────┼──────┐      Wiki Memory CodeGraph
+        │       │      │              │
+     Claude   Codex OpenCode      Retrieval
+        │       │      │              │
+        └───────┼──────┘              │
+                │                     │
+                ├──── MCP ────────────┤
+                │                     │
+                ├──── Prompt Context ─┤
+                │                     │
+                ├──── Resources ──────┤
+                │                     │
+                └──── Hooks ──────────┘

@@ -1,0 +1,11 @@
+packages:
+  - vault-server
+  - creator-studio
+  - creator-studio/packages/*
+  - creator-studio/apps/*
+
+# pnpm 10.0.0 reads this from package.json "pnpm.onlyBuiltDependencies";
+# kept here too for forward compatibility with newer pnpm.
+onlyBuiltDependencies:
+  - better-sqlite3
+  - esbuild

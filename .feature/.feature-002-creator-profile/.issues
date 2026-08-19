@@ -1,0 +1,116 @@
+# Creator Profile Issues
+
+> 来源：`.prd` + `.spec`
+> 生成日期：2026-08-10
+> 说明：本 feature 定义 Personal Style 契约（spec §3.2），canvas-runtime（.feature-001）依赖此契约。建议 #1 优先评审，两端同步对齐。
+
+## Issue #1: Personal Style 契约与数据模型（creator-profile 底座）
+**Status:** shipped
+**Type:** backend
+**Priority:** high
+**Dependencies:** None
+
+### Description
+在 `packages/contracts` 新增 `creator-profile.ts`：七块 `PersonalStyle` 类型 + zod schema（Identity / Positioning / Audience / Voice / Knowledge / Memory / Rules + `extra` 自由扩展）、`InjectionSettings`（全局 enabled + sections 开关）、`InjectScope`、CRUD/render/import 请求响应 schema。在 `creator_profiles` 表新增 `profile_json` / `injection_json` 列 + 迁移。**此契约是 canvas-runtime Context Assembly 的依赖。**
+
+### Acceptance Criteria
+- [x] `personalStyleSchema` 七块 + `extra` 自由扩展（未知键不报错）校验通过
+- [x] `injection_settings` schema：`enabled` + `sections: Record<key, boolean>`
+- [x] `creator_profiles` 新增两列迁移可运行，向后兼容既有行（默认 `{}`）
+- [x] `index.ts` 导出全部新契约；`test:foundation` + 契约测试通过
+- [x] Typecheck/lint 通过
+
+### SPEC Reference
+- [.spec §3](./.spec) ｜ [.spec §2.4](./.spec)
+
+## Issue #2: Creator Profile 后端 CRUD + revision + 路由
+**Status:** shipped
+**Type:** backend
+**Priority:** high
+**Dependencies:** #1
+
+### Description
+实现 `creator-profile` 后端 module：repository（读写 `creator_profiles`）+ service（CRUD、revision 乐观并发校验）+ routes（`GET /creator-profile`、`PATCH /creator-profile/:id`、`GET /creator-profile/default`）。既有的 `display_name/avatar_asset_id/bio` 作顶层摘要与 `profile_json` 并存。
+
+### Acceptance Criteria
+- [x] `GET /api/v1/creator-profile` 返回含 `profile` + `injection` + `revision`
+- [x] `PATCH /api/v1/creator-profile/:id`（revisionedPatch）成功更新；revision 不匹配返回 409 `REVISION_CONFLICT`；id 不存在 404 `NOT_FOUND`
+- [x] `GET /api/v1/creator-profile/default` 返回阿篓 seed 画像
+- [x] 集成测试覆盖 CRUD + 409/404；Typecheck/lint 通过
+
+### SPEC Reference
+- [.spec §4 §6](./.spec)
+
+## Issue #3: Context 渲染契约（renderContext / inject）
+**Status:** shipped
+**Type:** backend
+**Priority:** high
+**Dependencies:** #1
+
+### Description
+实现纯函数 `renderContext(profile, injection, scope)`：按 injection 开关收集启用区块，每区块渲染一段带标题 markdown，用固定模板（含 scope 意图 +「遵循以下创作者风格」提示）拼成单一注入文本；总开关关或全空 → 空文本。公开 `POST /creator-profile/render`（body `{ profileId?, scope }` → `{ text }`）。**canvas-runtime 的 Context Assembler 调用此函数。**
+
+### Acceptance Criteria
+- [x] 开关组合正确：`sections.voice=false` 则输出不含 Voice 区块；`enabled=false` 输出空
+- [x] 空画像返回空文本，不抛错
+- [x] scope 前缀体现在文本中；`extra` 不进入渲染
+- [x] `POST /creator-profile/render` 返回 `{ text }`
+- [x] 单元测试覆盖开关/空值/scope；Typecheck/lint 通过
+
+### SPEC Reference
+- [.spec §2.2 §3.4 §5.1](./.spec) ｜ [.spec §4.2](./.spec)
+
+## Issue #4: 画像编辑与注入设置 UI
+**Status:** shipped
+**Type:** frontend
+**Priority:** high
+**Dependencies:** #2, #3
+
+### Description
+实现 `modules/creator-profile/`（api client + store）+ 画像编辑页：头像/名称/领域/Creator Level 摘要，按 Identity / Positioning / Audience / Voice / Knowledge / Content Rules / Examples / Memory 分区块编辑；Injection Settings 区块（区块开关 + 全局开关）+ 渲染预览。字段保存走 revisionedPatch。风格用语义 token + `shared/ui` 组件。
+
+### Acceptance Criteria
+- [x] 画像页按七块区块展示与编辑，保存后刷新保留
+- [x] Voice 区块含 Tone / Writing Style / Sentence Style / Vocabulary（常用/禁用）
+- [x] Injection Settings 可逐一开关区块，并显示渲染预览（文本随开关变化）
+- [x] revision 冲突时提示刷新
+- [x] 浏览器验证（`run` skill）：编辑/保存/注入预览；Typecheck/lint 通过
+
+### SPEC Reference
+- [.prd US-001/002/003](./.prd) ｜ [.spec §2.4](./.spec)
+
+## Issue #5: Obsidian vault 导入
+**Status:** shipped
+**Type:** fullstack
+**Priority:** medium
+**Dependencies:** #2
+
+### Description
+实现 `POST /creator-profile/import`：Server 侧读 vault `.md`（校验路径在 vault 根内，防穿越），按 `targetSection` 结构化抽取或整体放入草稿。前端提供导入入口与结果反馈。
+
+### Acceptance Criteria
+- [x] 合法 vault 相对路径（如 `50_Channels/阿篓的AI篓子/00-账号定位.md`）导入成功，填入对应区块或返回草稿
+- [x] 越界路径 / 文件不存在返回 422 `IMPORT_FAILED`，可读错误，不抛堆栈
+- [x] 重复导入幂等（覆盖同名区块），返回 `imported` 摘要
+- [x] 浏览器验证（`run` skill）；Typecheck/lint 通过
+
+### SPEC Reference
+- [.prd US-004](./.prd) ｜ [.spec §4.3 §5.1](./.spec)
+
+## Issue #6: Seed 画像 + 验收退出门禁
+**Status:** shipped
+**Type:** infra
+**Priority:** medium
+**Dependencies:** #1-#5
+
+### Description
+固化阿篓（AI晚点）seed 画像数据；对照 `.prd` US-001~005 与 MVP 目标逐条验收；补 loading/empty/error 三态；跑全量 `test:foundation` + 新增测试 + Node LTS 门禁。确认 Personal Style 契约被 canvas-runtime 引用成功。
+
+### Acceptance Criteria
+- [x] 默认画像（阿篓）可用，新建 workspace 自动 seed
+- [x] `.prd` US-001~005 验收条件全部满足；主要状态有 loading/empty/error
+- [x] 与 canvas-runtime Context Assembly 的契约对齐验证通过（`renderContext` 被引用）
+- [x] `test:foundation` 全绿；typecheck/lint 通过
+
+### SPEC Reference
+- [.prd §8](./.prd) ｜ [.spec §10.3](./.spec)

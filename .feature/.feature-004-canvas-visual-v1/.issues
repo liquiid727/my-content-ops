@@ -1,0 +1,28 @@
+# Canvas Visual V1 — Issues
+
+> 来源：`.prd` + `.spec`
+> 不改 003 的图模型 / Studio / ChangeSet。只做画布内容表现。
+
+## CVV1-01 — Canonical visual spec
+**Status:** completed
+Record 0810-aligned canvas visual boundary against the Artifact / Recipe model.
+
+## CVV1-02 — Node chrome and role catalog
+**Status:** completed
+**Depends on:** CVV1-01
+Shared Header / Preview / Footer, role labels, accent tones, More menu, default sizes.
+
+## CVV1-03 — Content-card previews
+**Status:** completed
+**Depends on:** CVV1-02
+Text snippet, image cover, Collection 4-up + select, audio waveform, video/action read-only.
+
+## CVV1-04 — Canvas title bar and picker roles
+**Status:** completed
+**Depends on:** CVV1-01
+Project title, last updated, share / fit, inspiration + cover in Node Picker.
+
+## CVV1-05 — Inspector density
+**Status:** completed
+**Depends on:** CVV1-02, CVV1-03
+详情 / 评论占位 / 历史版本, grouped operations, related nodes, Studio entry.

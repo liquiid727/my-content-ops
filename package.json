@@ -1,0 +1,31 @@
+{
+  "name": "content-ops-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:vault": "pnpm -C vault-server run dev",
+    "dev:canvas": "node scripts/dev-canvas.mjs",
+    "canvas:install": "npm --prefix infinite-canvas/web install --legacy-peer-deps",
+    "build": "pnpm -C vault-server run build && pnpm run creator-studio:build",
+    "test": "pnpm run creator-studio:test",
+    "install:all": "pnpm install",
+    "creator-studio:install": "pnpm install",
+    "creator-studio:dev": "pnpm -C creator-studio run dev",
+    "creator-studio:dev:web": "pnpm -C creator-studio run dev:web",
+    "creator-studio:dev:server": "pnpm -C creator-studio run dev:server",
+    "creator-studio:build": "pnpm -C creator-studio run build",
+    "creator-studio:start": "pnpm -C creator-studio run start",
+    "creator-studio:typecheck": "pnpm -C creator-studio run typecheck",
+    "creator-studio:lint": "pnpm -C creator-studio run lint",
+    "creator-studio:test": "pnpm -C creator-studio run test",
+    "creator-studio:test:foundation": "pnpm -C creator-studio run test:foundation"
+  }
+}

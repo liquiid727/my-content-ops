@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server'
 import { watch } from 'chokidar'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import { BM25Index } from './bm25.js'
 import { scanVault, parseVaultFile } from './vault.js'
 import { createApp } from './server.js'

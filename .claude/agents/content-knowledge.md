@@ -5,7 +5,7 @@ description: |
   给出各平台（公众号/小红书/抖音/B站）的具体内容框架和标题建议。
   触发场景：用户提出内容 idea、问"写什么"、需要从知识库找素材、规划内容选题、
   或需要将某个笔记主题转化为可发布内容时。
-model: claude-sonnet-4-6
+model: deepseek-v4-flash
 tools:
   - Bash
   - Read
@@ -87,9 +87,9 @@ ls /Users/liquiid/Journal/personal_journey/40_Content/Drafts/
 
 ## 关于现有 workflow 系统
 
-本项目 `gpt_image_playground/` 已有内容工作台（`/content-ops` 路由），支持：
+内容生产链路正在迁移到 `creator-studio/`（新创作工作台，见 `docs/frontend_design.md` 与 `issues/foundation/`）。旧版 `gpt_image_playground` 前端已删除。
 - `video` 类型 — 视频脚本 + 分章节图像生成
 - `article` 类型 — 图文内容管理
 - Cover 生成、标题生成、口播稿等模块
 
-你的输出要与这个 workflow 衔接：内容框架建议应该能直接作为 ContentOpsWorkspace 的输入使用。
+你的输出要与 Creator Studio 的 workflow 衔接：内容框架建议应能直接作为创作模块（脚本/分镜/封面/标题）的输入使用。知识检索优先走 `vault-server`（`127.0.0.1:3721`）。

@@ -1,0 +1,114 @@
+# PRD: 个人自媒体创作台 — Creator Profile（创作者画像 / 风格 / 记忆层）
+
+> 来源文档：[`feauture01-person.md`](../../creator-studio/docs/creator-profile/feauture01-person.md) 与设计稿 [`482a7ff6-a651-482d-9426-9c164ea09599.png`](../../creator-studio/docs/creator-profile/482a7ff6-a651-482d-9426-9c164ea09599.png)
+> 生成日期：2026-08-10
+> 状态：待评审
+
+## 1. Introduction / Overview
+
+AI 创作最常见的痛点是「写出来的东西没有我的味道」。现在的 AI 收到「写一篇 AI Coding 文章」就按大众模板生成，因为它不知道这个账号是谁、面向谁、喜欢什么语气、忌惮什么词。
+
+**Creator Profile（创作者画像 / 记忆层）** 就是一套集中维护、可复用的创作者上下文资产：身份、领域、观点、表达风格、常用/禁用词、受众、过去作品、喜欢的内容结构、喜欢的 Hook、内容原则。它不是一个账号资料页，而是**所有 AI 创作节点的基础上下文**——让 AI 从「写一篇 AI Coding 文章」变成「**按照我的表达方式**写一篇 AI Coding 文章」。
+
+后期可演化为类似 hardness 的记忆层（自主记忆、跨内容沉淀）；本 PRD 的 MVP 先实现「可载入、可编辑、可注入」的静态画像。
+
+## 2. Goals
+
+- 建立 Creator Profile 的数据模型，覆盖 Identity / Positioning / Audience / Voice / Knowledge / Memory / Rules 七类信息。
+- 提供可视化编辑界面与「注入设置」（Injection Settings），控制哪些内容在什么场景注入 AI 上下文。
+- 支持从本地 Obsidian（如 `50_Channels/阿篓的AI篓子/00-账号定位.md`）导入账号定位/风格素材。
+- 产出稳定的 **Personal Style 契约**，供 canvas-runtime 的 Project 绑定（`personalStyleId`）与 Context Assembly 消费。
+- 默认内置一组示例画像（阿篓 / AI晚点），作为 seed data。
+
+## 3. User Stories
+
+### US-001: 查看与编辑创作者画像
+**Description:** As a 创作者, I want to 在一个页面里查看和编辑我的身份、定位、受众、表达风格等信息，以便 AI 了解我是谁。
+
+**Acceptance Criteria:**
+- [ ] 画像页展示头像、名称、领域标签、Creator Level
+- [ ] 按 Identity / Positioning / Audience / Voice / Knowledge / Content Rules / Examples / Memory 分区块编辑
+- [ ] 所有字段可保存并持久化，刷新后保留
+- [ ] Typecheck/lint 通过，并在浏览器验证
+
+### US-002: 维护表达风格（Voice）
+**Description:** As a 创作者, I want to 定义我的语气、结构偏好、常用词与禁用词，以便 AI 输出符合我的表达。
+
+**Acceptance Criteria:**
+- [ ] Tone：可设置基调与避免项（如避免营销感/鸡汤感）
+- [ ] Writing Style：可设置喜欢的第一人称、起承转合结构
+- [ ] Vocabulary：可维护常用词列表与禁用词列表
+- [ ] 保存后这些字段作为注入内容的一部分
+- [ ] Typecheck/lint 通过，并在浏览器验证
+
+### US-003: 配置注入设置
+**Description:** As a 创作者, I want to 控制画像哪些部分在什么场景注入 AI 上下文，以便精细控制 AI 行为。
+
+**Acceptance Criteria:**
+- [ ] Injection Settings 区块可分别启用/禁用 Identity / Positioning / Audience / Voice / Knowledge / Rules 等
+- [ ] 显示当前画像注入后的渲染预览（prompt 拼装效果）
+- [ ] 保存后对下游 Context Assembly 生效
+- [ ] Typecheck/lint 通过，并在浏览器验证
+
+### US-004: 从 Obsidian 导入素材
+**Description:** As a 创作者, I want to 从我的 Obsidian 账号定位笔记导入内容，以便快速填充画像。
+
+**Acceptance Criteria:**
+- [ ] 可指定 vault 路径（如 `50_Channels/阿篓的AI篓子/00-账号定位.md`）导入文本
+- [ ] 导入内容进入对应区块（如账号定位→Positioning）或作为草稿供人工整理
+- [ ] 导入失败（路径不存在）给出可读错误
+- [ ] Typecheck/lint 通过，并在浏览器验证
+
+### US-005: 提供 Personal Style 契约
+**Description:** As a 系统, I want to 暴露稳定的 Personal Style 数据模型与 API，以便 canvas-runtime 的 Project 绑定并注入上下文。
+
+**Acceptance Criteria:**
+- [ ] `packages/contracts` 中定义 `CreatorProfile` / `PersonalStyle` 类型
+- [ ] Server 提供 Creator Profile 的 CRUD 与读取 API（`/api/v1` 错误 envelope + revision 乐观并发）
+- [ ] Project 模型可引用 `personalStyleId`
+- [ ] 提供 context 渲染函数：输入 profile + 场景 → 输出注入文本
+- [ ] Typecheck/lint 通过
+
+## 4. Functional Requirements
+
+- FR-1: 系统必须提供 Creator Profile 的创建、读取、更新、删除，默认存在一个本地画像。
+- FR-2: Creator Profile 必须包含 Identity（姓名/昵称/角色/背景/故事/使命）、Positioning、Audience、Voice、Knowledge、Content Rules、Examples、Memory 等区块。
+- FR-3: Voice 必须包含 Tone、Writing Style、Sentence Style、Vocabulary（常用/禁用）等结构化字段。
+- FR-4: 系统必须提供 Injection Settings，按场景控制注入的画像区块，并输出注入文本预览。
+- FR-5: 系统必须通过共享契约暴露 Personal Style 类型，并允许 Project 通过 `personalStyleId` 引用。
+- FR-6: 系统必须支持从本地 Obsidian vault 导入文本素材到画像区块。
+- FR-7: 所有实体保留 `workspace_id`（沿用 Foundation 约束）。
+
+## 5. Non-Goals
+
+- 不做自主记忆 / 从历史内容自动学习画像（后续演进）。
+- 不做多画像 A/B 或多账号复杂权限。
+- 不做画像内容的跨平台自动同步（如自动读各平台昵称）。
+- 本 feature 不做「画像驱动生成」本身，只提供数据、编辑与注入契约；生成能力由 canvas-runtime / 具体创作节点消费。
+
+## 6. Design Considerations
+
+设计稿：`creator-studio/docs/creator-profile/482a7ff6-a651-482d-9426-9c164ea09599.png`（TODO：需按此稿还原，或重新生图确认）。
+
+- 页面：头像 + 名称（阿篓的AI篓子）+ 领域（AI Coding / AI工具 / 独立开发）+ Creator Level（AI Builder）
+- 区块导航：Identity / Positioning / Audience / Voice / Knowledge / Content Rules / Examples / Memory / Injection Settings
+- 风格沿用 Creator Studio 暗色语义 token（`--surface/--elevated/--primary/--border`），组件走 `apps/web/src/shared/ui/`
+
+## 7. Technical Considerations
+
+- 构建在 Foundation 之上：Hono + SQLite/Drizzle + `/api/v1` + 错误 envelope + `revision` 乐观并发。
+- 复用 `packages/contracts` 共享契约与 `apps/web/src/shared/ui/` 组件库。
+- 导入功能复用 `vault-server` 或本地文件读取（Server 侧，不暴露绝对路径给浏览器）。
+- **这是 canvas-runtime 的依赖契约**：`.feature-001-canvas-runtime/.spec` 的 Context Assembly 会引用本 feature 定义的 Personal Style 契约。
+
+## 8. Success Metrics
+
+- 画像编辑保存闭环可用，刷新不丢。
+- Personal Style 契约被 canvas-runtime 的 Project 模型与 Context Assembly 引用成功。
+- 一次导入 Obsidian 账号定位笔记即可生成可用的 Positioning + Voice 初稿。
+
+## 9. Open Questions
+
+- 字段是否允许自由扩展（自定义 key/value）还是固定 schema。
+- 导入是「整篇塞入草稿」还是「结构化解析到对应区块」（需要 vault 文档有约定结构）。
+- 后期记忆层（自主沉淀）与当前静态画像的关系如何演进。
