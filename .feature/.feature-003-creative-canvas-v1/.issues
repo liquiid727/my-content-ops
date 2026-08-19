@@ -1,0 +1,84 @@
+# Creative Canvas V1 — Local Issues
+
+## CCV1-01 — Canonical product and technical documents
+
+**Status:** completed
+
+Record the approved boundary, model, APIs, safety model, and compatibility policy; preserve prior specs as history.
+
+## CCV1-02 — Workflow contracts and additive migration
+
+**Status:** completed
+**Depends on:** CCV1-01
+
+Add discriminated workflow nodes, typed connections, recipes, plans, ChangeSets, collection items, and SQLite tables.
+
+## CCV1-03 — Revisioned workflow graph service
+
+**Status:** completed
+**Depends on:** CCV1-02
+
+Implement snapshots, legacy import, command validation, atomic mutation, port checking, and cycle prevention.
+
+## CCV1-04 — Recipe registry and execution planning
+
+**Status:** completed
+**Depends on:** CCV1-03
+
+Add built-in capabilities, recipe CRUD, subgraph planning, topological order, and execution state.
+
+## CCV1-05 — Real image provider adapter
+
+**Status:** completed
+**Depends on:** CCV1-02
+
+Implement configurable OpenAI Images generation/editing, provider errors, references/masks, and durable outputs.
+
+## CCV1-06 — Mixed-node canvas UI
+
+**Status:** completed
+**Depends on:** CCV1-03, CCV1-04
+
+Render artifact and recipe nodes, typed ports, recipe palette, layout, selection planning, and execution shelf.
+
+## CCV1-07 — Text Studio
+
+**Status:** completed
+**Depends on:** CCV1-03
+
+Add Markdown editing/preview, autosave, revision conflict handling, and canvas navigation.
+
+## CCV1-08 — Image generation and candidate workflow
+
+**Status:** completed
+**Depends on:** CCV1-04, CCV1-05
+
+Add prompts/references, candidate collections, compare/select/download, and lineage.
+
+## CCV1-09 — Mask, outpaint, and enhancement
+
+**Status:** completed
+**Depends on:** CCV1-08
+
+Add mask drawing/import, expansion, validation, outpaint, variation, and enhancement.
+
+## CCV1-10 — Internal agent proposal review
+
+**Status:** completed
+**Depends on:** CCV1-03
+
+Implement ChangeSet proposal, validation, review, approval, rejection, and stale handling.
+
+## CCV1-11 — Read-only MCP proposal surface
+
+**Status:** completed
+**Depends on:** CCV1-10
+
+Expose snapshot, validation, proposal, and status tools with no approval or execution.
+
+## CCV1-12 — Hardening and release gates
+
+**Status:** completed
+**Depends on:** CCV1-05, CCV1-06, CCV1-07, CCV1-08, CCV1-09, CCV1-10, CCV1-11
+
+Add contract, migration, service, route, UI, provider, and end-to-end tests; verify build, limits, errors, and legacy compatibility.

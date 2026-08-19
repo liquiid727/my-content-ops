@@ -1,6 +1,8 @@
 # 个人自媒体创作台
 # PRD + Node Runtime SPEC v0.2
 
+> **历史文档（已废弃）**：本文仅保留 Foundation 阶段的产品与运行时设计。Creative Canvas V1 的规范以 [`.feature/.feature-003-creative-canvas-v1/.prd`](../../../.feature/.feature-003-creative-canvas-v1/.prd) 与 [`.spec`](../../../.feature/.feature-003-creative-canvas-v1/.spec) 为准。
+
 > 文档用途：作为产品、前端、后端、AI Runtime Agent 的统一实现依据。  
 > 文档性质：MVP 可执行规格，不是概念稿。  
 > 核心目标：先完成稳定、可扩展的「Project + Infinite Canvas + Node + Inspector + Operation Runtime」骨架，再持续增加每种 Node 的具体创作能力。

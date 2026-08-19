@@ -1,5 +1,7 @@
 # SPEC 01: Canvas Runtime — 系统架构
 
+> **历史 Foundation：** 本文不再定义后续产品方向；Creative Canvas V1 见 `.feature/.feature-003-creative-canvas-v1/.spec`。
+
 > 来源：[`.prd`](../.prd) + 技术基线 `specs/000-system/spec.md`
 > 生成日期：2026-08-10
 > 技术决策：Canvas 渲染层选 `@xyflow/react`；真实 Provider 接入；Run 复用 Foundation Task Runtime

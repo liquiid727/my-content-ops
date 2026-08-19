@@ -1,6 +1,8 @@
 # 个人自媒体创作台
 # UI / Interaction Design SPEC v0.2
 
+> **历史文档（已废弃）**：本文仅保留 Foundation 阶段的 UI 设计。Creative Canvas V1 的规范以 [`.feature/.feature-003-creative-canvas-v1/.prd`](../../../.feature/.feature-003-creative-canvas-v1/.prd) 与 [`.spec`](../../../.feature/.feature-003-creative-canvas-v1/.spec) 为准。
+
 > 本文用于前端 Agent 按统一 UI 和交互实现工作台。  
 > 视觉基准：暗黑、低饱和、专业创作者工具；Canvas 是视觉中心；操作收敛到 Inspector；Node 保持轻量。
 

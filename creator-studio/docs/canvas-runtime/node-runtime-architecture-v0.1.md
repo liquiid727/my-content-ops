@@ -1,5 +1,7 @@
 # 个人自媒体创作台 — Node Runtime Architecture v0.1
 
+> **历史文档（已废弃）**：本文仅保留早期架构讨论。Creative Canvas V1 的规范以 [`.feature/.feature-003-creative-canvas-v1/.prd`](../../../.feature/.feature-003-creative-canvas-v1/.prd) 与 [`.spec`](../../../.feature/.feature-003-creative-canvas-v1/.spec) 为准。
+
 > 目标：为「无限画布 + AI 创作 Pipeline」定义一套可长期扩展的节点架构，避免随着 Topic、Outline、Script、Cover、Image、Voice、Video、Publish 等能力增加而出现节点类型爆炸、状态耦合、渲染性能下降和执行逻辑不可维护的问题。
 
 ---

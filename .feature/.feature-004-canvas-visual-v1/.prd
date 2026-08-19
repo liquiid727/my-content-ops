@@ -1,0 +1,37 @@
+# Canvas Visual V1 — PRD
+
+**Status:** Approved
+**Owner:** Creator Studio
+**Depends on:** `.feature-003-creative-canvas-v1`（模型与 Studio 边界）
+**Visual source:** `creator-studio/docs/0810.png`
+
+## Problem
+
+001 / 003 把画布引擎和 Artifact / Recipe 模型做完了，但画布仍像图查看器：节点标题是裸 `role`，预览是截断文本或占位图，Inspector 是扁平行按钮。`0810.png` 要的是「一条内容的生产现场」——卡片能读懂、候选能对比、右侧能继续做。
+
+001 的 UI spec 已标历史；003 只规定 Recipe 琥珀色、底部 execution shelf。视觉没有现行规格。
+
+## Product promise
+
+无限画布是项目内容的编排面。节点是可读的内容卡，不是类型徽章。选中节点后，右侧 Inspector 足够完成「看摘要 → 改一处 → 跑下一步」，长文和修图仍进 Text / Image Studio。
+
+不把 `0810` 逐像素复刻：产品模型已是 Artifact + Recipe，V1 不做音视频生产，侧栏「灵感 / 模板 / 发布中心」仍是独立模块。
+
+## In scope
+
+- 画布内容卡：Header / Preview / Footer，按 role 轻量着色。
+- 文本 / 图片 / Collection 四宫格 / 配音 / 视频只读 / 发布 / Recipe 的差异化预览。
+- 画布标题条：项目名、最近更新、轻量操作。
+- Inspector：详情 / 评论占位 / 历史版本；操作按 Registry group 分组；展示关联节点。
+- 节点 More：复制 / 副本 / 删除。双击进对应 Studio。
+
+## Out of scope
+
+- 侧栏底栏用户卡、存储条、专业版；Tab dirty / running 徽章。
+- 评论实体、自动整理、版本对比分屏、Handle 拖到空白 Quick Insert。
+- 音视频生成与时间线；真实多平台发布。
+- 多人协同、Group 容器。
+
+## Success
+
+创作者不用读 `role` 字符串就能认出灵感、选题、口播、封面方案和配音。选中封面方案能看到最多 4 个候选并点选。选中文本节点能在 Inspector 里按组执行操作，或双击进 Text Studio。

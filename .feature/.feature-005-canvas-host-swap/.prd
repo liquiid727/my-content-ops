@@ -1,0 +1,80 @@
+# PRD: Canvas Host Swap — 用 infinite-canvas 替换创作画布宿主
+
+**Status:** Approved（对话已拍板）  
+**Owner:** Creator Studio  
+**Upstream:** https://github.com/basketikun/infinite-canvas（MIT，须保留原作者信息与前端标识）
+
+## 1. Introduction / Overview
+
+现有 Creator Studio 画布是 `@xyflow/react` 上的编排卡。图片手感、悬停工具、按原比例缩放做不到对方那种「图躺在无限平面上」。已决定不追 XYFlow，而是 **换宿主**：产品画布 = 钉死 commit 的 infinite-canvas 整站，不再嵌进现有 AppShell。
+
+本 feature 第一刀只做「fork 进来、能打开、能配浏览器里的 API Key、能生图」。知识库等做成外置插件是后续刀。
+
+## 2. Goals
+
+- 仓库内有一份钉死 commit 的 infinite-canvas，可离线启动。
+- `make dev-canvas`（以及总 `make dev`）能拉起新画布，本机浏览器可打开。
+- API Key / Base URL 只存在浏览器，走对方原有配置页。
+- 旧 `apps/web` 画布本阶段仍可启动，但不再是创作主路径。
+- 保留上游 README / LICENSE / 页面标识。
+
+## 3. User Stories
+
+### US-001: 钉死上游并落入仓库
+**Description:** As a 开发者, I want 一份可复现的 infinite-canvas 副本, so that 不追 main、格式突变时我们不受影响。
+
+**Acceptance Criteria:**
+- [ ] 源码在仓库内独立目录，不进 pnpm workspace
+- [ ] 记录 origin URL、commit SHA、许可证
+- [ ] 不含对方 `.git` / `node_modules` / 构建产物
+
+### US-002: 一条命令启动新画布
+**Description:** As a 创作者, I want 用现有 make 工作流打开新画布, so that 不用记另一套 bun/docker 步骤。
+
+**Acceptance Criteria:**
+- [ ] `make dev-canvas` 在约定端口拉起 Vite
+- [ ] 本机无 bun 时用 pnpm/npm 也能装依赖并启动
+- [ ] 打开首页能进入画布/项目，不是空白或构建错误
+- [ ] 在浏览器里走通：打开 → 看到画布界面
+
+### US-003: 浏览器里配置模型渠道
+**Description:** As a 创作者, I want 在新画布设置里填 Base URL 和 API Key, so that 生图走浏览器直连。
+
+**Acceptance Criteria:**
+- [ ] 设置入口可用（对方原有配置页）
+- [ ] Key 不写入我们的 Creator Studio server
+- [ ] 未配 Key 时仍能浏览画布空状态，不崩溃
+
+## 4. Functional Requirements
+
+- FR-1: 系统必须把 infinite-canvas 作为独立宿主应用 vendoring，不得嵌进现有 `CanvasShell`。
+- FR-2: 系统必须钉死上游 commit，并在仓库内写明 SHA 与更新方式。
+- FR-3: 系统必须提供 `make dev-canvas`，默认监听 `127.0.0.1` 上的可配置端口（`CREATOR_STUDIO_CANVAS_PORT`，默认 3300）。
+- FR-4: `make dev` 必须同时拉起 vault、旧 studio、新画布，并在启动横幅打印新画布 URL。
+- FR-5: 安装依赖不得把对方应用并入根 `pnpm-workspace.yaml`。
+- FR-6: 系统必须保留上游 LICENSE 与页面原作者标识。
+
+## 5. Non-Goals
+
+- 不把对方画布做成 iframe / React 组件嵌进 AppShell
+- 不迁移 Artifact / Recipe / ChangeSet / Text Studio / Image Studio
+- 不删旧 `apps/web/src/canvas`（下一刀再清）
+- 不做知识库节点插件（下一刀）
+- 不把 API Key 存进 Creator Studio server
+- 不跟踪上游 main、不做数据迁移
+
+## 6. Technical Considerations
+
+- 对方默认 bun；本机可无 bun，用 Vite + pnpm 在 `infinite-canvas/web` 独立安装。
+- 对方数据在 IndexedDB / localforage，与我们的 SQLite 项目无关。
+- 更新上游：在 VENDOR 记录里按 SHA 重拉，禁止日常 merge main。
+
+## 7. Success Metrics
+
+- 从仓库根目录一条命令，两分钟内能在浏览器里看到对方画布。
+- 未安装 bun 的机器也能启动。
+
+## 8. Open Questions
+
+- 旧 studio 下线时机（本刀不做）。
+- 知识节点插件的检索入口形态（本刀不做）。

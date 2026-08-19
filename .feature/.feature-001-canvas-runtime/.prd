@@ -1,5 +1,7 @@
 # PRD: 个人自媒体创作台 — Canvas Runtime（无限画布 + 节点创作 Pipeline）
 
+> **历史 Foundation：** 本文保留为已交付实现记录。当前产品方向以 `.feature/.feature-003-creative-canvas-v1/` 为准，兼容与迁移策略也由新 SPEC 统一定义。
+
 > 来源文档：
 > - [`creator-workspace-prd-runtime-spec-v0.2.md`](../../creator-studio/docs/canvas-runtime/creator-workspace-prd-runtime-spec-v0.2.md)
 > - [`creator-workspace-ui-interaction-spec-v0.2.md`](../../creator-studio/docs/canvas-runtime/creator-workspace-ui-interaction-spec-v0.2.md)

@@ -148,6 +148,8 @@ interface VideoGenerationProvider {
 
 Adapter 负责模型参数、认证、轮询和供应商错误转换。业务 Module 不保存供应商 SDK 对象，不判断具体模型名称。
 
+实现层的 CapabilityHost、Provider factory、注册点与改造顺序以 [`creator-studio/docs/architecture/capability-seams.md`](../../creator-studio/docs/architecture/capability-seams.md) 为准。本 SPEC 仍是产品 / 系统基线；不要在这里平行维护第二套 Plugin 词汇。
+
 ### 3.4 Connector seam
 
 ```ts
@@ -163,6 +165,7 @@ interface ExternalConnector {
 - Lark Adapter 只能执行预定义 CLI command 和参数数组。
 - Obsidian Adapter 只能访问经过规范化且位于 Vault 根目录内的路径。
 - 覆盖、删除和冲突处理必须由明确的 write command 表达，不能隐式发生。
+- Knowledge `ResourceAdapter` 与后续 Connector 合并，见 Capability Seam 文档的 seam 目录；不要在 Settings stub 与 `ConnectionService` 之间再长一套平行接口。
 
 ## 4. 核心状态机
 
