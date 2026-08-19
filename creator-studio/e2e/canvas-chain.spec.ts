@@ -53,15 +53,17 @@ test('Topic → Outline → Script chain runs end-to-end on the Canvas', async (
   await expect(nodes).toHaveCount(2, { timeout: 15_000 })
 
   // 大纲节点已出现：适配视图后选中它，执行「生成口播稿」
-  await page.getByRole('button', { name: '适应视图' }).click()
-  const outlineNode = nodes.filter({ hasText: 'outline' })
+  // 画布顶栏（role=status）与 React Flow Controls 各有一个适应视图按钮，限定顶栏入口避免 strict mode 歧义
+  await page.getByRole('status').getByRole('button', { name: '适应视图' }).click()
+  const outlineNode = nodes.filter({ hasText: '大纲' })
   await outlineNode.click()
   await page.getByRole('button', { name: '生成口播稿' }).click()
   await expect(nodes).toHaveCount(3, { timeout: 15_000 })
 
   // 口播稿节点已出现：三条文本链路全部落库
-  await page.getByRole('button', { name: '适应视图' }).click()
-  await expect(nodes.filter({ hasText: 'script' })).toBeVisible()
+  // 画布顶栏（role=status）与 React Flow Controls 各有一个适应视图按钮，限定顶栏入口避免 strict mode 歧义
+  await page.getByRole('status').getByRole('button', { name: '适应视图' }).click()
+  await expect(nodes.filter({ hasText: '口播稿' })).toBeVisible()
 
   // 服务端确认：graph 含 3 节点 2 边，且三个 artifact role 为 topic/outline/script
   const roles = await page.evaluate(async (pid) => {
@@ -93,17 +95,19 @@ test('Script → Cover (image collection) + Voice (audio) media chain', async ({
 
   // generate_cover → Image Collection 节点出现，缩略图 lazy 加载（contentRef → assets）
   await page.getByRole('button', { name: '生成封面' }).click()
-  await expect(nodes.filter({ hasText: 'cover' })).toBeVisible({ timeout: 15_000 })
-  await page.getByRole('button', { name: '适应视图' }).click()
-  const coverImage = nodes.filter({ hasText: 'cover' }).locator('img[src*="/api/v1/assets/"]')
+  await expect(nodes.filter({ hasText: '封面' })).toBeVisible({ timeout: 15_000 })
+  // 画布顶栏（role=status）与 React Flow Controls 各有一个适应视图按钮，限定顶栏入口避免 strict mode 歧义
+  await page.getByRole('status').getByRole('button', { name: '适应视图' }).click()
+  const coverImage = nodes.filter({ hasText: '封面' }).locator('img[src*="/api/v1/assets/"]').first()
   await expect(coverImage).toBeVisible({ timeout: 10_000 })
 
   // generate_voice → Audio 节点出现，可点击播放（lazy mount）
-  await nodes.filter({ hasText: 'script' }).click()
+  await nodes.filter({ hasText: '口播稿' }).click()
   await page.getByRole('button', { name: '生成配音' }).click()
-  await expect(nodes.filter({ hasText: 'voice' })).toBeVisible({ timeout: 15_000 })
-  await page.getByRole('button', { name: '适应视图' }).click()
-  const voiceNode = nodes.filter({ hasText: 'voice' })
+  await expect(nodes.filter({ hasText: '配音' })).toBeVisible({ timeout: 15_000 })
+  // 画布顶栏（role=status）与 React Flow Controls 各有一个适应视图按钮，限定顶栏入口避免 strict mode 歧义
+  await page.getByRole('status').getByRole('button', { name: '适应视图' }).click()
+  const voiceNode = nodes.filter({ hasText: '配音' })
   await expect(voiceNode.getByRole('button', { name: '播放配音' })).toBeVisible({ timeout: 10_000 })
   await voiceNode.getByRole('button', { name: '播放配音' }).click()
   await expect(voiceNode.locator('audio')).toBeVisible()
@@ -150,6 +154,92 @@ test('Script → Video chain produces a Video node with a draft asset (MVP skele
     return details.sort()
   }, projectId)
   expect(video).toEqual(['text:script', 'video:draft'])
+})
+
+test('Hover "+" on a node opens the anchored generate-next menu', async ({ page }) => {
+  await page.goto('/')
+  const projectId = await createProject(page)
+  await page.goto(`/projects/${projectId}/canvas`)
+  await expect(page.getByText('开始你的第一个创作节点')).toBeVisible({ timeout: 10_000 })
+
+  await page.locator('.react-flow__pane').dblclick({ position: { x: 320, y: 220 } })
+  await page.getByRole('button', { name: '选题' }).click()
+  const nodes = page.locator('[data-testid="canvas-node"]')
+  await expect(nodes).toHaveCount(1, { timeout: 10_000 })
+
+  // 悬停节点 → 右缘出现「+」→ 锚定小菜单 → 点「生成大纲」
+  await nodes.first().hover()
+  await page.getByTestId('generate-next-entry').click()
+  const menu = page.getByTestId('generate-next-menu')
+  await expect(menu).toBeVisible()
+  await menu.getByRole('menuitem', { name: '生成大纲' }).click()
+  await expect(nodes).toHaveCount(2, { timeout: 15_000 })
+})
+
+test('Multi-select topic + image → generate cover: loading placeholder wired from every source', async ({ page }) => {
+  await page.goto('/')
+  const projectId = await createProject(page)
+  await page.goto(`/projects/${projectId}/canvas`)
+  await expect(page.getByText('开始你的第一个创作节点')).toBeVisible({ timeout: 10_000 })
+
+  // 创建「选题」与「配图」两个节点
+  await page.locator('.react-flow__pane').dblclick({ position: { x: 320, y: 160 } })
+  await page.getByRole('button', { name: '选题' }).click()
+  const nodes = page.locator('[data-testid="canvas-node"]')
+  await expect(nodes).toHaveCount(1, { timeout: 10_000 })
+  await page.locator('.react-flow__pane').dblclick({ position: { x: 320, y: 360 } })
+  await page.getByRole('button', { name: '配图' }).click()
+  await expect(nodes).toHaveCount(2, { timeout: 10_000 })
+
+  // ⌘点多选两个节点 → 底部浮动条「生成」→ 菜单选「生成封面」
+  await nodes.nth(0).click()
+  await nodes.nth(1).click({ modifiers: ['Meta'] })
+  const bar = page.getByTestId('multi-generate-bar')
+  await expect(bar).toBeVisible()
+  await bar.getByRole('button', { name: '生成' }).click()
+  const menu = page.getByTestId('generate-next-menu')
+  await expect(menu).toBeVisible()
+  await menu.getByRole('menuitem', { name: '生成封面' }).click()
+
+  // 占位 collection 节点立即出现（loading 态，SSE 刷图后）
+  await expect(nodes).toHaveCount(3, { timeout: 15_000 })
+
+  // 服务端确认：run 完成后仍是 3 节点、两条源边都指向 cover artifact、候选填充
+  const result = await page.evaluate(async (pid) => {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      const runsResponse = await fetch(`/api/v1/runs?projectId=${pid}`)
+      const runs = (await runsResponse.json() as { data: Array<{ operationId: string; status: string }> }).data
+        .filter((run) => run.operationId === 'generate_cover')
+      if (runs.length > 0 && runs.every((run) => run.status === 'completed' || run.status === 'failed')) {
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    const graphResponse = await fetch(`/api/v1/projects/${pid}/graph`)
+    const graph = await graphResponse.json() as {
+      data: {
+        nodes: Array<{ artifactId: string }>
+        edges: Array<{ sourceArtifactId: string; targetArtifactId: string; inputSlot: string }>
+      }
+    }
+    const details = await Promise.all(graph.data.nodes.map(async (node) => {
+      const response = await fetch(`/api/v1/artifacts/${node.artifactId}`)
+      return response.json() as Promise<{ data: { kind: string; role: string } }>
+    }))
+    const cover = details.find((detail) => detail.data.role === 'cover')
+    const itemsResponse = cover ? await fetch(`/api/v1/artifacts/${graph.data.nodes[details.indexOf(cover)].artifactId}/collection-items`) : null
+    const items = itemsResponse ? await itemsResponse.json() as { data: { items: unknown[] } } : null
+    return {
+      nodeKinds: details.map((detail) => detail.data.kind).sort(),
+      edges: graph.data.edges,
+      candidateCount: items?.data.items.length ?? 0,
+    }
+  }, projectId)
+  expect(result.nodeKinds).toEqual(['collection', 'image', 'text'])
+  expect(result.edges).toHaveLength(2)
+  expect(result.edges.every((edge) => edge.inputSlot === 'cover')).toBe(true)
+  expect(new Set(result.edges.map((edge) => edge.targetArtifactId)).size).toBe(1)
+  expect(result.candidateCount).toBeGreaterThan(0)
 })
 
 test('Publish skeleton: header entry → dialog → publish run side effect', async ({ page }) => {

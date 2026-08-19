@@ -25,13 +25,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `CREATOR_STUDIO_PORT=${foundationPort} CREATOR_STUDIO_DATA_DIR="$(mktemp -d)" pnpm run start`,
+      command: `CREATOR_STUDIO_PORT=${foundationPort} CREATOR_STUDIO_DEMO_MEDIA=true CREATOR_STUDIO_DATA_DIR="$(mktemp -d)" pnpm run start`,
       url: `http://127.0.0.1:${foundationPort}/api/v1/health`,
       reuseExistingServer: false,
       timeout: 30_000,
     },
     {
-      command: `CREATOR_STUDIO_PORT=${canvasPort} CREATOR_STUDIO_DATA_DIR="$(mktemp -d)" pnpm run start`,
+      command: `CREATOR_STUDIO_PORT=${canvasPort} CREATOR_STUDIO_DEMO_MEDIA=true CREATOR_STUDIO_DATA_DIR="$(mktemp -d)" pnpm run start`,
       url: `http://127.0.0.1:${canvasPort}/api/v1/health`,
       reuseExistingServer: false,
       timeout: 30_000,
