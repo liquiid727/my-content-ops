@@ -8,7 +8,7 @@ export const localePreferenceSchema = z.enum(['zh-CN', 'en-US'])
 
 export const creatorPreferencesSchema = z
   .object({
-    theme: themePreferenceSchema.default('dark'),
+    theme: themePreferenceSchema.default('light'),
     locale: localePreferenceSchema.default('zh-CN'),
   })
   .passthrough()

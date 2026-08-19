@@ -18,7 +18,9 @@ export const runSchema = z.object({
   taskId: idSchema,
   operationId: z.string().trim().min(1),
   sourceArtifactId: idSchema.nullable(),
+  sourceArtifactIds: z.array(idSchema).default([]),
   inputVersionIds: z.array(idSchema).default([]),
+  knowledgeSourceIds: z.array(idSchema).default([]),
   outputVersionIds: z.array(idSchema).nullable(),
   outputArtifactIds: z.array(idSchema).nullable(),
   status: runStatusSchema,
@@ -32,12 +34,14 @@ export const runSchema = z.object({
 export const runResponseSchema = successEnvelopeSchema(runSchema)
 export const runListResponseSchema = listEnvelopeSchema(runSchema)
 
-/** 创建 Run（async）。idempotencyKey 必须为 ULID。 */
+/** 创建 Run（async）。idempotencyKey 必须为 ULID。sourceArtifactIds 为多源生成（画布多选），sourceArtifactId 为主源（向后兼容单源）。 */
 export const createRunSchema = z
   .object({
     projectId: idSchema,
     sourceArtifactId: idSchema.nullable().optional(),
+    sourceArtifactIds: z.array(idSchema).min(1).max(10).optional(),
     inputVersionIds: z.array(idSchema).default([]),
+    knowledgeSourceIds: z.array(idSchema).default([]),
     config: z.record(z.string(), z.unknown()).default({}),
     idempotencyKey: idSchema,
   })
@@ -49,6 +53,8 @@ export const createRunResultSchema = z
     runId: idSchema,
     taskId: idSchema,
     status: runStatusSchema,
+    /** create 类操作在 Run 创建时即落地的占位输出 artifact（loading 节点）。 */
+    outputArtifactIds: z.array(idSchema).default([]),
   })
   .strict()
 export const createRunResponseSchema = successEnvelopeSchema(createRunResultSchema)

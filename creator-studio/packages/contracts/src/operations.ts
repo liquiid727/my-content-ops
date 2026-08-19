@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { artifactKindSchema } from './artifacts.js'
+import { idSchema } from './common.js'
 import { successEnvelopeSchema } from './envelopes.js'
 
 export const operationBehaviorSchema = z.enum(['create', 'transform', 'branch', 'action'])
@@ -62,5 +63,14 @@ export const operationDefinitionListSchema = z.object({
 }).strict()
 
 export const operationDefinitionListResponseSchema = successEnvelopeSchema(operationDefinitionListSchema)
+
+/** 查询一组 artifact（画布多选）可用的操作集合。 */
+export const availableOperationsRequestSchema = z
+  .object({
+    projectId: idSchema,
+    artifactIds: z.array(idSchema).min(1).max(10),
+  })
+  .strict()
+export type AvailableOperationsRequest = z.infer<typeof availableOperationsRequestSchema>
 
 export type OperationDefinition = z.infer<typeof operationDefinitionSchema>
