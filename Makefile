@@ -5,21 +5,31 @@ VAULT_PATH ?= $(HOME)/Journal/personal_journey
 VAULT_PORT ?= 3721
 CREATOR_STUDIO_PORT ?= 4310
 CREATOR_STUDIO_WEB_PORT ?= 5173
+CREATOR_STUDIO_CANVAS_PORT ?= 3300
 
-.PHONY: help install dev dev-vault build test smoke smoke-vault smoke-studio \
+.PHONY: help install canvas-install dev dev-vault dev-canvas build test smoke smoke-vault smoke-studio \
 	studio-install dev-studio dev-studio-web dev-studio-server studio-build studio-start \
 	studio-typecheck studio-lint studio-test studio-test-foundation studio-smoke
 
 help: ## ℹ️  Show available make targets
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-22s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install: ## 📦 Install all workspace dependencies (pnpm)
+install: ## 📦 Install workspace + vendored canvas dependencies
 	@echo "📦 Installing workspace dependencies..."
 	pnpm install
+	@$(MAKE) canvas-install
 
-dev: ## 🚀 Run vault-server + creator-studio (web + server) together
-	@echo "🚀 Starting vault + creator-studio..."
-	VAULT_PATH="$(VAULT_PATH)" PORT="$(VAULT_PORT)" CREATOR_STUDIO_PORT="$(CREATOR_STUDIO_PORT)" CREATOR_STUDIO_WEB_PORT="$(CREATOR_STUDIO_WEB_PORT)" pnpm run dev
+canvas-install: ## 📦 Install vendored infinite-canvas (npm, isolated from pnpm workspace)
+	@echo "📦 Installing infinite-canvas/web dependencies..."
+	pnpm run canvas:install
+
+dev: ## 🚀 Run vault-server + creator-studio + infinite-canvas together
+	@echo "🚀 Starting vault + creator-studio + infinite-canvas..."
+	VAULT_PATH="$(VAULT_PATH)" PORT="$(VAULT_PORT)" CREATOR_STUDIO_PORT="$(CREATOR_STUDIO_PORT)" CREATOR_STUDIO_WEB_PORT="$(CREATOR_STUDIO_WEB_PORT)" CREATOR_STUDIO_CANVAS_PORT="$(CREATOR_STUDIO_CANVAS_PORT)" pnpm run dev
+
+dev-canvas: ## 🖼️  Run vendored infinite-canvas host (default 3300)
+	@echo "🖼️  Starting infinite-canvas on :$(CREATOR_STUDIO_CANVAS_PORT)..."
+	CREATOR_STUDIO_CANVAS_PORT="$(CREATOR_STUDIO_CANVAS_PORT)" pnpm run dev:canvas
 
 dev-vault: ## 🔍 Run only the vault API server
 	@echo "🔍 Starting vault API server on :$(VAULT_PORT)..."
@@ -42,9 +52,9 @@ studio-install: ## 📦 Install creator-studio dependencies
 	@echo "📦 Installing workspace dependencies..."
 	pnpm install
 
-dev-studio: ## 🎛️  Run creator-studio web + server together (web:5173, server:4310)
-	@echo "🎛️  Starting creator-studio (web:$(CREATOR_STUDIO_WEB_PORT), server:$(CREATOR_STUDIO_PORT))..."
-	CREATOR_STUDIO_PORT="$(CREATOR_STUDIO_PORT)" CREATOR_STUDIO_WEB_PORT="$(CREATOR_STUDIO_WEB_PORT)" pnpm run creator-studio:dev
+dev-studio: ## 🎛️  Run studio web + API + canvas host (open :5173; canvas embeds automatically)
+	@echo "🎛️  Starting creator-studio (web:$(CREATOR_STUDIO_WEB_PORT), server:$(CREATOR_STUDIO_PORT), canvas:$(CREATOR_STUDIO_CANVAS_PORT))..."
+	CREATOR_STUDIO_PORT="$(CREATOR_STUDIO_PORT)" CREATOR_STUDIO_WEB_PORT="$(CREATOR_STUDIO_WEB_PORT)" CREATOR_STUDIO_CANVAS_PORT="$(CREATOR_STUDIO_CANVAS_PORT)" pnpm run creator-studio:dev
 
 dev-studio-web: ## 🌐 Run only creator-studio web (Vite, default 5173)
 	@echo "🌐 Starting creator-studio web (Vite) on :$(CREATOR_STUDIO_WEB_PORT)..."

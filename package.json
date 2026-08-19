@@ -12,6 +12,8 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:vault": "pnpm -C vault-server run dev",
+    "dev:canvas": "node scripts/dev-canvas.mjs",
+    "canvas:install": "npm --prefix infinite-canvas/web install --legacy-peer-deps",
     "build": "pnpm -C vault-server run build && pnpm run creator-studio:build",
     "test": "pnpm run creator-studio:test",
     "install:all": "pnpm install",
